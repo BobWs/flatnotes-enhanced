@@ -199,6 +199,19 @@ docker run -d \
   flatnotes-enhanced:latest
 ```
 
+## 🐳 Docker
+
+```bash
+docker pull dockerbobw/flatnotes-enhanced:latest
+docker run -d \
+  --name flatnotes-enhanced \
+  -p 8080:8080 \
+  -v ./data:/data \
+  -e "FLATNOTES_AUTH_TYPE=password" \
+  -e "FLATNOTES_USERNAME=user" \
+  -e "FLATNOTES_PASSWORD=changeMe!" \
+  dockerbobw/flatnotes-enhanced:latest
+```
 ---
 
 ## 📦 Manual Installation
