@@ -1,0 +1,17 @@
+# Ignore everything
+**
+
+# Include the following
+!.htmlnanorc
+!LICENSE
+!Pipfile
+!Pipfile.lock
+!client/**
+!entrypoint.sh
+!healthcheck.sh
+!package-lock.json
+!package.json
+!postcss.config.js
+!server/**
+!tailwind.config.js
+!vite.config.js

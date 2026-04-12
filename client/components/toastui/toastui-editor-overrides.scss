@@ -1,0 +1,905 @@
+.ProseMirror,
+.toastui-editor-defaultUI .ProseMirror,
+.toastui-editor-md-container .toastui-editor-md-preview {
+  padding: 1rem 0 0 0;
+}
+
+.ProseMirror {
+  height: 100%;
+}
+
+.toastui-editor-contents ul > li::before {
+  // Vertically center the bullet point
+  margin-top: 0.7rem;
+}
+
+// Typography
+.ProseMirror,
+.toastui-editor-contents {
+  font-family: "Poppins", sans-serif;
+  font-size: 1rem;
+}
+
+.toastui-editor-contents,
+.ProseMirror {
+  h1,
+  .toastui-editor-md-heading1,
+  h2,
+  .toastui-editor-md-heading2,
+  h3,
+  .toastui-editor-md-heading3,
+  h4,
+  .toastui-editor-md-heading4,
+  h5,
+  .toastui-editor-md-heading5,
+  h6,
+  .toastui-editor-md-heading6 {
+    font-weight: bold;
+    line-height: 1.4;
+    margin: 1em 0 0.5em 0;
+    padding: 0;
+    border-bottom: none;
+
+    &:first-of-type {
+      margin-top: 0;
+    }
+  }
+
+  h1,
+  .toastui-editor-md-heading1 {
+    font-size: 1.75rem;
+  }
+
+  h2,
+  .toastui-editor-md-heading2 {
+    font-size: 1.6rem;
+  }
+
+  h3,
+  .toastui-editor-md-heading3 {
+    font-size: 1.45rem;
+  }
+
+  h4,
+  .toastui-editor-md-heading4 {
+    font-size: 1.3rem;
+  }
+
+  h5,
+  .toastui-editor-md-heading5 {
+    font-size: 1.15rem;
+  }
+
+  h6,
+  .toastui-editor-md-heading6 {
+    font-size: 1rem;
+  }
+
+  p {
+    line-height: 1.6rem;
+    margin: 0 0 1rem 0;
+  }
+}
+
+// Override the default font-family for code blocks as some of the fallbacks are not monospace
+.toastui-editor-contents code,
+.toastui-editor-contents pre,
+.toastui-editor-md-code,
+.toastui-editor-md-code-block {
+  font-family: Consolas, "Lucida Console", Monaco, "Andale Mono", monospace;
+}
+
+// Colours
+.toastui-editor-defaultUI {
+  border: none;
+}
+
+.toastui-editor-contents {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: rgb(var(--theme-text));
+  }
+  p {
+    color: rgb(var(--theme-text));
+  }
+  pre code {
+    color: rgb(var(--theme-text));
+  }
+}
+
+.toastui-editor-main {
+  background-color: rgb(var(--theme-background));
+}
+
+.toastui-editor-ww-container {
+  background-color: rgb(var(--theme-background));
+}
+
+.toastui-editor-contents ul,
+.toastui-editor-contents menu,
+.toastui-editor-contents ol,
+.toastui-editor-contents dir {
+  color: rgb(var(--theme-text));
+}
+
+// Code Block
+.toastui-editor-contents pre,
+.toastui-editor-md-code-block-line-background {
+  background-color: rgb(var(--theme-background-elevated));
+}
+
+body.dark .toastui-editor-contents pre,
+body.dark .toastui-editor-md-code-block-line-background {
+  background-color: rgb(var(--theme-background-elevated));
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  background: none;
+}
+
+// Tables
+.toastui-editor-contents table th {
+  color: rgb(var(--theme-text));
+  background-color: rgb(var(--theme-background-elevated));
+}
+
+.toastui-editor-contents table {
+  color: rgb(var(--theme-text));
+}
+
+.toastui-editor-md-table .toastui-editor-md-table-cell {
+  color: rgb(var(--theme-text));
+}
+
+// Editor
+.ProseMirror {
+  color: rgb(var(--theme-text));
+}
+
+// Toolbar
+.toastui-editor-defaultUI-toolbar {
+  background-color: rgb(var(--theme-background));
+  border-bottom-color: rgb(var(--theme-border));
+}
+
+.toastui-editor-defaultUI .toastui-editor-md-tab-container {
+  background-color: rgb(var(--theme-background));
+  border-bottom-color: rgb(var(--theme-border));
+}
+
+.toastui-editor-mode-switch {
+  background-color: rgb(var(--theme-background));
+  border-color: rgb(var(--theme-border));
+}
+
+.toastui-editor-defaultUI-toolbar button {
+  border: 1px solid rgb(var(--theme-background));
+}
+
+.toastui-editor-defaultUI .tab-item.active {
+  background-color: rgb(var(--theme-background));
+  color: rgb(var(--theme-text));
+  border-color: rgb(var(--theme-border));
+}
+
+.toastui-editor-defaultUI .tab-item {
+  background-color: rgb(var(--theme-background));
+  color: rgb(var(--theme-text-muted));
+  border-color: rgb(var(--theme-border));
+}
+
+.toastui-editor-md-tab-container .tab-item.active {
+  border-bottom: none;
+}
+
+.toastui-editor-toolbar-divider {
+  background-color: rgb(var(--theme-border));
+}
+
+body.dark .toastui-editor-toolbar-icons {
+  // Standard dark theme buttons are dark grey, this position change makes them white
+  background-position-y: -49px;
+}
+
+.toastui-editor-defaultUI-toolbar button:not(:disabled):hover {
+  background-color: rgb(var(--theme-background-elevated));
+  border: 1px solid rgb(var(--theme-background));
+}
+
+.toastui-editor-md-block-quote .toastui-editor-md-marked-text {
+  color: rgb(var(--theme-text-muted));
+}
+
+.toastui-editor-md-code,
+.toastui-editor-contents code {
+  background-color: rgb(var(--theme-background-elevated));
+}
+
+body.dark .toastui-editor-md-code,
+body.dark .toastui-editor-contents code {
+  background-color: rgb(var(--theme-background-elevated));
+}
+
+.toastui-editor-popup {
+  background-color: rgb(var(--theme-background));
+  border: 1px solid rgb(var(--theme-border));
+}
+
+.toastui-editor-popup-body {
+  label {
+    color: rgb(var(--theme-text));
+  }
+  input {
+    background-color: rgb(var(--theme-background));
+    border: 1px solid rgb(var(--theme-border));
+  }
+}
+
+.toastui-editor-popup-add-table .toastui-editor-table-cell,
+.toastui-editor-popup-add-table .toastui-editor-table-cell.header {
+  background-color: rgb(var(--theme-background));
+  border-color: rgb(var(--theme-border));
+}
+
+.toastui-editor-popup-add-heading ul li:hover {
+  background-color: rgb(var(--theme-background-elevated));
+}
+
+.toastui-editor-popup-add-image .toastui-editor-tabs .tab-item {
+  color: rgb(var(--theme-text));
+  background-color: rgb(var(--theme-background));
+  border-color: rgb(var(--theme-border));
+}
+
+.toastui-editor-popup-add-image .toastui-editor-file-name.has-file {
+  color: rgb(var(--theme-text));
+}
+
+.toastui-editor-popup-body input[type="text"] {
+  color: rgb(var(--theme-text));
+  background-color: rgb(var(--theme-background));
+}
+
+.toastui-editor-dropdown-toolbar {
+  background-color: rgb(var(--theme-background));
+  border-color: rgb(var(--theme-border));
+}
+
+// ============================================================
+// Mobile editor fixes (@media max-width: 767px)
+// ============================================================
+//
+// Three problems addressed:
+//
+//  1. Toolbar overflow — the single-row toolbar and its "..." dropdown both
+//     clip buttons on narrow screens. Fix: horizontal scroll on both, plus
+//     a fade-out indicator on the right edge.
+//
+//  2. Popup (link / image) clipping — popups are positioned relative to the
+//     toolbar button and overflow the right edge on mobile. Fix: centre-anchor
+//     the popup to the viewport and constrain its width.
+//
+//  3. Touch targets — toolbar buttons get a minimum 34×34 px tap area.
+
+@media (max-width: 767px) {
+
+  // ── 1a. Main toolbar: horizontal scroll, no clipping ───────────────────────
+  .toastui-editor-defaultUI-toolbar {
+    overflow-x: auto;
+    overflow-y: visible;
+    &::-webkit-scrollbar { display: none; }
+    scrollbar-width: none;
+
+    // Keep all groups on one line — never let them wrap or shrink
+    .toastui-editor-toolbar-group {
+      flex-shrink: 0;
+    }
+  }
+
+  // Subtle right-edge fade to signal that more toolbar items exist off-screen
+  .toastui-editor-defaultUI-toolbar::after {
+    content: "";
+    position: sticky;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    flex-shrink: 0;
+    background: linear-gradient(to right, transparent, rgb(var(--theme-background)) 80%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  // ── 1b. Dropdown ("...") toolbar: full-width scrollable sheet ─────────────
+  //
+  // Reanchor the dropdown to the viewport instead of to its trigger button,
+  // then let it scroll horizontally so every button group is reachable.
+  .toastui-editor-dropdown-toolbar {
+    position: fixed !important;
+    left: 4px !important;
+    right: 4px !important;
+    width: auto !important;
+    max-width: none !important;
+
+    overflow-x: auto;
+    overflow-y: visible;
+    &::-webkit-scrollbar { display: none; }
+    scrollbar-width: none;
+
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 6px;
+
+    .toastui-editor-toolbar-group {
+      flex-shrink: 0;
+    }
+
+    // Comfortable touch targets inside the dropdown
+    button {
+      min-width: 36px;
+      min-height: 36px;
+    }
+  }
+
+  // ── 2. Popups (link / image): clamp to viewport width ──────────────────────
+  //
+  // Toast UI positions popups absolutely relative to their toolbar button.
+  // On narrow viewports they overflow the right edge. We centre-anchor them
+  // to the viewport and cap their width.
+  .toastui-editor-popup {
+    max-width: calc(100vw - 16px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 200 !important;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  // Give the link and image popups a comfortable minimum width
+  .toastui-editor-popup-add-image,
+  .toastui-editor-popup-add-link {
+    min-width: min(340px, calc(100vw - 16px)) !important;
+  }
+
+  // Full-width inputs; font-size 16px prevents iOS auto-zoom on focus
+  .toastui-editor-popup-body input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+
+  // ── 3. Toolbar buttons: minimum tap target ──────────────────────────────────
+  .toastui-editor-defaultUI-toolbar button {
+    min-width: 34px;
+    min-height: 34px;
+  }
+
+  // ── 4. Markdown/WYSIWYG tab bar: no clipping ───────────────────────────────
+  .toastui-editor-defaultUI .toastui-editor-md-tab-container {
+    overflow-x: auto;
+    &::-webkit-scrollbar { display: none; }
+    scrollbar-width: none;
+  }
+
+} // end @media (max-width: 767px)
+
+// Tables
+.toastui-editor-contents table th,
+.toastui-editor-contents table td {
+  border-color: rgb(var(--theme-border));
+}
+
+.toastui-editor-contents th p {
+  color: rgb(var(--theme-text));
+}
+
+/* ==highlight== support */
+.toastui-editor-contents mark,
+.toastui-editor-ww-container mark {
+  background-color: rgb(var(--theme-brand) / 0.22);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+
+// ============================================================
+// Custom Markdown Styling — ported from Obsidian snippets
+// ============================================================
+
+
+// ── Headers H1–H6 ───────────────────────────────────────────
+// Colours match obsidian-headers.css exactly.
+// Quicksand is loaded from embedded woff2 in style.css (weight 400 & 500).
+// Font sizes defined above are preserved; we add color and font-family here.
+
+.toastui-editor-contents {
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Quicksand", "Poppins", sans-serif;
+    font-weight: 500;
+  }
+}
+
+/* ===== CUSTOM TABLE STYLES ===== */
+/* Applied when table has data-custom-table attribute */
+.toastui-editor-contents table[data-custom-table] th {
+  background-color: var(--table-header-color) !important;
+  color: white !important;
+  letter-spacing: 0.4px;
+  font-family: "DIN Alternate", "DIN 1451 Std", "Trade Gothic LT Std", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" !important;
+  font-weight: 600;
+}
+
+.toastui-editor-contents table[data-custom-table] th p {
+  font-family: "DIN Alternate", "DIN 1451 Std", "Trade Gothic LT Std", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" !important;
+  color: white !important;
+}
+
+/* Light theme table cells */
+.toastui-editor-contents table[data-custom-table] td {
+  font-family: "DIN Alternate", "DIN 1451 Std", "Trade Gothic LT Std", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" !important;
+  color: #085294;
+}
+
+/* Zebra striping */
+.toastui-editor-contents table[data-custom-table][data-zebra="true"] tr:nth-child(odd) td {
+  background-color: rgb(var(--theme-background));
+}
+
+.toastui-editor-contents table[data-custom-table][data-zebra="true"] tr:nth-child(even) td {
+  background-color: rgb(var(--theme-background-elevated));
+}
+
+/* Dark theme overrides */
+body.dark .toastui-editor-contents table[data-custom-table] td {
+  font-family: "DIN Alternate", "DIN 1451 Std", "Trade Gothic LT Std", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" !important;
+  color: #3984c6;
+}
+
+body.dark .toastui-editor-contents table[data-custom-table][data-zebra="true"] tr:nth-child(odd) td {
+  background-color: rgb(var(--theme-background));
+}
+
+body.dark .toastui-editor-contents table[data-custom-table][data-zebra="true"] tr:nth-child(even) td {
+  background-color: rgba(149, 213, 234, 0.06);
+}
+
+/* ===== CUSTOM QUOTE STYLES ===== */
+/* Applied when blockquote has data-custom-quote attribute */
+.toastui-editor-contents blockquote[data-custom-quote] {
+  border-left: 6px solid var(--quote-border-color) !important;
+  border-radius: 4px;
+  margin: 1.2em 0;
+  padding: 0.5em 1em;
+  line-height: 1.6em;
+  font-family: "DIN Alternate", "DIN 1451 Std", "Trade Gothic LT Std", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" !important;
+  font-style: normal;
+  font-weight: normal;
+  background-color: var(--quote-bg-color) !important;
+  color: #085294;
+}
+
+.toastui-editor-contents blockquote[data-custom-quote] p {
+  color: inherit;
+  margin-bottom: 0.4em;
+}
+
+.toastui-editor-contents blockquote[data-custom-quote] p:last-child {
+  margin-bottom: 0;
+}
+
+/* Dark theme quote */
+body.dark .toastui-editor-contents blockquote[data-custom-quote] {
+  background-color: var(--quote-dark-bg-color) !important;
+  color: #dadada;
+}
+
+body.dark .toastui-editor-contents blockquote[data-custom-quote] p {
+  color: inherit;
+}
+
+// ============================================================
+// Callout blocks — Obsidian-compatible > [!type] Title syntax
+// ============================================================
+
+// ── Callout color palette (matches obsidian-callouts.css) ────────────────────
+// Each type gets a CSS custom property that drives border, icon, and title color.
+
+.callout { --callout-color: 130, 208, 216; }  // default: teal
+
+.callout[data-callout="note"],
+.callout[data-callout="default"],
+.callout[data-callout="algemeen"]    { --callout-color: 130, 208, 216; }
+.callout[data-callout="info"],
+.callout[data-callout="information"],
+.callout[data-callout="informatie"]  { --callout-color: 51, 122, 183; }
+.callout[data-callout="warning"],
+.callout[data-callout="opgelet"]     { --callout-color: 230, 152, 0; }
+.callout[data-callout="danger"]      { --callout-color: 220, 53, 69; }
+.callout[data-callout="success"],
+.callout[data-callout="tip"]         { --callout-color: 40, 167, 69; }
+.callout[data-callout="question"],
+.callout[data-callout="help"]        { --callout-color: 252, 161, 100; }
+.callout[data-callout="quote"],
+.callout[data-callout="belangrijk"]  { --callout-color: 153, 102, 51; }
+.callout[data-callout="archive"],
+.callout[data-callout="archived"]    { --callout-color: 177, 177, 177; }
+.callout[data-callout="code"]        { --callout-color: 10, 153, 204; }
+.callout[data-callout="checklist"],
+.callout[data-callout="task"]        { --callout-color: 102, 204, 102; }
+.callout[data-callout="table"],
+.callout[data-callout="tabel"]       { --callout-color: 249, 175, 27; }
+.callout[data-callout="daily"],
+.callout[data-callout="inbox"]       { --callout-color: 222, 182, 22; }
+.callout[data-callout="car"],
+.callout[data-callout="auto"]        { --callout-color: 112, 90, 1; }
+.callout[data-callout="shared"],
+.callout[data-callout="delen"],
+.callout[data-callout="group"]       { --callout-color: 255, 205, 26; }
+.callout[data-callout="study"],
+.callout[data-callout="studie"],
+.callout[data-callout="school"]      { --callout-color: 140, 69, 255; }
+.callout[data-callout="guide"],
+.callout[data-callout="how-to"],
+.callout[data-callout="tutorial"]    { --callout-color: 255, 126, 40; }
+.callout[data-callout="house"],
+.callout[data-callout="huis"]        { --callout-color: 25, 121, 24; }
+.callout[data-callout="nas"],
+.callout[data-callout="server"],
+.callout[data-callout="virtual"]     { --callout-color: 213, 60, 135; }
+.callout[data-callout="docker"],
+.callout[data-callout="container"]   { --callout-color: 10, 67, 182; }
+.callout[data-callout="network"],
+.callout[data-callout="netwerk"]     { --callout-color: 0, 204, 51; }
+.callout[data-callout="mobile"],
+.callout[data-callout="ios"],
+.callout[data-callout="android"]     { --callout-color: 51, 204, 255; }
+.callout[data-callout="desktop"],
+.callout[data-callout="macos"],
+.callout[data-callout="windows"],
+.callout[data-callout="linux"]       { --callout-color: 143, 147, 184; }
+.callout[data-callout="dataview"],
+.callout[data-callout="list"]        { --callout-color: 235, 175, 35; }
+.callout[data-callout="recipes"],
+.callout[data-callout="recepten"]    { --callout-color: 102, 102, 255; }
+
+// ── Callout base structure ────────────────────────────────────────────────────
+
+.toastui-editor-contents .callout {
+  border-left: 6px solid rgb(var(--callout-color));
+  border-radius: 4px;
+  margin: 1em 0;
+  overflow: hidden;
+
+  // Light theme background: very faint tint of callout color
+  background-color: rgba(var(--callout-color), 0.07);
+}
+
+body.dark .toastui-editor-contents .callout {
+  background-color: rgba(var(--callout-color), 0.12);
+}
+
+// ── Callout title row ─────────────────────────────────────────────────────────
+
+.toastui-editor-contents .callout-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  font-weight: 600;
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+  color: rgb(var(--callout-color));
+  background-color: rgba(var(--callout-color), 0.12);
+}
+
+body.dark .toastui-editor-contents .callout-title {
+  background-color: rgba(var(--callout-color), 0.2);
+}
+
+.toastui-editor-contents .callout-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: rgb(var(--callout-color));
+  flex-shrink: 0;
+}
+
+.toastui-editor-contents .callout-title-inner {
+  color: rgb(var(--callout-color));
+  // Light theme: slightly darken for contrast on white
+  filter: brightness(0.85);
+}
+
+body.dark .toastui-editor-contents .callout-title-inner {
+  // Dark theme: lighten for contrast on dark background
+  filter: brightness(1.3);
+}
+
+// ── Callout body ──────────────────────────────────────────────────────────────
+
+.toastui-editor-contents .callout-content {
+  padding: 0.6rem 0.85rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+
+  // Light theme
+  color: #085294;
+
+  p {
+    margin: 0 0 0.4em 0;
+    color: inherit;
+    &:last-child { margin-bottom: 0; }
+  }
+}
+
+body.dark .toastui-editor-contents .callout-content {
+  color: #dadada;
+}
+
+// ── Override the generic blockquote style for callouts ───────────────────────
+// Callouts ARE blockquotes in the DOM, so we need to prevent the blockquote
+// styles from bleeding into them.
+
+.toastui-editor-contents blockquote:has(.callout) {
+  border-left: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+}
+// Fallback for browsers without :has() — callout div overrides parent blockquote
+.toastui-editor-contents .callout {
+  // Reset any inherited blockquote styles
+  font-style: normal;
+  font-weight: normal;
+}
+
+// ── PDF attachment cards (rendered in notes viewer) ───────────────────────────
+.toastui-editor-contents .pdf-attachment-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.8rem 0.5rem 0.6rem;
+  border: 1px solid rgba(var(--theme-border, 200 200 200));
+  border-radius: 8px;
+  background: rgba(var(--theme-background-elevated, 245 245 245), 0.6);
+  margin: 0.25rem 0;
+  max-width: 420px;
+  text-decoration: none;
+}
+
+.toastui-editor-contents .pdf-attachment-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: #ef4444;
+  border-radius: 6px;
+  flex-shrink: 0;
+
+  svg {
+    width: 1.4rem;
+    height: 1.4rem;
+    fill: white;
+  }
+}
+
+.toastui-editor-contents .pdf-badge {
+  display: none; // icon alone is clear enough; badge reserved for future use
+}
+
+.toastui-editor-contents .pdf-attachment-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgb(var(--theme-text, 30 30 30));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toastui-editor-contents .pdf-preview-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgb(var(--theme-brand, 99 102 241));
+  border: 1px solid rgba(var(--theme-brand, 99 102 241), 0.4);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s;
+  flex-shrink: 0;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    fill: currentColor;
+  }
+
+  &:hover {
+    background: rgba(var(--theme-brand, 99 102 241), 0.08);
+    text-decoration: none;
+  }
+}
+
+body.dark .toastui-editor-contents .pdf-attachment-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.dark .toastui-editor-contents .pdf-attachment-name {
+  color: #e0e0e0;
+}
+
+// ── Custom task icons ─────────────────────────────────────────────────────────
+
+.toastui-editor-contents li.task-custom {
+  list-style: none;
+
+  // Icon flows inline before the label text
+  .task-custom-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-right: 0.35rem;
+    vertical-align: middle;
+    flex-shrink: 0;
+
+    svg {
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+  }
+}
+
+// ── Collapsible task groups ────────────────────────────────────────────────────
+// A task group is a .task-custom <li> that contains a nested <ul>/<ol>.
+// Layout: [chevron in gutter] [icon] [label text]
+//         [────────── child list ──────────────]
+//
+// FIX — Checkbox clipping:
+//   The previous version put overflow:hidden on the <ul> itself, which clipped
+//   checkbox inputs at the list's left boundary. We now use the CSS grid
+//   grid-template-rows: 0fr ↔ 1fr technique: the <ul> gets display:grid with
+//   a collapsible inner div. overflow:hidden lives on the inner div only, so
+//   the <ul>'s own children (checkboxes, bullets) are never clipped.
+//
+// FIX — Chevron visibility:
+//   Chevron is now colored with --theme-brand (the app's orange accent) so it
+//   stands out clearly from both the task icon and the label text.
+//   It sits in a dedicated gutter (padding-left: 1.6rem on the li) with enough
+//   breathing room that it never visually merges with the icon beside it.
+
+.toastui-editor-contents li.task-group {
+  position: relative;
+  // Gutter wide enough for the chevron (1rem) + comfortable gap before the icon
+  padding-left: 1.95rem;
+
+  // ── Toggle chevron button ──────────────────────────────────────────────────
+  // Sits in the left gutter, vertically centred with the first line of text.
+  // Colored theme-brand (orange) for immediate visual discoverability.
+  .task-group-toggle {
+    position: absolute;
+    left: -0.25rem;
+    top: 0.22rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    // Theme-brand gives the orange accent color defined by the app
+    color: rgb(var(--theme-brand));
+    border-radius: 3px;
+    transition: color 0.15s, background-color 0.15s;
+    flex-shrink: 0;
+    // Ensure it sits above any list ::before pseudo-elements
+    z-index: 1;
+
+    &:hover {
+      background-color: rgb(var(--theme-brand) / 0.12);
+    }
+
+    // Chevron SVG — rotates smoothly on collapse/expand
+    .task-group-chevron {
+      display: block;
+      transition: transform 0.2s ease;
+      // Default (expanded): chevron points downward
+    }
+
+    .task-group-chevron-collapsed {
+      transform: rotate(-90deg);
+    }
+  }
+
+  // ── Label text ─────────────────────────────────────────────────────────────
+  .task-group-label {
+    vertical-align: middle;
+    font-weight: 500;
+    color: rgb(var(--theme-text));
+  }
+
+  // ── Child list collapse — CSS grid wrapper pattern ────────────────────────
+  // We wrap the <ul> in a .task-group-children-wrapper div (injected by JS).
+  // The WRAPPER is the CSS grid container that animates grid-template-rows.
+  // The <ul> itself is the single grid item (min-height:0, overflow:hidden).
+  // This keeps the <li> children completely free of any overflow clipping,
+  // so checkboxes render identically to top-level task lists.
+  //
+  //  li.task-group
+  //    button.task-group-toggle         ← chevron in gutter
+  //    span.task-custom-icon            ← task icon
+  //    span.task-group-label            ← label text
+  //    div.task-group-children-wrapper  ← GRID CONTAINER (animates)
+  //      ul.task-group-children         ← GRID ITEM (min-height:0, overflow:hidden)
+  //        li …                         ← normal list items, never clipped
+
+  .task-group-children-wrapper {
+    display: grid;
+    grid-template-rows: 1fr;    // expanded — single implicit row fills naturally
+    transition: grid-template-rows 0.22s ease, opacity 0.18s ease;
+    opacity: 1;
+    margin-top: 0.3rem;
+
+    &.task-group-collapsed {
+      grid-template-rows: 0fr;
+      opacity: 0;
+      transition: grid-template-rows 0.18s ease, opacity 0.12s ease;
+    }
+  }
+
+  // The <ul> is the single grid item. min-height:0 lets it compress to 0 height
+  // when the grid row is 0fr. overflow:hidden clips the list height during animation
+  // but NOT horizontally — the ul's own padding-left keeps all children inset.
+  .task-group-children {
+    min-height: 0;
+    overflow: hidden;
+    // Generous left padding: enough for checkboxes + bullets with no clipping
+    padding-left: 1.75rem;
+  }
+
+  // Child list items are completely normal — no min-height or overflow overrides.
+  .task-group-children li {
+    color: rgb(var(--theme-text));
+  }
+}
+
+// ── Dark mode ─────────────────────────────────────────────────────────────────
+// The chevron inherits --theme-brand which already adapts to dark mode via the
+// app's CSS variable definitions, so no separate dark override is needed for color.
+// We add a slightly brighter hover tint for dark backgrounds.
+body.dark .toastui-editor-contents li.task-group {
+  .task-group-toggle:hover {
+    background-color: rgb(var(--theme-brand) / 0.18);
+  }
+
+  .task-group-label {
+    color: rgb(var(--theme-text));
+  }
+
+  .task-group-children > li {
+    color: rgb(var(--theme-text));
+  }
+}
+
