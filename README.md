@@ -277,7 +277,7 @@ Open your browser and navigate to `http://localhost:8080`
 
 ## 🐛 Known Issues & Roadmap
 
-### Current Status (Devolop/Testing Phase)
+### Current Status
 
 - ✅ All other features – stable
 
