@@ -281,6 +281,11 @@ Open your browser and navigate to `http://localhost:8080`
 
 - ✅ All other features – stable
 
+## Tags
+
+- `latest` – newest version
+- `v1.0.0` – first stable release
+
 ### Future Features
 
 - Modal table editor – planned!
@@ -288,7 +293,6 @@ Open your browser and navigate to `http://localhost:8080`
 - Auto-delete trash after N days
 - Multi-user support
 - Automatic database backup
-- Official Docker image on Docker Hub - planned!
 
 ---
 

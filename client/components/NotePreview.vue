@@ -343,14 +343,14 @@ onUnmounted(() => {
 }
 
 .preview-content :deep(code) {
-  background-color: var(--theme-background-elevated);
+  background-color: rgb(var(--theme-background-elevated));
   padding: 0.125rem 0.25rem;
   border-radius: 3px;
   font-size: 0.8em;
 }
 
 .preview-content :deep(pre) {
-  background-color: var(--theme-background-elevated);
+  background-color: rgb(var(--theme-background-elevated));
   padding: 0.5rem;
   border-radius: 6px;
   overflow-x: auto;
@@ -380,7 +380,7 @@ onUnmounted(() => {
 }
 
 .preview-content :deep(th) {
-  background-color: var(--theme-background-elevated);
+  background-color: rgb(var(--theme-background-elevated));
   font-weight: 600;
 }
 
