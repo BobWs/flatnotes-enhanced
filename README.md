@@ -201,6 +201,8 @@ docker run -d \
 
 ## 🐳 Docker
 
+**Supports `linux/amd64` and `linux/arm64` (Raspberry Pi, Apple Silicon).**
+
 ```bash
 docker pull dockerbobw/flatnotes-enhanced:latest
 docker run -d \
@@ -283,8 +285,10 @@ Open your browser and navigate to `http://localhost:8080`
 
 ## Tags
 
-- `latest` – newest version
-- `v1.0.0` – first stable release
+- `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.0.2` – current stable release (multi-arch)
+- `v1.0.1` – bug fix release (amd64 only)
+- `v1.0.0` – first stable release (amd64 only)
 
 ### Future Features
 
