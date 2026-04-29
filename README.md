@@ -1,5 +1,9 @@
 # Flatnotes-Enhanced
 
+[![License](https://img.shields.io/github/license/BobWs/flatnotes-enhanced)](LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/BobWs/flatnotes-enhanced)](https://github.com/BobWs/flatnotes-enhanced/releases)
+
+
 **A professional-grade, feature-rich fork of [Flatnotes](https://github.com/Dullage/flatnotes).**
 
 Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable, and user-friendly note-taking application. Designed for professionals and enthusiasts, it offers advanced organization, visual customization, and a seamless user experience—all while maintaining simplicity and performance.
@@ -24,6 +28,15 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
+## 🆕 What's New in v1.1.0
+
+- **Duplicate Notes** – Copy notes to any folder with smart naming
+- **Bulk Delete** – Soft-delete multiple notes at once from the sidebar
+
+[View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
+
+---
+
 ## ✨ Key Features
 
 ### 📁 Advanced Organization
@@ -35,6 +48,8 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Bulk Operations | Select multiple notes and move them to existing or new folders. |
 | Drag & Drop | Intuitive drag-and-drop for moving notes between folders. |
 | Smart Counters | Real-time note counts for folders and tags. |
+| Duplicate Notes | Copy one or more notes to any folder; originals remain untouched. Smart naming resolves conflicts automatically (Report (copy), Report (copy 2), etc.). |
+| Bulk Delete | Soft-delete multiple notes at once from the sidebar. Notes go to _trash and can be restored later. |
 
 ### 🏷️ Tag System
 
@@ -54,8 +69,6 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Smart Autocomplete | Real-time suggestions for tags, callouts, variables, and task icons. |
 | File Attachments | Support for PDF, DOCX, XLSX, TXT, RTF, Pages, and Numbers. |
 | PDF Preview | In-browser preview for attached PDFs. |
-| Modal Table Editor | Edit markdown tables in a dedicated modal interface. |
-| Spreadsheet in Notes | Mini Excel-like spreadsheet support within notes. |
 
 ### 🎨 Visual Customization
 
@@ -286,7 +299,8 @@ Open your browser and navigate to `http://localhost:8080`
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
-- `v1.0.2` – current stable release (multi-arch)
+- `v1.1.0` – current stable release (duplicate notes + bulk delete)
+- `v1.0.2` – multi-arch support (ARM64)
 - `v1.0.1` – bug fix release (amd64 only)
 - `v1.0.0` – first stable release (amd64 only)
 
