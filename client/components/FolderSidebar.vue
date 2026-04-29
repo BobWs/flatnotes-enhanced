@@ -18,17 +18,30 @@
     <div class="flex items-center justify-between px-4 py-3 border-b border-theme-border shrink-0">
       <span class="text-xs font-bold uppercase text-theme-text-very-muted tracking-wider">Folders</span>
       <div class="flex items-center gap-1">
-        <!-- Move button (only shows if selection mode is active) -->
+        <!-- Move/Copy button (only shows if selection mode is active) -->
         <button
           v-if="selectionMode"
           @click="openMoveModal"
           class="text-theme-text-muted hover:text-theme-text transition-colors p-1 rounded"
-          title="Move selected notes"
+          title="Move or copy selected notes"
           :disabled="selectedNotes.size === 0"
           :class="{ 'opacity-40 cursor-not-allowed': selectedNotes.size === 0 }"
         >
           <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current">
             <path d="M9.5,4L8.5,3H4A2,2 0 0,0 2,5V19A2,2 0 0,0 4,21H20A2,2 0 0,0 22,19V7A2,2 0 0,0 20,5H13.5L12.5,4H9.5M15,11V13H11V16L8,12L11,8V11H15Z"/>
+          </svg>
+        </button>
+        <!-- Trash button (only shows if selection mode is active) -->
+        <button
+          v-if="selectionMode"
+          @click="openDeleteModal"
+          class="text-theme-text-muted hover:text-red-500 transition-colors p-1 rounded"
+          title="Delete selected notes"
+          :disabled="selectedNotes.size === 0"
+          :class="{ 'opacity-40 cursor-not-allowed': selectedNotes.size === 0 }"
+        >
+          <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current">
+            <path d="M9,3V4H4V6H5V19A2,2 0 0,0 7,21H17A2,2 0 0,0 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z"/>
           </svg>
         </button>
         <!-- Expand/Collapse all -->
@@ -148,7 +161,9 @@
           <div class="bg-theme-background rounded-lg shadow-xl border border-theme-border overflow-hidden">
             <!-- Header -->
             <div class="flex items-center justify-between px-4 py-3 border-b border-theme-border bg-theme-background-elevated">
-              <span class="text-sm font-semibold text-theme-text">Move to folder</span>
+              <span class="text-sm font-semibold text-theme-text">
+                {{ operationMode === 'duplicate' ? 'Duplicate to folder' : 'Move to folder' }}
+              </span>
               <button
                 @click="closeMoveDialog"
                 class="text-theme-text-muted hover:text-theme-text transition-colors p-1 rounded"
@@ -163,8 +178,41 @@
             <!-- Info text -->
             <div class="px-4 pt-3 pb-2">
               <div class="text-xs text-theme-text-muted">
-                Moving <span class="font-semibold text-theme-text">{{ selectedNotes.size }}</span> note{{ selectedNotes.size !== 1 ? 's' : '' }} to:
+                <span class="font-semibold text-theme-text">{{ selectedNotes.size }}</span>
+                note{{ selectedNotes.size !== 1 ? 's' : '' }} selected
               </div>
+            </div>
+
+            <!-- Operation mode toggle -->
+            <div class="px-4 pb-3">
+              <div class="flex rounded-md border border-theme-border overflow-hidden text-xs font-medium">
+                <button
+                  @click="operationMode = 'move'"
+                  :class="[
+                    'flex-1 py-1.5 px-2 transition-colors text-center',
+                    operationMode === 'move'
+                      ? 'bg-theme-brand text-white'
+                      : 'text-theme-text-muted hover:bg-theme-background-elevated'
+                  ]"
+                >
+                  Move
+                </button>
+                <button
+                  @click="operationMode = 'duplicate'"
+                  :class="[
+                    'flex-1 py-1.5 px-2 transition-colors text-center border-l border-theme-border',
+                    operationMode === 'duplicate'
+                      ? 'bg-theme-brand text-white'
+                      : 'text-theme-text-muted hover:bg-theme-background-elevated'
+                  ]"
+                >
+                  Duplicate
+                </button>
+              </div>
+              <p class="text-xs text-theme-text-very-muted mt-1.5 leading-snug">
+                <template v-if="operationMode === 'move'">Removes originals from their current folder.</template>
+                <template v-else>Copies notes; originals stay in place.</template>
+              </p>
             </div>
 
             <!-- Folder list with search -->
@@ -244,7 +292,7 @@
                 <button
                   v-for="folder in filteredFolderPaths"
                   :key="folder"
-                  @click="moveNotesTo(folder)"
+                  @click="applyNotesAction(folder)"
                   class="w-full text-left px-3 py-2 rounded-md text-sm transition-colors hover:bg-theme-background-elevated text-theme-text"
                 >
                   <div class="flex items-center gap-2">
@@ -265,6 +313,83 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Batch delete confirmation modal -->
+    <Teleport to="body">
+      <div
+        v-if="showDeleteDialog"
+        class="fixed inset-0 z-50 flex items-start justify-start"
+        @click.self="closeDeleteDialog"
+      >
+        <div class="fixed inset-0 bg-black/20 backdrop-blur-sm" @click="closeDeleteDialog"></div>
+        <div
+          class="relative mt-2 move-folder-modal w-80"
+          :class="isOpen ? 'ml-[calc(18rem+0.5rem)]' : 'ml-2'"
+        >
+          <div class="bg-theme-background rounded-lg shadow-xl border border-theme-border overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-theme-border bg-theme-background-elevated">
+              <div class="flex items-center gap-2">
+                <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current text-red-500">
+                  <path d="M9,3V4H4V6H5V19A2,2 0 0,0 7,21H17A2,2 0 0,0 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z"/>
+                </svg>
+                <span class="text-sm font-semibold text-theme-text">Delete notes</span>
+              </div>
+              <button @click="closeDeleteDialog" class="text-theme-text-muted hover:text-theme-text transition-colors p-1 rounded" title="Close">
+                <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg>
+              </button>
+            </div>
+            <div class="px-4 py-4">
+              <div class="flex gap-3 mb-4">
+                <div class="shrink-0 w-9 h-9 rounded-full bg-red-500/10 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-red-500">
+                    <path d="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-theme-text">
+                    Move <span class="text-red-500 font-semibold">{{ selectedNotes.size }}</span>
+                    note{{ selectedNotes.size !== 1 ? 's' : '' }} to trash?
+                  </p>
+                  <p class="text-xs text-theme-text-muted mt-1 leading-relaxed">
+                    Notes will be soft-deleted and can be restored from trash.
+                  </p>
+                </div>
+              </div>
+              <div class="bg-theme-background-elevated rounded-md px-3 py-2 mb-4 max-h-32 overflow-y-auto">
+                <div v-for="title in deletePreviewList" :key="title" class="flex items-center gap-2 py-0.5">
+                  <svg viewBox="0 0 24 24" class="w-3 h-3 fill-current shrink-0 text-theme-text-very-muted">
+                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                  </svg>
+                  <span class="text-xs text-theme-text truncate">{{ title.split('/').pop() }}</span>
+                </div>
+                <div v-if="selectedNotes.size > 5" class="text-xs text-theme-text-very-muted pt-1 italic">
+                  &hellip;and {{ selectedNotes.size - 5 }} more
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <button
+                  @click="closeDeleteDialog"
+                  class="flex-1 px-3 py-2 text-sm rounded-md border border-theme-border text-theme-text-muted hover:bg-theme-background-elevated transition-colors"
+                >Cancel</button>
+                <button
+                  @click="confirmDeleteNotes"
+                  :disabled="isDeleting"
+                  class="flex-1 px-3 py-2 text-sm rounded-md font-medium transition-colors bg-red-500 hover:bg-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                >
+                  <svg v-if="isDeleting" class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+                  </svg>
+                  <svg v-else viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-current">
+                    <path d="M9,3V4H4V6H5V19A2,2 0 0,0 7,21H17A2,2 0 0,0 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z"/>
+                  </svg>
+                  {{ isDeleting ? 'Deleting…' : 'Move to trash' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </aside>
 </template>
 
@@ -273,7 +398,7 @@ import { ref, computed, watch, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
 
-import { getFolders, updateNote } from "../api.js";
+import { getFolders, getFolderNotes, updateNote, getNote, createNote, deleteNote } from "../api.js";
 import FolderItem from "./FolderItem.vue";
 import { getToastOptions } from "../helpers.js";
 
@@ -293,7 +418,12 @@ const expandAll    = ref(null);
 const selectionMode = ref(false);
 const selectedNotes = ref(new Set());
 
-const showMoveDialog = ref(false);
+const showMoveDialog  = ref(false);
+const operationMode   = ref("move"); // 'move' | 'duplicate'
+
+// Delete dialog state
+const showDeleteDialog = ref(false);
+const isDeleting       = ref(false);
 
 // ── New-folder-in-dialog state ────────────────────────────────────────────
 const showNewFolderInput = ref(false);
@@ -332,6 +462,8 @@ const filteredFolderPaths = computed(() => {
     folder.toLowerCase().includes(query)
   );
 });
+
+const deletePreviewList = computed(() => Array.from(selectedNotes.value).slice(0, 5));
 
 const folderTree = computed(() => {
   const root = [];
@@ -404,8 +536,9 @@ function openMoveModal() {
     toast.add(getToastOptions("No notes selected", "Info", "info"));
     return;
   }
-  folderSearchQuery.value = ""; // Reset search when opening
-  showMoveDialog.value = true;
+  folderSearchQuery.value = "";
+  operationMode.value     = "move";
+  showMoveDialog.value    = true;
 }
 
 function closeMoveDialog() {
@@ -459,8 +592,17 @@ async function confirmNewFolder() {
     return;
   }
   newFolderError.value = "";
-  await moveNotesTo(trimmed);
+  await applyNotesAction(trimmed);
   cancelNewFolder();
+}
+
+// ── Dispatcher: routes to move or duplicate based on operationMode ────────
+async function applyNotesAction(targetFolder) {
+  if (operationMode.value === "duplicate") {
+    await duplicateNotesTo(targetFolder);
+  } else {
+    await moveNotesTo(targetFolder);
+  }
 }
 
 async function moveNotesTo(targetFolder) {
@@ -472,22 +614,15 @@ async function moveNotesTo(targetFolder) {
   for (const oldTitle of notesToMove) {
     const parts = oldTitle.split("/");
     const basename = parts.pop();
-    let newTitle;
-    if (targetFolder) {
-      newTitle = `${targetFolder}/${basename}`;
-    } else {
-      newTitle = basename;
-    }
+    const newTitle = targetFolder ? `${targetFolder}/${basename}` : basename;
 
     try {
-      // Use undefined for newContent to omit it from the JSON body
       await updateNote(oldTitle, newTitle, undefined);
       successCount++;
     } catch (error) {
       if (error.response?.status === 409) {
         toast.add(getToastOptions(`Note "${basename}" already exists in destination. Skipping.`, "Conflict", "warn"));
       } else if (error.response?.status === 404) {
-        // Source was already moved (cleanup_empty_dirs removed the directory) — count as success
         successCount++;
       } else {
         console.error(`Failed to move ${oldTitle}:`, error);
@@ -504,6 +639,125 @@ async function moveNotesTo(targetFolder) {
   }
   if (failCount > 0) {
     toast.add(getToastOptions(`Failed to move ${failCount} note(s)`, "Error", "error"));
+  }
+}
+
+async function duplicateNotesTo(targetFolder) {
+  showMoveDialog.value = false;
+  const notesToDup = Array.from(selectedNotes.value);
+  let successCount = 0;
+  let failCount    = 0;
+
+  const prefix = targetFolder ? `${targetFolder}/` : "";
+
+  // Strip any existing " (copy)" / " (copy N)" tail so duplicating a copy
+  // always counts up from the root name, never chains suffixes.
+  const copyPattern = / \(copy(?:\s+\d+)?\)$/;
+  const rootName = (title) => title.split("/").pop().replace(copyPattern, "");
+
+  // Seed existingTitles from what is ACTUALLY on disk in the destination folder.
+  // Without this, a second duplication run has no knowledge of copies created
+  // in a previous run and collides with a 409.
+  const existingTitles = new Set();
+  try {
+    const folderNotes = targetFolder
+      ? await getFolderNotes(targetFolder)
+      : await getFolderNotes(""); // root
+    for (const note of folderNotes) {
+      // API returns objects with a title property, e.g. { title: "Draft/Report (copy)", ... }
+      const bare = typeof note === "string" ? note : (note.title ?? note.filename ?? "");
+      if (bare) existingTitles.add(bare);
+    }
+  } catch {
+    // If the folder fetch fails (empty/new folder), continue with an empty set.
+  }
+
+  // Also seed the plain root name of every note being duplicated so each one
+  // always lands on at least " (copy)" — never overwrites the original.
+  for (const oldTitle of notesToDup) {
+    existingTitles.add(prefix + rootName(oldTitle));
+  }
+
+  for (const oldTitle of notesToDup) {
+    const base = rootName(oldTitle);
+
+    // Start at " (copy)" and increment until we find an unclaimed slot.
+    let suffix   = 1;
+    let newTitle = prefix + `${base} (copy)`;
+
+    while (existingTitles.has(newTitle)) {
+      suffix++;
+      newTitle = prefix + `${base} (copy ${suffix})`;
+    }
+
+    // Reserve slot before the async call so the next iteration sees it.
+    existingTitles.add(newTitle);
+
+    try {
+      const sourceNote = await getNote(oldTitle);
+      await createNote(newTitle, sourceNote.content);
+      successCount++;
+    } catch (error) {
+      existingTitles.delete(newTitle); // release reservation on failure
+      console.error(`Failed to duplicate ${oldTitle}:`, error);
+      failCount++;
+    }
+  }
+
+  if (successCount > 0) {
+    const dest = targetFolder || "Root";
+    toast.add(getToastOptions(`Duplicated ${successCount} note(s) to "${dest}"`, "Success", "success"));
+    selectedNotes.value.clear();
+    selectionMode.value = false;
+    await loadFolders();
+  }
+  if (failCount > 0) {
+    toast.add(getToastOptions(`Failed to duplicate ${failCount} note(s)`, "Error", "error"));
+  }
+}
+
+// Batch delete
+function openDeleteModal() {
+  if (selectedNotes.value.size === 0) {
+    toast.add(getToastOptions("No notes selected", "Info", "info"));
+    return;
+  }
+  showDeleteDialog.value = true;
+}
+
+function closeDeleteDialog() {
+  if (isDeleting.value) return;
+  showDeleteDialog.value = false;
+}
+
+async function confirmDeleteNotes() {
+  isDeleting.value = true;
+  const notesToDelete = Array.from(selectedNotes.value);
+  let successCount = 0;
+  let failCount    = 0;
+
+  for (const title of notesToDelete) {
+    try {
+      await deleteNote(title);
+      successCount++;
+    } catch (error) {
+      console.error("Failed to delete " + title + ":", error);
+      failCount++;
+    }
+  }
+
+  isDeleting.value       = false;
+  showDeleteDialog.value = false;
+
+  if (successCount > 0) {
+    const label = successCount === 1 ? "note" : "notes";
+    toast.add(getToastOptions("Moved " + successCount + " " + label + " to trash", "Deleted", "success"));
+    selectedNotes.value.clear();
+    selectionMode.value = false;
+    await loadFolders();
+  }
+  if (failCount > 0) {
+    toast.add(getToastOptions("Failed to delete " + failCount + " note(s)", "Error", "error"));
   }
 }
 

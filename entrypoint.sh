@@ -6,10 +6,15 @@
 
 set -e
 
+# Extract version from package.json
+VERSION=$(grep -m1 '"version"' /app/package.json | cut -d'"' -f4)
+
 echo "\
 ===============================================
 ======== Welcome to Flatnotes-Enhanced ========
 ===============================================
+
+Version: v${VERSION}
 
 Thank you for using Flatnotes-Enhanced!
 

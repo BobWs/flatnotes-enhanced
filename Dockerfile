@@ -55,6 +55,9 @@ RUN pipenv install --deploy --ignore-pipfile --system && \
 COPY server ./server
 COPY --from=build ${BUILD_DIR}/client/dist ./client/dist
 
+# Copy package.json to runtime container for version info
+COPY --from=build ${BUILD_DIR}/package.json ${APP_PATH}/package.json
+
 COPY entrypoint.sh healthcheck.sh /
 RUN chmod +x /entrypoint.sh /healthcheck.sh
 
