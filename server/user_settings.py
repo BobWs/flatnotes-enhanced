@@ -85,6 +85,7 @@ class UserPrefs(CustomBaseModel):
     table_style: TableStyleDefinition = Field(default_factory=TableStyleDefinition)
     quote_style: QuoteStyleDefinition = Field(default_factory=QuoteStyleDefinition)
     tag_colors: TagColorSettings = Field(default_factory=TagColorSettings)
+    show_button_labels: bool = Field(True)
 
 
 class UserPrefsUpdate(CustomBaseModel):
@@ -98,6 +99,7 @@ class UserPrefsUpdate(CustomBaseModel):
     default_highlight: Optional[str] = Field(None)
     table_style: Optional[TableStyleDefinition] = Field(None)
     quote_style: Optional[QuoteStyleDefinition] = Field(None)
+    show_button_labels: Optional[bool] = Field(None)    
 
 
 # ── Built-in defaults ─────────────────────────────────────────────────────────
@@ -330,6 +332,7 @@ def get_prefs() -> UserPrefs:
                     table_style=_dict_to_table_style(settings.table_style),
                     quote_style=_dict_to_quote_style(settings.quote_style),
                     tag_colors=_dict_to_tag_colors(settings.tag_colors or {}),
+                    show_button_labels=(settings.extra or {}).get("show_button_labels", True),                    
                 )
         except Exception as e:
             logger.error(f"Database error in get_prefs: {e}")
@@ -386,6 +389,11 @@ def save_prefs(prefs: UserPrefsUpdate) -> None:
                 settings.table_style = dict(prefs.table_style.dict())
             if prefs.quote_style is not None:
                 settings.quote_style = dict(prefs.quote_style.dict())
+
+            if prefs.show_button_labels is not None:
+                extra = dict(settings.extra or {})
+                extra["show_button_labels"] = prefs.show_button_labels
+                settings.extra = extra  # fresh dict triggers SQLAlchemy dirty-tracking
 
             db.commit()
             logger.info("Saved preferences to database")

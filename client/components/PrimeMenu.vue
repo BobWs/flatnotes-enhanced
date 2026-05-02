@@ -1,8 +1,13 @@
 <template>
   <Menu ref="menu" :pt="style">
     <template #item="{ item, props }">
-      <a class="flex items-center justify-between" v-bind="props.action">
-        <IconLabel :iconPath="item.icon" :label="item.label" />
+      <a
+        class="flex items-center justify-between"
+        v-bind="props.action"
+        :title="item.title || ''"
+      >
+        <!-- Labels always visible in dropdown regardless of showButtonLabels setting -->
+        <IconLabel :iconPath="item.icon" :label="item.label" :forceLabel="true" />
         <span
           v-if="item.keyboardShortcut"
           class="ml-4 rounded bg-theme-background-elevated px-3 py-1 text-xs"

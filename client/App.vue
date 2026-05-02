@@ -56,7 +56,7 @@ import { useToast } from "primevue/usetoast";
 import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import { RouterView, useRoute } from "vue-router";
 
-import { apiErrorHandler, getConfig } from "./api.js";
+import { apiErrorHandler, getConfig, getPrefs } from "./api.js";
 import PrimeToast from "./components/PrimeToast.vue";
 import TagSidebar from "./components/TagSidebar.vue";
 import FolderSidebar from "./components/FolderSidebar.vue";
@@ -125,6 +125,15 @@ getConfig()
   .then(async (data) => {
     globalStore.config = data;
     await initSettingsStore();
+    // Load show_button_labels preference so it persists across page refreshes.
+    // We do this after auth is confirmed (getConfig succeeds only when authenticated).
+    try {
+      const prefs = await getPrefs();
+      // Default is true — only override if explicitly set to false
+      globalStore.showButtonLabels = prefs.show_button_labels !== false;
+    } catch {
+      // Non-fatal: defaults to true (labels shown)
+    }
     loadingIndicator.value.setLoaded();
   })
   .catch((error) => {

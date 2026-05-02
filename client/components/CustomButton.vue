@@ -1,6 +1,6 @@
 <template>
   <button
-    class="text-nowrap rounded px-2 py-1"
+    class="text-nowrap rounded px-2 py-1 inline-flex items-center"
     :class="{
       'bg-theme-background text-theme-text-muted hover:bg-theme-background-elevated':
         style === 'subtle',
@@ -13,7 +13,7 @@
     }"
   >
     <slot></slot>
-    <IconLabel :iconPath="iconPath" :iconSize="iconSize" :label="label" />
+    <IconLabel :iconPath="iconPath" :iconSize="iconSize" :label="label" :forceLabel="forceLabel" />
   </button>
 </template>
 
@@ -24,6 +24,12 @@ defineProps({
   iconPath: String,
   iconSize: String,
   label: String,
+  // forceLabel: when true (default), always shows label regardless of globalStore.showButtonLabels.
+  // Set to false for navbar buttons that should respect the icon-only preference.
+  forceLabel: {
+    type: Boolean,
+    default: true,
+  },
   style: {
     type: String,
     default: "subtle",

@@ -23,7 +23,7 @@ consider sponsoring this forked project.
 
 It would really make my day 🙏.
 
-──────────────────────────────────────
+===============================================
 "
 
 flatnotes_command="python -m \

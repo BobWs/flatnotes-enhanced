@@ -5,21 +5,33 @@
       type="mdi"
       :path="iconPath"
       :size="iconSize"
-      :class="{ 'mr-1': label }"
+      :class="{ 'mr-1': label && showLabel }"
     ></SvgIcon>
-    <span v-if="label">{{ label }}</span>
+    <!-- forceLabel overrides the global setting (used in dropdown menus) -->
+    <span v-if="label && showLabel">{{ label }}</span>
   </div>
 </template>
 
 <script setup>
+import { computed } from "vue";
 import SvgIcon from "@jamescoyle/vue-icon";
+import { useGlobalStore } from "../globalStore.js";
 
-defineProps({
+const globalStore = useGlobalStore();
+
+const props = defineProps({
   iconPath: String,
   iconSize: {
     type: String,
     default: "1.25em",
   },
   label: String,
+  forceLabel: {
+    type: Boolean,
+    default: false,
+  },
 });
+
+// Show label if: forced (e.g. in dropdown menu) OR global setting allows it
+const showLabel = computed(() => props.forceLabel || globalStore.showButtonLabels);
 </script>

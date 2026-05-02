@@ -3,63 +3,71 @@
 
     <!-- ── Single-row layout on sm+ (original behaviour) ── -->
     <div class="nav-buttons hidden sm:flex items-start justify-end gap-1">
-      <CustomButton :iconPath="mdiHome" label="Home" @click="goHome" title="Go home (Ctrl+Alt+H)" />
+      <CustomButton :iconPath="mdiHome" label="Home" @click="goHome" title="Go home (Ctrl+Alt+H)" :forceLabel="false" />
 
       <button
         v-if="showNewButton"
         @click="openNewNoteModal"
-        class="text-nowrap rounded px-2 py-1 bg-theme-background text-theme-text-muted
+        title="Create a new note (Ctrl+Alt+N)"
+        class="text-nowrap rounded px-2 py-1 inline-flex items-center gap-1
+               bg-theme-background text-theme-text-muted
                hover:bg-theme-background-elevated active:bg-theme-background-elevated touch-manipulation"
-        style="display:inline-flex;align-items:center;gap:4px;min-height:2.25rem;"
       >
         <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current flex-shrink-0">
           <path d="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10-4.48 10-10S17.52,2 12,2 M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8 8,3.59 8,8-3.59,8-8,8 M13,7h-2v4H7v2h4v4h2v-4h4v-2h-4V7z"/>
         </svg>
-        <span class="hidden sm:inline">New Note</span>
+        <span v-show="globalStore.showButtonLabels" class="hidden sm:inline">New Note</span>
       </button>
 
-      <CustomButton v-if="hasPinnedNotes" :iconPath="mdiBookmark" label="Bookmarks" @click="goToPinned" title="View pinned notes" />
+      <CustomButton v-if="hasPinnedNotes" :iconPath="mdiBookmark" label="Bookmarks" @click="goToPinned" title="View pinned notes" :forceLabel="false" />
       <CustomButton :iconPath="mdiTagMultiple" label="Tags" @click="$emit('toggleSidebar')"
         :title="isSidebarOpen ? 'Close tag sidebar (Ctrl+Alt+T)' : 'Open tag sidebar (Ctrl+Alt+T)'"
-        :class="{ 'sidebar-active': isSidebarOpen }" />
+        :class="{ 'sidebar-active': isSidebarOpen }" :forceLabel="false" />
       <CustomButton :iconPath="mdiFolderMultiple" label="Folders" @click="$emit('toggleFolderSidebar')"
         :title="isFolderSidebarOpen ? 'Close folder browser' : 'Browse folders'"
-        :class="{ 'sidebar-active': isFolderSidebarOpen }" />
-      <CustomButton :iconPath="mdilMenu" label="Menu" @click="toggleMenu" />
+        :class="{ 'sidebar-active': isFolderSidebarOpen }" :forceLabel="false" />
+
+      <CustomButton :iconPath="mdilMenu" label="Menu" @click="toggleMenu" title="Open menu" :forceLabel="false" />
       <PrimeMenu ref="menu" :model="menuItems" :popup="true" />
     </div>
 
-    <!-- ── Two-row layout on mobile (below sm) ── -->
-    <div class="nav-buttons flex flex-col items-end gap-0.5 sm:hidden">
+    <!-- ── Mobile layout: two rows when labels on, single row when icons only ── -->
+    <div
+      class="nav-buttons sm:hidden"
+      :class="globalStore.showButtonLabels
+        ? 'flex flex-col items-end gap-0.5'
+        : 'flex flex-row items-center justify-end gap-1'"
+    >
       <!-- Row 1: primary actions — Home, New Note, Bookmarks -->
-      <div class="flex items-center gap-1">
-        <CustomButton :iconPath="mdiHome" label="Home" @click="goHome" title="Go home" />
+      <!-- In single-row mode this div is a transparent passthrough (contents flow into parent) -->
+      <div :class="globalStore.showButtonLabels ? 'flex items-center gap-1' : 'contents'">
+        <CustomButton :iconPath="mdiHome" label="Home" @click="goHome" title="Go home" :forceLabel="false" />
 
         <button
           v-if="showNewButton"
           @click="openNewNoteModal"
-          class="rounded px-2 py-1 bg-theme-background text-theme-text-muted
-                 hover:bg-theme-background-elevated active:bg-theme-background-elevated touch-manipulation
-                 inline-flex items-center gap-1"
-          style="min-height:2.75rem;min-width:2.75rem;"
+          title="Create a new note"
+          class="text-nowrap rounded px-2 py-1 inline-flex items-center gap-1
+                 bg-theme-background text-theme-text-muted
+                 hover:bg-theme-background-elevated active:bg-theme-background-elevated touch-manipulation"
         >
           <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current flex-shrink-0">
             <path d="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10-4.48 10-10S17.52,2 12,2 M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8 8,3.59 8,8-3.59,8-8,8 M13,7h-2v4H7v2h4v4h2v-4h4v-2h-4V7z"/>
           </svg>
         </button>
 
-        <CustomButton v-if="hasPinnedNotes" :iconPath="mdiBookmark" label="Bookmarks" @click="goToPinned" title="View pinned notes" />
+        <CustomButton v-if="hasPinnedNotes" :iconPath="mdiBookmark" label="Bookmarks" @click="goToPinned" title="View pinned notes" :forceLabel="false" />
       </div>
 
       <!-- Row 2: navigation/utility — Tags, Folders, Menu -->
-      <div class="flex items-center gap-1">
+      <div :class="globalStore.showButtonLabels ? 'flex items-center gap-1' : 'contents'">
         <CustomButton :iconPath="mdiTagMultiple" label="Tags" @click="$emit('toggleSidebar')"
           :title="isSidebarOpen ? 'Close tag sidebar' : 'Open tag sidebar'"
-          :class="{ 'sidebar-active': isSidebarOpen }" />
+          :class="{ 'sidebar-active': isSidebarOpen }" :forceLabel="false" />
         <CustomButton :iconPath="mdiFolderMultiple" label="Folders" @click="$emit('toggleFolderSidebar')"
           :title="isFolderSidebarOpen ? 'Close folder browser' : 'Browse folders'"
-          :class="{ 'sidebar-active': isFolderSidebarOpen }" />
-        <CustomButton :iconPath="mdilMenu" label="Menu" @click="toggleMenu" />
+          :class="{ 'sidebar-active': isFolderSidebarOpen }" :forceLabel="false" />
+        <CustomButton :iconPath="mdilMenu" label="Menu" @click="toggleMenu" title="Open menu" :forceLabel="false" />
         <PrimeMenu ref="menuMobile" :model="menuItems" :popup="true" />
       </div>
     </div>
@@ -142,27 +150,26 @@ const props = defineProps({
 const emit = defineEmits(["toggleSearchModal", "toggleSidebar", "toggleFolderSidebar"]);
 
 const hasPinnedNotes = ref(false);
-const templateModalVisible = ref(false);
-const templates = ref([]);
-const templatesLoading = ref(false);
 
-// Theme cycle
+// ── Theme cycle ───────────────────────────────────────────────────────────────
 const themeMode = ref(getCurrentThemeMode());
 let _navThemeObserver = null;
 
+const themeButtonTitle = computed(() => {
+  if (themeMode.value === 'light') return 'Light theme — click for Dark';
+  if (themeMode.value === 'dark')  return 'Dark theme — click to follow OS';
+  return 'Following OS theme — click for Light';
+});
+
 function cycleTheme() {
-  const current = themeMode.value;
-  if (current === "light") {
-    setDarkThemeOn();
-    themeMode.value = "dark";
-  } else if (current === "dark") {
-    followSystemTheme();
-    themeMode.value = "system";
-  } else {
-    setDarkThemeOff();
-    themeMode.value = "light";
-  }
+  if (themeMode.value === 'light')       { setDarkThemeOn();    themeMode.value = 'dark';   }
+  else if (themeMode.value === 'dark')   { followSystemTheme(); themeMode.value = 'system'; }
+  else                                   { setDarkThemeOff();   themeMode.value = 'light';  }
 }
+
+const templateModalVisible = ref(false);
+const templates = ref([]);
+const templatesLoading = ref(false);
 
 async function checkPinned() {
   try {
@@ -195,6 +202,14 @@ function getThemeLabel() {
   return "Auto Theme";
 }
 
+// Helper to get dynamic theme hover title
+function getThemeTitle() {
+  const mode = themeMode.value;
+  if (mode === "light") return "Switch to Dark Theme";
+  if (mode === "dark") return "Switch to Auto Theme (follows system)";
+  return "Switch to Light Theme";
+}
+
 // Make menu items reactive with computed
 const menuItems = computed(() => [
   {
@@ -202,6 +217,7 @@ const menuItems = computed(() => [
     icon: mdilMagnify,
     command: () => emit("toggleSearchModal"),
     keyboardShortcut: "/",
+    title: "Search notes (press / to open)",
   },
   {
     label: "All Notes",
@@ -214,31 +230,37 @@ const menuItems = computed(() => [
           [params.sortBy]: searchSortOptions.title,
         },
       }),
+    title: "View all notes",
   },
   {
     label: "Templates",
     icon: mdiFileDocumentOutline,
     command: () => router.push({ name: "templates" }),
+    title: "Manage note templates",
   },
   {
     label: "Attachments",
     icon: mdiPaperclip,
     command: () => router.push({ name: "attachments" }),
+    title: "View and manage attachments",
   },
   {
     label: "Archive",
     icon: mdiArchive,
     command: () => router.push({ name: "archive" }),
+    title: "View archived notes",
   },
   {
     label: "Settings",
     icon: mdiCog,
     command: () => router.push({ name: "settings" }),
+    title: "Application settings",
   },
   {
     label: "Trash",
     icon: mdiDeleteClock,
     command: () => router.push({ name: "trash" }),
+    title: "View deleted notes",
   },
   {
     separator: true,
@@ -247,6 +269,7 @@ const menuItems = computed(() => [
     label: getThemeLabel(),
     icon: mdiThemeLightDark,
     command: cycleTheme,
+    title: getThemeTitle(),
   },
   {
     separator: true,
@@ -256,6 +279,7 @@ const menuItems = computed(() => [
     label: "Log Out",
     icon: mdilLogout,
     command: logOut,
+    title: "Sign out of your account",
     visible: showLogOutButton,
   },
 ]);

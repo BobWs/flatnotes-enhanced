@@ -1,8 +1,8 @@
 {
   "name": "flatnotes-enhanced",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
-  "description": "A professional-grade, feature-rich fork of Flatnotes with folders, nested tags, popup previews, modal table editor, and spreadsheet support.",
+  "description": "A professional-grade, feature-rich fork of Flatnotes with folders, nested tags, popup previews and more.",
   "main": "client/index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

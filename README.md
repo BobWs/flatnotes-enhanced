@@ -156,7 +156,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Advanced | Table styling, quote styling. |
 | Tags | Global tag colors + per-tag overrides. |
 | Task Icons | Custom colors for task markers. |
-| Preferences | Display name, avatar, default sort, preview toggle. |
+| Preferences | Display name, avatar, default sort, preview toggle, Button Label Toggle. |
 
 ---
 
@@ -299,6 +299,7 @@ Open your browser and navigate to `http://localhost:8080`
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.2.0` – current stable release ( Button Label Toggle & UI Polish)
 - `v1.1.0` – current stable release (duplicate notes + bulk delete)
 - `v1.0.2` – multi-arch support (ARM64)
 - `v1.0.1` – bug fix release (amd64 only)

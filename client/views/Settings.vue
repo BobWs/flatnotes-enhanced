@@ -984,6 +984,24 @@
           </div>
         </div>
 
+        <!-- Button labels toggle -->
+        <div class="flex items-center justify-between p-3 rounded-lg border border-theme-border bg-theme-background">
+          <div>
+            <p class="text-sm font-medium text-theme-text">Show button labels</p>
+            <p class="text-xs text-theme-text-muted mt-0.5">
+              When off, navigation buttons show icons only — ideal for smaller screens.
+            </p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer ml-4 shrink-0">
+            <input type="checkbox" v-model="prefs.showButtonLabels" class="sr-only peer" />
+            <div class="w-11 h-6 bg-theme-border rounded-full peer
+                        peer-checked:bg-theme-brand transition-colors
+                        after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                        after:bg-white after:rounded-full after:h-5 after:w-5
+                        after:transition-transform peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+
         <!-- Save -->
         <div class="flex items-center gap-3 pt-2">
           <button
@@ -1040,7 +1058,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { 
   getCallouts, saveCallouts as apiSaveCallouts, 
   getPrefs, savePrefs as apiSavePrefs, 
@@ -1057,6 +1075,8 @@ import {
   loadHeaderColors, loadHighlightColors, loadTableStyle, loadQuoteStyle,
 } from "../appearanceStore.js";
 import { loadTagColors } from "../tagColorStore.js";
+import { useGlobalStore } from "../globalStore.js";
+const globalStore = useGlobalStore();
 import { ICON_LIBRARY, searchIcons } from "../IconLibrary.js";
 import { TASK_ICONS } from "../taskIcons.js";
 import { getTaskIcons, saveTaskIcons as apiSaveTaskIcons } from "../api.js";
@@ -1364,8 +1384,13 @@ async function saveQuoteStyle() {
 }
 
 // ── Preferences ───────────────────────────────────────────────────────────────
-const prefs = ref({ displayName: "", avatarFilename: null, notesDefaultSort: "", notesDefaultView: "" });
+const prefs = ref({ displayName: "", avatarFilename: null, notesDefaultSort: "", notesDefaultView: "", showButtonLabels: true });
 const prefsSaving = ref(false);
+
+// Keep globalStore in sync so buttons react instantly (no save needed for live preview)
+watch(() => prefs.value.showButtonLabels, (val) => {
+  globalStore.showButtonLabels = val;
+}, { immediate: true });
 const prefsSaveMsg = ref("");
 const prefsSaveOk = ref(true);
 
@@ -1401,10 +1426,11 @@ async function savePrefs() {
     // arrives as null and overwrites a previously-saved name on re-save.
     const toNull = (v) => (v === "" || v === undefined) ? null : v;
     await apiSavePrefs({
-      display_name:       toNull(p.displayName),
-      avatar_filename:    toNull(p.avatarFilename),
-      notes_default_sort: toNull(p.notesDefaultSort),
-      notes_default_view: toNull(p.notesDefaultView),
+      display_name:        toNull(p.displayName),
+      avatar_filename:     toNull(p.avatarFilename),
+      notes_default_sort:  toNull(p.notesDefaultSort),
+      notes_default_view:  toNull(p.notesDefaultView),
+      show_button_labels:  p.showButtonLabels,
     });
     prefsSaveOk.value = true;
     prefsSaveMsg.value = "Saved ✓";
@@ -1688,6 +1714,7 @@ onMounted(async () => {
       avatarFilename:    p.avatar_filename ?? null,
       notesDefaultSort:  p.notes_default_sort ?? "",
       notesDefaultView:  p.notes_default_view ?? "",
+      showButtonLabels:  p.show_button_labels !== false,
     };
   } catch {
     // defaults already set
