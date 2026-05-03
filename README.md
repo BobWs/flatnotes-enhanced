@@ -28,10 +28,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.1.0
+## 🆕 What's New in v1.3.0
 
-- **Duplicate Notes** – Copy notes to any folder with smart naming
-- **Bulk Delete** – Soft-delete multiple notes at once from the sidebar
+- **Multi-Instance Support** – You can now run **two or more Flatnotes-Enhanced instances** on the same server
 
 [View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
 
@@ -119,6 +118,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Metadata Sidecars | Creation/modification dates stored in `.meta.json` files. |
 | JSON Migration | Automatic migration from legacy JSON settings. |
 | Multi-User Ready | Database schema supports multiple users. |
+| Multi-Instance Support | Run **two or more Flatnotes-Enhanced instances** on the same server. |
 
 ### 🔐 Authentication
 
@@ -299,11 +299,25 @@ Open your browser and navigate to `http://localhost:8080`
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.3.0` – New: Multi-Instance Support (run **two or more Flatnotes-Enhanced instances** on the same server)
 - `v1.2.0` – current stable release ( Button Label Toggle & UI Polish)
 - `v1.1.0` – current stable release (duplicate notes + bulk delete)
 - `v1.0.2` – multi-arch support (ARM64)
 - `v1.0.1` – bug fix release (amd64 only)
 - `v1.0.0` – first stable release (amd64 only)
+
+## Multi-Instance Setup
+
+Running separate instances for work and personal notes? Flatnotes-Enhanced fully
+supports multi-instance deployment on the same server.
+
+- **Unique storage keys** – No session bleed, no cache conflicts
+- **Works with TOTP** – Each instance has its own 2FA secret
+- **Any reverse proxy** – Nginx, Caddy, Nginx Proxy Manager
+
+📖 **[Full multi-instance guide](MULTI_INSTANCE.md)**
+
+---
 
 ### Future Features
 

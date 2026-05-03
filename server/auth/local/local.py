@@ -78,28 +78,45 @@ class LocalAuth(BaseAuth):
     def authenticate(
         self, request: Request, token: str = Depends(oauth2_scheme)
     ):
-        # If no token is found in the header, check the cookies
+        # If no token in Authorization header, check cookies.
+        # The frontend namespaces the cookie name by origin (e.g. "token_<base64>")
+        # so multiple instances on different domains don't share session state.
+        # We accept "token" (legacy) or any "token_*" cookie whose JWT is valid.
         if token is None:
-            token = request.cookies.get("token")
-        # Validate the token
-        try:
-            self._validate_token(token)
-        except (JWTError, ValueError):
+            for name, value in request.cookies.items():
+                if (name == "token" or name.startswith("token_")) and value:
+                    try:
+                        self._validate_token(value)
+                        token = value
+                        break
+                    except Exception:
+                        continue
+
+        # Validate — raises 401 if still no valid token
+        if not self._validate_token_bool(token):
             raise HTTPException(
                 status_code=401,
-                detail="Invalid authentication credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
     def _validate_token(self, token: str) -> bool:
+        """Validate token, raising JWTError or ValueError on failure."""
         if token is None:
-            raise ValueError
+            raise ValueError("No token")
         payload = jwt.decode(
             token, self.secret_key, algorithms=[self.JWT_ALGORITHM]
         )
         username = payload.get("sub")
         if username is None or username.lower() != self.username:
-            raise ValueError
+            raise ValueError("Invalid subject")
+        return True
+
+    def _validate_token_bool(self, token: str) -> bool:
+        """Validate token, returning False instead of raising."""
+        try:
+            return self._validate_token(token)
+        except Exception:
+            return False
 
     def _create_access_token(self, data: dict):
         to_encode = data.copy()
