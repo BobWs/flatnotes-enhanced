@@ -108,7 +108,11 @@ Mousetrap.bindGlobal("ctrl+alt+n", () => {
 // 'CTRL + ALT/OPT + H' to go to home
 Mousetrap.bindGlobal("ctrl+alt+h", () => {
   if (route.name !== "login") {
-    router.push({ name: "home" });
+    if (globalStore.homeNoteEnabled && globalStore.homeNote) {
+      router.push({ name: "note", params: { title: globalStore.homeNote } });
+    } else {
+      router.push({ name: "home" });
+    }
     return false;
   }
 });
@@ -129,10 +133,21 @@ getConfig()
     // We do this after auth is confirmed (getConfig succeeds only when authenticated).
     try {
       const prefs = await getPrefs();
-      // Default is true — only override if explicitly set to false
       globalStore.showButtonLabels = prefs.show_button_labels !== false;
+      globalStore.homeNoteEnabled  = prefs.home_note_enabled === true;
+      globalStore.homeNote         = prefs.home_note || '';
+
+      // If a custom home note is configured and we're currently on the
+      // default home route, navigate there immediately on startup.
+      if (
+        globalStore.homeNoteEnabled &&
+        globalStore.homeNote &&
+        router.currentRoute.value.name === 'home'
+      ) {
+        router.replace({ name: 'note', params: { title: globalStore.homeNote } });
+      }
     } catch {
-      // Non-fatal: defaults to true (labels shown)
+      // Non-fatal: defaults apply
     }
     loadingIndicator.value.setLoaded();
   })

@@ -86,6 +86,8 @@ class UserPrefs(CustomBaseModel):
     quote_style: QuoteStyleDefinition = Field(default_factory=QuoteStyleDefinition)
     tag_colors: TagColorSettings = Field(default_factory=TagColorSettings)
     show_button_labels: bool = Field(True)
+    home_note_enabled: bool = Field(False)
+    home_note: Optional[str] = Field(None)
 
 
 class UserPrefsUpdate(CustomBaseModel):
@@ -99,7 +101,9 @@ class UserPrefsUpdate(CustomBaseModel):
     default_highlight: Optional[str] = Field(None)
     table_style: Optional[TableStyleDefinition] = Field(None)
     quote_style: Optional[QuoteStyleDefinition] = Field(None)
-    show_button_labels: Optional[bool] = Field(None)    
+    show_button_labels: Optional[bool] = Field(None)
+    home_note_enabled: Optional[bool] = Field(None)
+    home_note: Optional[str] = Field(None)    
 
 
 # ── Built-in defaults ─────────────────────────────────────────────────────────
@@ -332,7 +336,9 @@ def get_prefs() -> UserPrefs:
                     table_style=_dict_to_table_style(settings.table_style),
                     quote_style=_dict_to_quote_style(settings.quote_style),
                     tag_colors=_dict_to_tag_colors(settings.tag_colors or {}),
-                    show_button_labels=(settings.extra or {}).get("show_button_labels", True),                    
+                    show_button_labels=(settings.extra or {}).get("show_button_labels", True),
+                    home_note_enabled=(settings.extra or {}).get("home_note_enabled", False),
+                    home_note=(settings.extra or {}).get("home_note", None),
                 )
         except Exception as e:
             logger.error(f"Database error in get_prefs: {e}")
@@ -393,7 +399,13 @@ def save_prefs(prefs: UserPrefsUpdate) -> None:
             if prefs.show_button_labels is not None:
                 extra = dict(settings.extra or {})
                 extra["show_button_labels"] = prefs.show_button_labels
-                settings.extra = extra  # fresh dict triggers SQLAlchemy dirty-tracking
+                settings.extra = extra
+
+            if prefs.home_note_enabled is not None:
+                extra = dict(settings.extra or {})
+                extra["home_note_enabled"] = prefs.home_note_enabled
+                extra["home_note"] = prefs.home_note
+                settings.extra = extra
 
             db.commit()
             logger.info("Saved preferences to database")

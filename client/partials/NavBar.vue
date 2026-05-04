@@ -290,7 +290,11 @@ const showNewButton = computed(() => {
 
 function goHome() {
   localStorage.removeItem("fn_active_tags");
-  router.push({ name: "home" });
+  if (globalStore.homeNoteEnabled && globalStore.homeNote) {
+    router.push({ name: "note", params: { title: globalStore.homeNote } });
+  } else {
+    router.push({ name: "home" });
+  }
 }
 
 function goToPinned() {

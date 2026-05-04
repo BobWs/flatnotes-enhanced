@@ -28,9 +28,10 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.3.0
+## 🆕 What's New in v1.4.0
 
-- **Multi-Instance Support** – You can now run **two or more Flatnotes-Enhanced instances** on the same server
+* **Custom Home Note** – Set any note as your personal start page. The Home button, logo, and `Ctrl+Alt+H` shortcut all open it directly — including on app start.
+* **Preferences Tab Redesign** – Two-column layout keeps settings clean and scannable as more options are added.
 
 [View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
 
@@ -109,6 +110,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Home Button | Always-visible home button for quick access. |
 | Mobile Optimized | Responsive design for all screen sizes. |
 | Theme Toggle | Light/Dark/System theme with automatic OS detection. |
+| Preferences | Display name, avatar, default sort, note preview toggle, button label toggle, custom home note. |
 
 ### 💾 Data & Storage
 
@@ -156,7 +158,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Advanced | Table styling, quote styling. |
 | Tags | Global tag colors + per-tag overrides. |
 | Task Icons | Custom colors for task markers. |
-| Preferences | Display name, avatar, default sort, preview toggle, Button Label Toggle. |
+| Preferences | Display name, avatar, default sort, note preview toggle, button label toggle, custom home note. |
 
 ---
 
@@ -299,9 +301,10 @@ Open your browser and navigate to `http://localhost:8080`
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
-- `v1.3.0` – New: Multi-Instance Support (run **two or more Flatnotes-Enhanced instances** on the same server)
-- `v1.2.0` – current stable release ( Button Label Toggle & UI Polish)
-- `v1.1.0` – current stable release (duplicate notes + bulk delete)
+- `v1.4.0` – New: Custom Home Note + Preferences tab redesign
+- `v1.3.0` – Multi-Instance Support (run two or more Flatnotes-Enhanced instances on the same server)
+- `v1.2.0` – Button Label Toggle & UI Polish
+- `v1.1.0` – Duplicate notes + bulk delete
 - `v1.0.2` – multi-arch support (ARM64)
 - `v1.0.1` – bug fix release (amd64 only)
 - `v1.0.0` – first stable release (amd64 only)
@@ -316,6 +319,18 @@ supports multi-instance deployment on the same server.
 - **Any reverse proxy** – Nginx, Caddy, Nginx Proxy Manager
 
 📖 **[Full multi-instance guide](MULTI_INSTANCE.md)**
+
+
+## Custom Home Note
+
+Want to land on your dashboard, weekly planner, or project overview every time you open the app? Set any note as your personal start page.
+
+* **Loads on app start** — no extra click needed
+* **Home button always navigates there** — so does `Ctrl+Alt+H`
+* **Works with folder paths** — e.g. `Work/Weekly` or `Projects/Dashboard`
+* **Opt-in** — users who prefer the default quick-access home page are unaffected
+
+**Setup:** Settings → Preferences → Custom home note → toggle on → enter note title → Save.
 
 ---
 

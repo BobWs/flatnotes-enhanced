@@ -7,10 +7,14 @@ export const useGlobalStore = defineStore("global", () => {
   // Whether to show text labels next to nav/toolbar buttons.
   // true = labels visible (default), false = icons only.
   const showButtonLabels = ref(true);
+  // Custom home note: when enabled the Home button navigates to a specific note
+  // instead of the default quick-access home page.
+  const homeNoteEnabled = ref(false);
+  const homeNote = ref('');
 
   function bumpPinned() {
     pinnedVersion.value++;
   }
 
-  return { config, pinnedVersion, bumpPinned, showButtonLabels };
+  return { config, pinnedVersion, bumpPinned, showButtonLabels, homeNoteEnabled, homeNote };
 });
