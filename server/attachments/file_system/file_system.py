@@ -14,9 +14,31 @@ from ..base import BaseAttachments
 from ..models import AttachmentCreateResponse, AttachmentInfo
 
 # Extensions treated as images (shown with inline preview in the UI)
-IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp"}
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".ico", ".avif", ".tiff", ".tif"}
 PDF_EXTENSIONS = {".pdf"}
-DOCUMENT_EXTENSIONS = {".docx", ".doc", ".xls", ".xlsx", ".numbers", ".pages", ".txt", ".rtf"}   # NEW
+DOCUMENT_EXTENSIONS = {
+    # Office / word processors
+    ".docx", ".doc", ".odt",
+    # Spreadsheets
+    ".xls", ".xlsx", ".ods", ".csv",
+    # Presentations
+    ".pptx", ".ppt", ".odp",
+    # Apple iWork
+    ".numbers", ".pages", ".key",
+    # Plain text / markup
+    ".txt", ".rtf", ".md", ".markdown",
+    ".json", ".yaml", ".yml", ".xml", ".html", ".htm",
+    # Archives
+    ".zip", ".gz", ".tar", ".7z", ".rar", ".bz2", ".xz",
+    # Code
+    ".js", ".ts", ".py", ".sh", ".rb", ".php",
+    # Audio
+    ".mp3", ".m4a", ".ogg", ".wav", ".flac", ".aac",
+    # Video
+    ".mp4", ".mkv", ".mov", ".avi", ".webm",
+    # Fonts
+    ".ttf", ".otf", ".woff",
+}
 
 
 class FileSystemAttachments(BaseAttachments):

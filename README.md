@@ -28,10 +28,10 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.4.0
+## 🆕 What's New in v1.4.1
 
-* **Custom Home Note** – Set any note as your personal start page. The Home button, logo, and `Ctrl+Alt+H` shortcut all open it directly — including on app start.
-* **Preferences Tab Redesign** – Two-column layout keeps settings clean and scannable as more options are added.
+- **Attachment System Overhaul** – 40+ file types supported with proper icons and colours (documents, spreadsheets, archives, audio, video, code, and more)
+- **Attachments Page Redesign** – Search, filter by usage (All/In use/Unused), sort by name/category/size/usage, and category badges
 
 [View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
 
@@ -67,7 +67,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Custom Highlights | Colored text highlighting with picker and default colors. |
 | Search & Replace | Full search/replace functionality (`Ctrl+H`). |
 | Smart Autocomplete | Real-time suggestions for tags, callouts, variables, and task icons. |
-| File Attachments | Support for PDF, DOCX, XLSX, TXT, RTF, Pages, and Numbers. |
+| File Attachments | Support for 40+ file types – documents (`DOCX, ODT, TXT`), spreadsheets (`XLSX, CSV`), presentations (`PPTX`), archives (`ZIP, RAR, 7Z`), audio (`MP3, WAV, FLAC`), video (`MP4, MKV, MOV`), code files (`JS, PY, HTML, JSON`), and more. Proper icons and colours for each category. |
 | PDF Preview | In-browser preview for attached PDFs. |
 
 ### 🎨 Visual Customization
@@ -144,7 +144,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Trash | Manage soft-deleted notes. |
 | Bookmarks | View all pinned notes. |
 | Templates | Manage note templates. |
-| Attachments | Browse and delete file attachments. |
+| Attachments | Browse, search, filter, and sort file attachments. Category badges show file types at a glance. |
 | Settings | Full customization interface. |
 
 ---
@@ -301,6 +301,7 @@ Open your browser and navigate to `http://localhost:8080`
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.4.1` – Attachment System Overhaul + Attachments Page redesign (search, filter, sort)
 - `v1.4.0` – New: Custom Home Note + Preferences tab redesign
 - `v1.3.0` – Multi-Instance Support (run two or more Flatnotes-Enhanced instances on the same server)
 - `v1.2.0` – Button Label Toggle & UI Polish
@@ -336,6 +337,7 @@ Want to land on your dashboard, weekly planner, or project overview every time y
 
 ### Future Features
 
+- Wikilink Popup Modal - planned!
 - Modal table editor – planned!
 - Spreadsheet in notes – planned!
 - Auto-delete trash after N days
