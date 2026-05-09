@@ -515,6 +515,19 @@ async function init() {
     return;
   }
 
+  // ── Navigation guard: exit edit mode when switching to a different note ──────
+  // If the user navigates away while editing (e.g. via the sidebar), we must
+  // reset edit mode and clear the stale title so the new note loads cleanly.
+  // Without this, newTitle keeps the old note's title, causing duplicate-note
+  // errors when the editor auto-saves. (Discussion #23)
+  if (editMode.value) {
+    editMode.value = false;
+    newTitle.value = "";
+    unsavedChanges.value = false;
+    clearContentChangedTimeout();   // cancel any pending auto-save from old note
+    setBeforeUnloadConfirmation(false);
+  }
+
   loadingIndicator.value.setLoading();
   if (props.title) {
     getNote(props.title)

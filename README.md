@@ -28,10 +28,10 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.4.1
+## 🆕 What's New in v1.4.2
 
-- **Attachment System Overhaul** – 40+ file types supported with proper icons and colours (documents, spreadsheets, archives, audio, video, code, and more)
-- **Attachments Page Redesign** – Search, filter by usage (All/In use/Unused), sort by name/category/size/usage, and category badges
+- **Bug Fix – Note switching while editing** 
+- **Fixed:** Switching to a different note while the editor was open caused title mismatches, duplicate note errors, and a broken editor state.
 
 [View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
 
@@ -301,6 +301,7 @@ Open your browser and navigate to `http://localhost:8080`
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.4.2` – Bug fix: note switching while editing (clean editor close)
 - `v1.4.1` – Attachment System Overhaul + Attachments Page redesign (search, filter, sort)
 - `v1.4.0` – New: Custom Home Note + Preferences tab redesign
 - `v1.3.0` – Multi-Instance Support (run two or more Flatnotes-Enhanced instances on the same server)
