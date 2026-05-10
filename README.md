@@ -178,7 +178,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Settings page (Tags tab) | ![Settings - Tags](images/settings_tags_1.png), <br> ![Settings - Tags](images/settings_tags_2.png) |
 | Settings page (Task Icons tab) | ![Settings - Task Icons](images/settings_task_1.png), <br> ![Settings - Task Icons](images/settings_task_2.png) |
 | Settings page (Account tab) | ![Settings - Account](images/settings_account.png) |
-| Note Editor (insert wikilink) | ![ToastEditor - Wikilink button](attachments/wikilink_editor_button.png), <br>  ![ToastEditor - popup modal](attachments/wikilink_popup_modal.png) |
+| Note Editor (insert wikilink) | ![ToastEditor - Wikilink button](images/wikilink_editor_button.png), <br>  ![ToastEditor - popup modal](images/wikilink_popup_modal.png) |
 ---
 
 ## 🚀 Getting Started
