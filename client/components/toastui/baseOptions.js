@@ -185,14 +185,17 @@ const customHTMLRenderer = {
     // Check for highlight with color syntax: ==text==:color or ==text=={color}
     const hasHighlight = /==.+?==(?::[a-zA-Z]+|\{[a-zA-Z]+\})?/s.test(processed);
     const hasTag = /(?:^|\s)#[a-zA-Z0-9_-]+/.test(processed);
+    const hasWikilink = /\[\[.+?\]\]/.test(processed);
 
-    if (!hasHighlight && !hasTag) {
+    if (!hasHighlight && !hasTag && !hasWikilink) {
       return { type: "text", content: processed };
     }
 
     // Pattern: ==text== followed by optional :color or {color}
     const HIGHLIGHT_RE = /==((?:[^=]|=[^=])+?)==(?::([a-zA-Z]+)|\{([a-zA-Z]+)\})?/gs;
     const TAG_RE = /(?<![a-zA-Z0-9_-])#([a-zA-Z0-9_][a-zA-Z0-9_/-]*)/g;
+    // [[Note Title]] — display text after | is used as label but title is always the link target
+    const WIKILINK_RE = /\[\[([^\]]+?)(?:\|([^\]]+?))?\]\]/g;
 
     const matches = [];
     let m;
@@ -219,6 +222,26 @@ const customHTMLRenderer = {
       }
     }
 
+    const wl = new RegExp(WIKILINK_RE.source, "g");
+    while ((m = wl.exec(processed)) !== null) {
+      const overlaps = matches.some(
+        (ex) => m.index >= ex.start && m.index < ex.end
+      );
+      if (!overlaps) {
+        // m[1] = note title (everything before | or end of [[]])
+        // m[2] = display label (everything after |, optional)
+        const target = m[1].trim();
+        const label  = m[2] ? m[2].trim() : null;
+        matches.push({
+          start: m.index,
+          end:   m.index + m[0].length,
+          type:  "wikilink",
+          target,
+          label,
+        });
+      }
+    }
+
     if (matches.length === 0) {
       return { type: "text", content: processed };
     }
@@ -242,6 +265,20 @@ const customHTMLRenderer = {
         out += `<mark style="background-color: ${bgColor};">${escapeHtml(match.inner)}</mark>`;
       } else if (match.type === "tag") {
         out += renderTagChip(match.inner);
+      } else if (match.type === "wikilink") {
+        // Always route to match.target (the note title), never to the display label.
+        // The href is built via router.resolve so it uses the app's hash routing.
+        const href = router.resolve({
+          name: "note",
+          params: { title: match.target },
+        }).href;
+        // Display text: use label if provided, otherwise the note title.
+        // The |pipe and everything after it is purely cosmetic — never part of the URL.
+        const display = escapeHtml(match.label || match.target);
+        const tooltip = match.label
+          ? `[[${escapeHtml(match.target)}|${escapeHtml(match.label)}]]`
+          : `[[${escapeHtml(match.target)}]]`;
+        out += `<a href="${href}" class="fn-wikilink" title="${tooltip}">${display}</a>`;
       }
       pos = match.end;
     }

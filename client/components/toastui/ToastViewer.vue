@@ -133,69 +133,29 @@ function processDocumentLinks(el) {
   // Colour per file category — used for the icon background
   const colorMap = {
     // Documents
-    pdf:      '#EF4444',
-    doc:      '#2B5797',
-    docx:     '#2B5797',
-    odt:      '#2B5797',
+    'pdf': '#EF4444', 'doc': '#2B5797', 'docx': '#2B5797', 'odt': '#2B5797',
     // Spreadsheets
-    xls:      '#217346',
-    xlsx:     '#217346',
-    ods:      '#217346',
-    csv:      '#217346',
+    'xls': '#217346', 'xlsx': '#217346', 'ods': '#217346', 'csv': '#217346',
     // Presentations
-    ppt:      '#D04423',
-    pptx:     '#D04423',
-    odp:      '#D04423',
+    'ppt': '#D04423', 'pptx': '#D04423', 'odp': '#D04423',
     // Apple iWork
-    numbers:  '#FFA500',
-    pages:    '#FFA500',
-    key:      '#FFA500',
+    'numbers': '#FFA500', 'pages': '#FFA500', 'key': '#FFA500',
     // Plain text / markup
-    txt:      '#6B7280',
-    rtf:      '#6B7280',
+    'txt': '#6B7280', 'rtf': '#6B7280',
     // Structured web
-    html:     '#3B82F6',
-    htm:      '#3B82F6',
+    'html': '#3B82F6', 'htm': '#3B82F6',
     // Structured data
-    json:     '#F59E0B',
-    yaml:     '#F59E0B',
-    yml:      '#F59E0B',
-    xml:      '#F59E0B',
-    toml:     '#F59E0B',
+    'json': '#F59E0B', 'yaml': '#F59E0B', 'yml': '#F59E0B', 'xml': '#F59E0B', 'toml': '#F59E0B',
     // Archives
-    zip:      '#8B5CF6',
-    gz:       '#8B5CF6',
-    tar:      '#8B5CF6',
-    '7z':     '#8B5CF6',
-    rar:      '#8B5CF6',
-    bz2:      '#8B5CF6',
-    xz:       '#8B5CF6',
+    'zip': '#8B5CF6', 'gz': '#8B5CF6', 'tar': '#8B5CF6', '7z': '#8B5CF6', 'rar': '#8B5CF6', 'bz2': '#8B5CF6', 'xz': '#8B5CF6',
     // Code
-    js:       '#3776AB',
-    ts:       '#3776AB',
-    py:       '#3776AB',
-    sh:       '#3776AB',
-    rb:       '#3776AB',
-    php:      '#3776AB',
-    vue:      '#3776AB',    
+    'js': '#3776AB', 'ts': '#3776AB', 'py': '#3776AB', 'sh': '#3776AB', 'rb': '#3776AB', 'php': '#3776AB', 'vue': '#3776AB',
     // Audio
-    mp3:      '#EC4899',
-    m3u:      '#EC4899',
-    m4a:      '#EC4899',
-    ogg:      '#EC4899',
-    wav:      '#EC4899',
-    flac:     '#EC4899',
-    aac:      '#EC4899',
+    'mp3': '#EC4899', 'm3u': '#EC4899', 'm4a': '#EC4899', 'ogg': '#EC4899', 'wav': '#EC4899', 'flac': '#EC4899', 'aac': '#EC4899',
     // Video
-    mp4:      '#F97316',
-    mkv:      '#F97316',
-    mov:      '#F97316',
-    avi:      '#F97316',
-    webm:     '#F97316',
+    'mp4': '#F97316', 'mkv': '#F97316', 'mov': '#F97316', 'avi': '#F97316', 'webm': '#F97316',
     // Fonts
-    ttf:      '#6B7280',
-    otf:      '#6B7280',
-    woff:     '#6B7280',
+    'ttf': '#6B7280', 'otf': '#6B7280', 'woff': '#6B7280',
   };
 
   // SVG icon paths per category — used inside the icon background circle

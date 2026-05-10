@@ -28,10 +28,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.4.2
+## 🆕 What's New in v1.5.0
 
-- **Bug Fix – Note switching while editing** 
-- **Fixed:** Switching to a different note while the editor was open caused title mismatches, duplicate note errors, and a broken editor state.
+* **Wikilink Popup Modal** – You can now insert wikilinks using a searchable popup modal. No more memorizing note titles or typing `[[Note]]` manually.
 
 [View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
 
@@ -69,6 +68,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Smart Autocomplete | Real-time suggestions for tags, callouts, variables, and task icons. |
 | File Attachments | Support for 40+ file types – documents (`DOCX, ODT, TXT`), spreadsheets (`XLSX, CSV`), presentations (`PPTX`), archives (`ZIP, RAR, 7Z`), audio (`MP3, WAV, FLAC`), video (`MP4, MKV, MOV`), code files (`JS, PY, HTML, JSON`), and more. Proper icons and colours for each category. |
 | PDF Preview | In-browser preview for attached PDFs. |
+| Wikilink Popup Modal | Insert wikilinks using a searchable popup modal |
 
 ### 🎨 Visual Customization
 
@@ -178,7 +178,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Settings page (Tags tab) | ![Settings - Tags](images/settings_tags_1.png), <br> ![Settings - Tags](images/settings_tags_2.png) |
 | Settings page (Task Icons tab) | ![Settings - Task Icons](images/settings_task_1.png), <br> ![Settings - Task Icons](images/settings_task_2.png) |
 | Settings page (Account tab) | ![Settings - Account](images/settings_account.png) |
-
+| Note Editor (insert wikilink) | ![ToastEditor - Wikilink button](attachments/wikilink_editor_button.png), <br>  ![ToastEditor - popup modal](attachments/wikilink_popup_modal.png) |
 ---
 
 ## 🚀 Getting Started
@@ -301,6 +301,7 @@ Open your browser and navigate to `http://localhost:8080`
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.5.0` – New: Wikilink Popup Modal – Link notes without typing
 - `v1.4.2` – Bug fix: note switching while editing (clean editor close)
 - `v1.4.1` – Attachment System Overhaul + Attachments Page redesign (search, filter, sort)
 - `v1.4.0` – New: Custom Home Note + Preferences tab redesign
@@ -338,7 +339,7 @@ Want to land on your dashboard, weekly planner, or project overview every time y
 
 ### Future Features
 
-- Wikilink Popup Modal - planned!
+- Wikilink Popup Modal - done!
 - Modal table editor – planned!
 - Spreadsheet in notes – planned!
 - Auto-delete trash after N days

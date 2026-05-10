@@ -25,6 +25,12 @@
       @select="insertHighlightWithColor"
       @close="showColorPicker = false"
     />
+
+    <WikilinkModal
+      :show="showWikilinkModal"
+      @insert="insertWikilink"
+      @close="showWikilinkModal = false"
+    />
   </div>
 </template>
 
@@ -42,6 +48,7 @@ import { tagColorSettings } from "../../tagColorStore.js";
 import { loadHeaderColors, loadHighlightColors } from "../../appearanceStore.js";
 import { VARIABLES } from "../../variables.js";
 import { TASK_ICONS } from "../../taskIcons.js";
+import WikilinkModal from "../WikilinkModal.vue";
 
 const props = defineProps({
   initialValue: String,
@@ -53,6 +60,7 @@ const emit = defineEmits(["change", "keydown"]);
 
 const editorElement = ref();
 const isSearchReplaceVisible = ref(false);
+const showWikilinkModal = ref(false);
 let toastEditor;
 
 const acVisible = ref(false);
@@ -112,6 +120,23 @@ function insertHighlightWithColor(color) {
   showColorPicker.value = false;
   toastEditor.focus();
 }
+
+const wikilinkButton = {
+  name: "wikilink",
+  tooltip: "Insert note link ([[Note]])",
+  command: "wikilink",
+  text: "[[]]",
+  className: "toastui-editor-toolbar-icons",
+  style: {
+    background: "none",
+    color: "rgb(var(--theme-brand, 248 166 107))",
+    fontSize: "13px",
+    fontWeight: "800",
+    fontFamily: "monospace",
+    width: "36px",
+    letterSpacing: "-1px",
+  },
+};
 
 const highlightButton = {
   name: "highlight",
@@ -186,7 +211,7 @@ onMounted(async () => {
         ["ul", "ol", "task", "indent", "outdent"],
         ["table", "image", "link"],
         ["code", "codeblock"],
-        [highlightButton, searchReplaceButton, highlightColorButton],
+        [highlightButton, searchReplaceButton, highlightColorButton, wikilinkButton],
       ];
 
   toastEditor = new Editor({
@@ -253,6 +278,15 @@ onMounted(async () => {
   toastEditor.addCommand("wysiwyg", "highlightColor", () => {
     colorPickerPosition.value = getCursorPosition();
     showColorPicker.value = true;
+    return true;
+  });
+  toastEditor.addCommand("markdown", "wikilink", () => {
+    showWikilinkModal.value = true;
+    return true;
+  });
+  toastEditor.addCommand("wysiwyg", "wikilink", () => {
+    showWikilinkModal.value = true;
+    return true;
     return true;
   });
 
@@ -554,6 +588,13 @@ function insertTagCompletion(tag) {
   acModeRef.value = "tag";
 
   setTimeout(() => { attachInputListener(); }, 50);
+}
+
+function insertWikilink({ target, display }) {
+  const text = display ? `[[${target}|${display}]]` : `[[${target}]]`;
+  toastEditor.insertText(text);
+  showWikilinkModal.value = false;
+  toastEditor.focus();
 }
 
 function getMarkdown() {
