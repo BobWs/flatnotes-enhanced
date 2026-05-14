@@ -229,11 +229,14 @@ function processDocumentLinks(el) {
 
   imgs.forEach((img) => {
     const src = img.getAttribute("src") || "";
-    // Match both relative ("attachments/file.ext") and absolute ("/attachments/file.ext") URLs
-    if (!src.includes('attachments/')) return;
-    // But exclude actual external URLs that happen to contain the word "attachments"
-    if (src.startsWith('http') && !src.includes('/attachments/')) return;
+    const srcLower = src.toLowerCase();
+    // Match both relative ("attachments/file.ext") and absolute ("/attachments/file.ext") URLs,
+    // case-insensitively (some systems or migrations may produce /Attachments/… paths).
+    if (!srcLower.includes('attachments/')) return;
+    // Exclude actual external URLs that happen to contain the word "attachments"
+    if (src.startsWith('http') && !srcLower.includes('/attachments/')) return;
 
+    // Always lowercase the extension for all subsequent Set/map lookups.
     const rawExt = src.split('.').pop().split('?')[0].toLowerCase();
     // Leave actual images as <img> tags
     if (IMAGE_EXTS.has(rawExt)) return;

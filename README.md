@@ -2,6 +2,7 @@
 
 [![License](https://img.shields.io/github/license/BobWs/flatnotes-enhanced)](LICENSE)
 [![GitHub release](https://img.shields.io/github/v/release/BobWs/flatnotes-enhanced)](https://github.com/BobWs/flatnotes-enhanced/releases)
+[![Docker Pulls](https://img.shields.io/docker/pulls/dockerbobw/flatnotes-enhanced)](https://img.shields.io/docker/pulls/dockerbobw/flatnotes-enhanced)
 
 
 **A professional-grade, feature-rich fork of [Flatnotes](https://github.com/Dullage/flatnotes).**
@@ -28,9 +29,10 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.5.0
+## 🆕 What's New in v1.5.1
 
-* **Wikilink Popup Modal** – You can now insert wikilinks using a searchable popup modal. No more memorizing note titles or typing `[[Note]]` manually.
+- **Case-insensitive attachments** – `![image](attachments/Photo.png)` now works even if the file is named `photo.png`
+- **Archive folder scanning** – Attachments in archived notes are now correctly marked as "in use"
 
 [View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
 
@@ -301,6 +303,7 @@ Open your browser and navigate to `http://localhost:8080`
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.5.1` – Bug fixes: case-insensitive attachments + archive folder scanning
 - `v1.5.0` – New: Wikilink Popup Modal – Link notes without typing
 - `v1.4.2` – Bug fix: note switching while editing (clean editor close)
 - `v1.4.1` – Attachment System Overhaul + Attachments Page redesign (search, filter, sort)

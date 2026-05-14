@@ -64,11 +64,27 @@ class FileSystemAttachments(BaseAttachments):
         )
 
     def get(self, filename: str) -> FileResponse:
-        """Get a specific attachment."""
+        """Get a specific attachment, using case-insensitive lookup.
+
+        Strategy: try an exact match first (fast path, covers the common case).
+        If that misses, scan the directory for a case-insensitive match so that
+        a note linking to ``Photo.PNG`` still resolves when the file on disk is
+        ``photo.png``.  The file is served under its original on-disk name;
+        nothing is renamed.
+        """
         is_valid_filename(filename)
         filepath = os.path.join(self.storage_path, filename)
         if not os.path.isfile(filepath):
-            raise FileNotFoundError(f"'{filename}' not found.")
+            # Slow path: case-insensitive scan
+            lower = filename.lower()
+            try:
+                match = next(
+                    e.name for e in os.scandir(self.storage_path)
+                    if e.is_file() and e.name.lower() == lower
+                )
+                filepath = os.path.join(self.storage_path, match)
+            except StopIteration:
+                raise FileNotFoundError(f"'{filename}' not found.")
         return FileResponse(filepath)
 
     def list_all(self) -> List[AttachmentInfo]:
@@ -81,15 +97,19 @@ class FileSystemAttachments(BaseAttachments):
         if not os.path.isdir(self.storage_path):
             return []
 
-        # Build a lookup: {filename: [note_title, ...]} by scanning .md files
+        # Build a lookup: {filename_lower: [note_title, ...]} by scanning .md files.
+        # Keys are stored lowercased so that a reference to "Photo.PNG" in a note
+        # matches a file named "photo.png" on disk (and vice-versa).
         usage_map: dict[str, list[str]] = {}
         notes_path = self.base_path
         for root, dirs, files in os.walk(notes_path):
-            # Skip system directories and the attachments folder itself
+            # Skip system/storage directories that should never contribute to usage.
+            # NOTE: _archive is intentionally NOT excluded — archived notes still
+            # own their attachments and should prevent them from appearing "unused".
+            # _trash IS excluded — deleted notes no longer count as active references.
             dirs[:] = [
                 d for d in dirs
-                if d not in ("attachments", ".flatnotes", ".metadata",
-                             "_trash", "_archive")
+                if d not in ("attachments", ".flatnotes", ".metadata", "_trash")
             ]
             for fname in files:
                 if not fname.endswith(".md"):
@@ -106,7 +126,7 @@ class FileSystemAttachments(BaseAttachments):
                 # Find all attachment references: "attachments/<filename>"
                 referenced = re.findall(r"attachments/([^\s\)\]\"']+)", content)
                 for ref in referenced:
-                    decoded = urllib.parse.unquote(ref)
+                    decoded = urllib.parse.unquote(ref).lower()   # normalise case
                     usage_map.setdefault(decoded, [])
                     if note_title not in usage_map[decoded]:
                         usage_map[decoded].append(note_title)
@@ -125,16 +145,29 @@ class FileSystemAttachments(BaseAttachments):
                 is_image=ext in IMAGE_EXTENSIONS,
                 is_pdf=ext in PDF_EXTENSIONS,
                 is_document = ext in DOCUMENT_EXTENSIONS,
-                used_in=usage_map.get(entry.name, []),
+                used_in=usage_map.get(entry.name.lower(), []),  # case-insensitive lookup
             ))
         return results
 
     def delete(self, filename: str) -> None:
-        """Permanently delete an attachment file from disk."""
+        """Permanently delete an attachment file from disk.
+
+        Uses case-insensitive lookup so that the delete API works even when the
+        caller's casing differs from the on-disk filename.
+        """
         is_valid_filename(filename)
         filepath = os.path.join(self.storage_path, filename)
         if not os.path.isfile(filepath):
-            raise FileNotFoundError(f"'{filename}' not found.")
+            # Case-insensitive fallback
+            lower = filename.lower()
+            try:
+                match = next(
+                    e.name for e in os.scandir(self.storage_path)
+                    if e.is_file() and e.name.lower() == lower
+                )
+                filepath = os.path.join(self.storage_path, match)
+            except StopIteration:
+                raise FileNotFoundError(f"'{filename}' not found.")
         os.remove(filepath)
 
     # ── Private helpers ───────────────────────────────────────────────────────
