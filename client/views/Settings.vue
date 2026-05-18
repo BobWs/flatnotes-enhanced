@@ -650,7 +650,7 @@
                   }"
                   placeholder="parent"
                   title="Parent tag name"
-                  class="w-24 text-sm bg-theme-background-elevated border border-theme-border
+                  class="w-28 text-sm bg-theme-background-elevated border border-theme-border
                          rounded px-2 py-1 outline-none focus:border-theme-brand text-theme-text"
                 />
                 <span class="text-theme-text-very-muted shrink-0 select-none text-sm">/</span>
@@ -663,7 +663,7 @@
                   }"
                   placeholder="child"
                   title="Child tag name (optional — leave empty for top-level tag)"
-                  class="w-24 text-sm bg-theme-background-elevated border border-theme-border
+                  class="w-28 text-sm bg-theme-background-elevated border border-theme-border
                          rounded px-2 py-1 outline-none focus:border-theme-brand text-theme-text"
                 />
               </div>
@@ -676,7 +676,7 @@
               />
               <input
                 v-model="row.color"
-                class="w-20 text-xs font-mono bg-theme-background-elevated border border-theme-border
+                class="w-24 text-xs font-mono bg-theme-background-elevated border border-theme-border
                        rounded px-2 py-1 outline-none focus:border-theme-brand text-theme-text uppercase"
               />
 
@@ -817,7 +817,7 @@
                 />
                 <input
                   v-model="row.color"
-                  class="w-20 text-xs font-mono bg-theme-background-elevated border border-theme-border
+                  class="w-24 text-xs font-mono bg-theme-background-elevated border border-theme-border
                          rounded px-1.5 py-1 outline-none focus:border-theme-brand text-theme-text uppercase"
                   @input="row.color = normalizeHex($event.target.value)"
                 />
@@ -970,18 +970,20 @@
           <p class="text-xs text-theme-text-very-muted mt-1.5">Default sort order for note lists.</p>
         </div>
 
-        <!-- Default view placeholder — grid/list view not yet implemented in frontend -->
-        <div class="p-4 rounded-lg border border-theme-border bg-theme-background opacity-50">
+        <!-- Default view -->
+        <div class="p-4 rounded-lg border border-theme-border bg-theme-background">
           <label class="block text-sm font-medium text-theme-text mb-1">Default note view</label>
           <select
-            disabled
+            v-model="prefs.notesDefaultView"
             class="w-full text-sm bg-theme-background-elevated border border-theme-border rounded px-3 py-2
-                   outline-none text-theme-text cursor-not-allowed"
+                   outline-none focus:border-theme-brand text-theme-text"
           >
-            <option>App default</option>
+            <option value="normal">Normal (999px)</option>
+            <option value="wide">Wide (1400px)</option>
+            <option value="fullscreen">Full Screen</option>
           </select>
           <p class="text-xs text-theme-text-very-muted mt-1.5">
-            Grid / list view toggle coming in a future update.
+            Wide gives more room on large desktops without stretching to full screen. Full Screen uses all available width.
           </p>
         </div>
       </div>
@@ -1464,12 +1466,17 @@ async function saveQuoteStyle() {
 }
 
 // ── Preferences ───────────────────────────────────────────────────────────────
-const prefs = ref({ displayName: "", avatarFilename: null, notesDefaultSort: "", notesDefaultView: "", showButtonLabels: true, homeNoteEnabled: false, homeNote: "" });
+const prefs = ref({ displayName: "", avatarFilename: null, notesDefaultSort: "", notesDefaultView: "normal", showButtonLabels: true, homeNoteEnabled: false, homeNote: "" });
 const prefsSaving = ref(false);
 
 // Keep globalStore in sync so buttons react instantly (no save needed for live preview)
 watch(() => prefs.value.showButtonLabels, (val) => {
   globalStore.showButtonLabels = val;
+}, { immediate: true });
+
+// Sync note view mode to globalStore so layout updates live on change
+watch(() => prefs.value.notesDefaultView, (val) => {
+  globalStore.noteViewMode = (val === 'fullscreen' || val === 'wide') ? val : 'normal';
 }, { immediate: true });
 
 // Sync home note settings to globalStore so NavBar reacts without requiring save
@@ -1517,7 +1524,7 @@ async function savePrefs() {
       display_name:        toNull(p.displayName),
       avatar_filename:     toNull(p.avatarFilename),
       notes_default_sort:  toNull(p.notesDefaultSort),
-      notes_default_view:  toNull(p.notesDefaultView),
+      notes_default_view:  (p.notesDefaultView === 'fullscreen' || p.notesDefaultView === 'wide') ? p.notesDefaultView : 'normal',
       show_button_labels:  p.showButtonLabels,
       home_note_enabled:   p.homeNoteEnabled,
       home_note:           p.homeNote ? p.homeNote.trim() : null,
@@ -1803,7 +1810,7 @@ onMounted(async () => {
       displayName:       p.display_name ?? "",
       avatarFilename:    p.avatar_filename ?? null,
       notesDefaultSort:  p.notes_default_sort ?? "",
-      notesDefaultView:  p.notes_default_view ?? "",
+      notesDefaultView:  (p.notes_default_view === 'fullscreen' || p.notes_default_view === 'wide') ? p.notes_default_view : 'normal',
       showButtonLabels:  p.show_button_labels !== false,
       homeNoteEnabled:   p.home_note_enabled === true,
       homeNote:          p.home_note || "",

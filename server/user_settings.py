@@ -382,8 +382,12 @@ def save_prefs(prefs: UserPrefsUpdate) -> None:
                 settings.avatar_filename = prefs.avatar_filename
             if prefs.notes_default_sort is not None:
                 settings.notes_default_sort = prefs.notes_default_sort
+            # Always save notes_default_view — it's an explicit choice ('normal' or 'fullscreen'),
+            # never omitted, so the None guard would incorrectly skip clearing it.
             if prefs.notes_default_view is not None:
                 settings.notes_default_view = prefs.notes_default_view
+            else:
+                settings.notes_default_view = 'normal'
 
             if prefs.header_colors is not None:
                 settings.header_colors = [c.dict() for c in prefs.header_colors]
@@ -421,7 +425,7 @@ def save_prefs(prefs: UserPrefsUpdate) -> None:
         display_name=prefs.display_name if prefs.display_name is not None else existing.display_name,
         avatar_filename=prefs.avatar_filename if prefs.avatar_filename is not None else existing.avatar_filename,
         notes_default_sort=prefs.notes_default_sort if prefs.notes_default_sort is not None else existing.notes_default_sort,
-        notes_default_view=prefs.notes_default_view if prefs.notes_default_view is not None else existing.notes_default_view,
+        notes_default_view=prefs.notes_default_view if prefs.notes_default_view is not None else 'normal',
         header_colors=prefs.header_colors if prefs.header_colors is not None else existing.header_colors,
         highlight_colors=prefs.highlight_colors if prefs.highlight_colors is not None else existing.highlight_colors,
         default_highlight=prefs.default_highlight if prefs.default_highlight is not None else existing.default_highlight,

@@ -1,49 +1,83 @@
 <template>
+  <!--
+    Outer shell is always full-width so the sidebar's fixed 288px offset
+    eats into the outer padding/margin space, NOT into the note content.
+    Inner centering is applied per-route via the contentClass computed.
+  -->
   <LoadingIndicator
     ref="loadingIndicator"
-    class="container mx-auto flex h-screen flex-col px-2 py-4 print:max-w-full"
+    class="flex h-screen flex-col py-4 print:max-w-full w-full px-2 md:px-4"
   >
     <PrimeToast />
     <SearchModal v-model="isSearchModalVisible" />
 
-    <!-- Tag Sidebar -->
+    <!-- Tag Sidebar (fixed-position, overlays content) -->
     <TagSidebar
       :isOpen="isSidebarOpen"
       @close="isSidebarOpen = false"
       @tagsChanged="handleTagsChanged"
     />
 
-    <!-- Folder Sidebar -->
+    <!-- Folder Sidebar (fixed-position, overlays content) -->
     <FolderSidebar
       :isOpen="isFolderSidebarOpen"
       @close="isFolderSidebarOpen = false"
     />
 
-    <!-- Main content area with fixed header and scrollable content -->
+    <!-- Main content area — shifts right when sidebar opens. The outer shell is
+         full-width so the 288px shift is absorbed by space outside the inner
+         centering wrapper rather than shrinking the note content. -->
     <div
       :class="[
         'flex flex-col flex-1 min-h-0 transition-all duration-300',
         (isSidebarOpen || isFolderSidebarOpen) ? 'md:ml-72' : 'md:ml-0',
       ]"
     >
-      <!-- Fixed NavBar - does not scroll -->
-      <div class="shrink-0">
-        <NavBar
-          v-if="showNavBar"
-          ref="navBar"
-          :class="{ 'print:hidden': route.name == 'note' }"
-          :hide-logo="true"
-          :isSidebarOpen="isSidebarOpen"
-          :isFolderSidebarOpen="isFolderSidebarOpen"
-          @toggleSearchModal="toggleSearchModal"
-          @toggleSidebar="openTagSidebar"
-          @toggleFolderSidebar="openFolderSidebar"
-        />
-      </div>
+      <!--
+        Inner centering wrapper — constrains both the NavBar and the page content
+        to the same max-width so they always stay aligned with each other.
 
-      <!-- Scrollable content area -->
-      <div class="flex-1 overflow-y-auto min-h-0">
-        <RouterView :activeTags="activeTags" />
+        Normal mode  : max-w-[999px] mx-auto  (centered column, same width as before)
+        Fullscreen on note routes: no max-w — full available width with outer padding
+        Non-note pages: always max-w-[999px] mx-auto regardless of view mode
+      -->
+      <div
+        :class="[
+          'flex flex-col flex-1 min-h-0',
+          contentWidthClass,
+        ]"
+      >
+        <!-- NavBar — always shrink-0, inherits the same width as content below -->
+        <div class="shrink-0">
+          <NavBar
+            v-if="showNavBar"
+            ref="navBar"
+            :class="{ 'print:hidden': route.name == 'note' }"
+            :hide-logo="true"
+            :isSidebarOpen="isSidebarOpen"
+            :isFolderSidebarOpen="isFolderSidebarOpen"
+            @toggleSearchModal="toggleSearchModal"
+            @toggleSidebar="openTagSidebar"
+            @toggleFolderSidebar="openFolderSidebar"
+          />
+        </div>
+
+        <!-- Note routes: flex column so Note.vue's h-full resolves correctly -->
+        <div
+          v-if="isNoteRoute"
+          class="flex-1 min-h-0 flex flex-col"
+        >
+          <RouterView :activeTags="activeTags" />
+        </div>
+
+        <!-- Non-note pages: scrollable, content has its own internal max-w -->
+        <div
+          v-else
+          class="flex-1 overflow-y-auto min-h-0"
+        >
+          <RouterView :activeTags="activeTags" />
+        </div>
+
       </div>
     </div>
   </LoadingIndicator>
@@ -136,7 +170,8 @@ getConfig()
       globalStore.showButtonLabels = prefs.show_button_labels !== false;
       globalStore.homeNoteEnabled  = prefs.home_note_enabled === true;
       globalStore.homeNote         = prefs.home_note || '';
-
+      const vm = prefs.notes_default_view;
+      globalStore.noteViewMode     = (vm === 'fullscreen' || vm === 'wide') ? vm : 'normal';
       // If a custom home note is configured and we're currently on the
       // default home route, navigate there immediately on startup.
       if (
@@ -158,6 +193,29 @@ getConfig()
 
 const showNavBar = computed(() => {
   return route.name !== "login";
+});
+
+// Note routes are the only ones that expand beyond normal width
+const isNoteRoute = computed(() => route.name === 'note' || route.name === 'new');
+
+// True when fullscreen mode is active AND we're on a note route
+const isFullscreenNoteRoute = computed(() =>
+  globalStore.noteViewMode === 'fullscreen' && isNoteRoute.value
+);
+
+// True when wide mode is active AND we're on a note route
+const isWideNoteRoute = computed(() =>
+  globalStore.noteViewMode === 'wide' && isNoteRoute.value
+);
+
+// The max-width class applied to the shared NavBar + content centering wrapper.
+// Normal : max-w-[999px]  — original behaviour, unchanged
+// Wide   : max-w-[1400px] — comfortable reading width on large desktops
+// Full   : w-full         — uses full available width (outer padding provides breathing room)
+const contentWidthClass = computed(() => {
+  if (isFullscreenNoteRoute.value) return 'w-full';
+  if (isWideNoteRoute.value)       return 'max-w-[1400px] w-full mx-auto';
+  return 'max-w-[999px] w-full mx-auto';
 });
 
 function toggleSearchModal() {

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full max-w-[999px] flex-col">
+  <div class="mx-auto flex h-full max-w-[999px] flex-col">
     <!-- Header -->
     <div class="flex items-center justify-between mb-4">
       <div>

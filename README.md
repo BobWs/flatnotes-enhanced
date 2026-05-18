@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/BobWs/flatnotes-enhanced)](LICENSE)
 [![GitHub release](https://img.shields.io/github/v/release/BobWs/flatnotes-enhanced)](https://github.com/BobWs/flatnotes-enhanced/releases)
-[![Docker Pulls](https://img.shields.io/docker/pulls/dockerbobw/flatnotes-enhanced)](https://img.shields.io/docker/pulls/dockerbobw/flatnotes-enhanced)
+[![Docker Pulls](https://img.shields.io/docker/pulls/dockerbobw/flatnotes-enhanced)](https://hub.docker.com/r/dockerbobw/flatnotes-enhanced)
 
 
 **A professional-grade, feature-rich fork of [Flatnotes](https://github.com/Dullage/flatnotes).**
@@ -29,10 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.5.1
+## 🆕 What's New in v1.6.0
 
-- **Case-insensitive attachments** – `![image](attachments/Photo.png)` now works even if the file is named `photo.png`
-- **Archive folder scanning** – Attachments in archived notes are now correctly marked as "in use"
+- **Note Views** – Choose your preferred reading width: Normal (999px), Wide (1400px), or Full Screen
 
 [View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
 
@@ -160,7 +159,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Advanced | Table styling, quote styling. |
 | Tags | Global tag colors + per-tag overrides. |
 | Task Icons | Custom colors for task markers. |
-| Preferences | Display name, avatar, default sort, note preview toggle, button label toggle, custom home note. |
+| Preferences | Display name, avatar, default sort, note view (Normal/Wide/Full Screen), note preview toggle, button label toggle, custom home note. |
 
 ---
 
@@ -303,6 +302,7 @@ Open your browser and navigate to `http://localhost:8080`
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.6.0` – Note Views: Normal (999px), Wide (1400px), Full Screen
 - `v1.5.1` – Bug fixes: case-insensitive attachments + archive folder scanning
 - `v1.5.0` – New: Wikilink Popup Modal – Link notes without typing
 - `v1.4.2` – Bug fix: note switching while editing (clean editor close)

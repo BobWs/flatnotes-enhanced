@@ -11,10 +11,12 @@ export const useGlobalStore = defineStore("global", () => {
   // instead of the default quick-access home page.
   const homeNoteEnabled = ref(false);
   const homeNote = ref('');
+  // Note view mode: 'normal' = centered container (default), 'fullscreen' = expanded width
+  const noteViewMode = ref('normal');
 
   function bumpPinned() {
     pinnedVersion.value++;
   }
 
-  return { config, pinnedVersion, bumpPinned, showButtonLabels, homeNoteEnabled, homeNote };
+  return { config, pinnedVersion, bumpPinned, showButtonLabels, homeNoteEnabled, homeNote, noteViewMode };
 });

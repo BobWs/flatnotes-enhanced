@@ -9,7 +9,7 @@
     @confirm="confirmDelete"
   />
 
-  <LoadingIndicator ref="loadingIndicator" class="flex h-full max-w-[999px] flex-col">
+  <LoadingIndicator ref="loadingIndicator" class="mx-auto flex h-full max-w-[999px] flex-col">
 
     <!-- Header row -->
     <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">

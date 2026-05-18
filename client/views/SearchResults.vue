@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full max-w-[999px] flex-col">
+  <div class="mx-auto flex h-full max-w-[999px] flex-col">
     <!-- Search Input -->
     <SearchInput :initialSearchTerm="props.searchTerm" class="mb-2" />
 
