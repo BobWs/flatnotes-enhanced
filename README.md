@@ -29,9 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.6.0
+## 🆕 What's New in v1.6.1
 
-- **Note Views** – Choose your preferred reading width: Normal (999px), Wide (1400px), or Full Screen
+- **Bug fix:** Long note titles now truncate properly with ellipsis (`…`) in the editor header
 
 [View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
 
@@ -302,6 +302,7 @@ Open your browser and navigate to `http://localhost:8080`
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.6.1` – Bug fix: title truncation in editor header
 - `v1.6.0` – Note Views: Normal (999px), Wide (1400px), Full Screen
 - `v1.5.1` – Bug fixes: case-insensitive attachments + archive folder scanning
 - `v1.5.0` – New: Wikilink Popup Modal – Link notes without typing

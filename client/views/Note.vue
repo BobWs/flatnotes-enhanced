@@ -51,67 +51,75 @@
   <LoadingIndicator ref="loadingIndicator" class="flex h-full flex-col">
     <!-- Edit Mode: full scrollable content -->
     <template v-if="editMode">
-      <!-- Header (scrolls in edit mode) -->
-      <div class="flex flex-col-reverse md:flex-row md:items-baseline shrink-0">
-        <!-- Title area: breadcrumb + title -->
-        <div class="grow truncate">
-          <!-- Folder breadcrumb -->
-          <div v-if="noteFolder" class="text-xs text-theme-text-very-muted mb-0.5 flex items-center gap-1">
-            <span v-for="(part, i) in folderParts" :key="i" class="flex items-center gap-1">
-              <RouterLink
-                :to="{ name: 'search', query: { term: '*', folder: part.path, sortBy: 1 } }"
-                class="hover:text-theme-brand transition-colors"
-              >{{ part.name }}</RouterLink>
-              <span v-if="i < folderParts.length - 1">/</span>
-            </span>
-            <span>/</span>
+      <!-- ── Two-row header ───────────────────────────────────────────────── -->
+      <div class="shrink-0">
+
+        <!-- Row 1: folder breadcrumb (left) + Save/Cancel buttons (right) -->
+        <div class="flex items-center justify-between min-h-[2rem] print:hidden">
+          <!-- Folder breadcrumb — left aligned, shrinks gracefully -->
+          <div class="flex items-center gap-1 text-xs text-theme-text-very-muted min-w-0 truncate">
+            <template v-if="noteFolder">
+              <span v-for="(part, i) in folderParts" :key="i" class="flex items-center gap-1 min-w-0">
+                <RouterLink
+                  :to="{ name: 'search', query: { term: '*', folder: part.path, sortBy: 1 } }"
+                  class="hover:text-theme-brand transition-colors truncate"
+                >{{ part.name }}</RouterLink>
+                <span v-if="i < folderParts.length - 1">/</span>
+              </span>
+              <span>/</span>
+            </template>
+            <!-- Placeholder keeps row height consistent when no folder -->
+            <span v-else class="opacity-0 select-none">·</span>
           </div>
-          <div class="text-3xl leading-[1.6em] relative">
-            <input
-              ref="titleInputEl"
-              v-model.trim="newTitle"
-              class="w-full bg-theme-background outline-none"
-              placeholder="Title (use / for folders, e.g. work/todo)"
-              @input="onTitleInput"
-              @keydown="onTitleKeydown"
-            />
-            <!-- Folder path autocomplete dropdown -->
-            <TagAutocomplete
-              :visible="folderAcVisible"
-              :matches="folderAcMatches"
-              :counts="{}"
-              :activeIndex="folderAcIndex"
-              :anchorRect="folderAcAnchorRect"
-              mode="folder"
-              @choose="selectFolder"
-              @hide="folderAcVisible = false"
+
+          <!-- Buttons — right aligned, never shrink -->
+          <div class="flex items-center shrink-0 ml-2">
+            <!-- Save Button -->
+            <CustomButton
+              label="Save"
+              :iconPath="mdilContentSave"
+              @click="saveHandler((close = false))"
+              class="relative ml-1"
+            >
+              <div
+                v-show="unsavedChanges"
+                class="absolute right-1 h-1.5 w-1.5 rounded-full bg-theme-brand"
+              ></div>
+            </CustomButton>
+            <!-- Cancel button -->
+            <Toggle
+              v-if="canModify"
+              label="Cancel"
+              :isOn="editMode"
+              class="ml-1"
+              @click="toggleEditModeHandler"
             />
           </div>
         </div>
 
-        <!-- Buttons -->
-        <div class="flex shrink-0 self-end md:self-baseline print:hidden">
-          <!-- Save Button -->
-          <CustomButton
-            label="Save"
-            :iconPath="mdilContentSave"
-            @click="saveHandler((close = false))"
-            class="relative ml-1"
-          >
-            <div
-              v-show="unsavedChanges"
-              class="absolute right-1 h-1.5 w-1.5 rounded-full bg-theme-brand"
-            ></div>
-          </CustomButton>
-          <!-- Edit Toggle (shows "Cancel" in edit mode) -->
-          <Toggle
-            v-if="canModify"
-            label="Cancel"
-            :isOn="editMode"
-            class="ml-1"
-            @click="toggleEditModeHandler"
+        <!-- Row 2: full-width title input — truncates cleanly with no competition -->
+        <div class="text-3xl leading-[1.6em] relative mt-1">
+          <input
+            ref="titleInputEl"
+            v-model.trim="newTitle"
+            class="w-full bg-theme-background outline-none truncate"
+            placeholder="Title (use / for folders, e.g. work/todo)"
+            @input="onTitleInput"
+            @keydown="onTitleKeydown"
+          />
+          <!-- Folder path autocomplete dropdown -->
+          <TagAutocomplete
+            :visible="folderAcVisible"
+            :matches="folderAcMatches"
+            :counts="{}"
+            :activeIndex="folderAcIndex"
+            :anchorRect="folderAcAnchorRect"
+            mode="folder"
+            @choose="selectFolder"
+            @hide="folderAcVisible = false"
           />
         </div>
+
       </div>
 
       <hr class="my-4 border-theme-border" />
@@ -133,29 +141,28 @@
     <template v-else>
       <!-- Fixed Header (does not scroll) -->
       <div class="shrink-0">
-        <!-- Header -->
-        <div class="flex flex-col-reverse md:flex-row md:items-baseline">
-          <!-- Title area: breadcrumb + title -->
-          <div class="grow truncate">
-            <!-- Folder breadcrumb -->
-            <div v-if="noteFolder" class="text-xs text-theme-text-very-muted mb-0.5 flex items-center gap-1">
-              <span v-for="(part, i) in folderParts" :key="i" class="flex items-center gap-1">
+
+        <!-- Row 1: folder breadcrumb (left) + action buttons (right) -->
+        <div class="flex items-center justify-between min-h-[2rem] print:hidden">
+          <!-- Folder breadcrumb — left aligned, shrinks gracefully -->
+          <div class="flex items-center gap-1 text-xs text-theme-text-very-muted min-w-0 truncate">
+            <template v-if="noteFolder">
+              <span v-for="(part, i) in folderParts" :key="i" class="flex items-center gap-1 min-w-0">
                 <RouterLink
                   :to="{ name: 'search', query: { term: '*', folder: part.path, sortBy: 1 } }"
-                  class="hover:text-theme-brand transition-colors"
+                  class="hover:text-theme-brand transition-colors truncate"
                 >{{ part.name }}</RouterLink>
                 <span v-if="i < folderParts.length - 1">/</span>
               </span>
               <span>/</span>
-            </div>
-            <div class="text-3xl leading-[1.6em]">
-              <span :title="note.title">{{ noteBasename }}</span>
-            </div>
+            </template>
+            <!-- Placeholder keeps row height consistent when no folder -->
+            <span v-else class="opacity-0 select-none">·</span>
           </div>
 
-          <!-- Buttons -->
-          <div class="flex shrink-0 self-end md:self-baseline print:hidden">
-            <!-- Prev/Next navigation buttons (only in folders) -->
+          <!-- Buttons — right aligned, never shrink -->
+          <div class="flex items-center shrink-0 ml-2">
+            <!-- Prev/Next navigation (only in folders) -->
             <template v-if="noteFolder && folderNotes.length > 0 && !isArchivedNote && !note.title.startsWith('_trash/')">
               <button
                 @click="goToPrevNote"
@@ -179,7 +186,7 @@
               </button>
             </template>
 
-            <!-- Pin/Unpin Button -->
+            <!-- Pin/Unpin -->
             <CustomButton
               v-show="canModify && !isNewNote"
               :iconPath="isPinned ? mdiPin : mdiPinOutline"
@@ -187,19 +194,20 @@
               @click="togglePin"
               :class="isPinned ? 'pin-active' : ''"
             />
-            <!-- Archive/Unarchive Button -->
+            <!-- Archive/Unarchive -->
             <CustomButton
               v-show="canModify && !isNewNote"
               :label="isArchivedNote ? 'Unarchive' : 'Archive'"
               :iconPath="mdiArchive"
               @click="isArchivedNote ? unarchiveHandler() : archiveHandler()"
             />
-            <!-- Delete (Trash) Button -->
+            <!-- Trash -->
             <CustomButton
               v-show="canModify && !isNewNote"
               label=""
               :iconPath="mdilDelete"
-              @click="deleteHandler" title="Move to Trash"
+              @click="deleteHandler"
+              title="Move to Trash"
             />
             <!-- Edit Toggle -->
             <Toggle
@@ -207,9 +215,15 @@
               label="Edit"
               :isOn="editMode"
               class="ml-1"
-              @click="toggleEditModeHandler" title="Edit Note"
+              @click="toggleEditModeHandler"
+              title="Edit Note"
             />
           </div>
+        </div>
+
+        <!-- Row 2: full-width title display — truncates cleanly with … -->
+        <div class="text-3xl leading-[1.6em] mt-1 truncate" :title="note.title">
+          {{ noteBasename }}
         </div>
 
         <hr class="my-4 border-theme-border" />
