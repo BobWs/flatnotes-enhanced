@@ -222,14 +222,24 @@ const menuItems = computed(() => [
   {
     label: "All Notes",
     icon: mdilNoteMultiple,
-    command: () =>
+    command: () => {
+      // Map the user's saved sort preference string to the numeric constant.
+      // Falls back to title sort when no preference is set ("app default").
+      const sortMap = {
+        lastModified: searchSortOptions.lastModified,
+        score:        searchSortOptions.score,
+        title:        searchSortOptions.title,
+      };
+      const savedSort = globalStore.notesDefaultSort;
+      const resolvedSort = sortMap[savedSort] ?? searchSortOptions.title;
       router.push({
         name: "search",
         query: {
           [params.searchTerm]: "*",
-          [params.sortBy]: searchSortOptions.title,
+          [params.sortBy]: resolvedSort,
         },
-      }),
+      });
+    },
     title: "View all notes",
   },
   {

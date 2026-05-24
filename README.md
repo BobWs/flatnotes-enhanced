@@ -29,9 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.6.1
+## 🆕 What's New in v1.6.2
 
-- **Bug fix:** Long note titles now truncate properly with ellipsis (`…`) in the editor header
+- **Consistent default sorting** – All "All Notes" entry points now respect your saved sort preference (with fallback to Docker env or Title)
 
 [View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
 
@@ -302,6 +302,7 @@ Open your browser and navigate to `http://localhost:8080`
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.6.2` – Consistent default sorting: all "All Notes" entry points respect your preference
 - `v1.6.1` – Bug fix: title truncation in editor header
 - `v1.6.0` – Note Views: Normal (999px), Wide (1400px), Full Screen
 - `v1.5.1` – Bug fixes: case-insensitive attachments + archive folder scanning

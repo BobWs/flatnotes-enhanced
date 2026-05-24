@@ -1486,6 +1486,10 @@ watch(() => prefs.value.homeNoteEnabled, (val) => {
 watch(() => prefs.value.homeNote, (val) => {
   globalStore.homeNote = val || '';
 }, { immediate: true });
+// Sync default sort so "All Notes" link in NavBar updates immediately on change
+watch(() => prefs.value.notesDefaultSort, (val) => {
+  globalStore.notesDefaultSort = val || '';
+}, { immediate: true });
 const prefsSaveMsg = ref("");
 const prefsSaveOk = ref(true);
 
@@ -1523,7 +1527,7 @@ async function savePrefs() {
     await apiSavePrefs({
       display_name:        toNull(p.displayName),
       avatar_filename:     toNull(p.avatarFilename),
-      notes_default_sort:  toNull(p.notesDefaultSort),
+      notes_default_sort:  p.notesDefaultSort ?? "",
       notes_default_view:  (p.notesDefaultView === 'fullscreen' || p.notesDefaultView === 'wide') ? p.notesDefaultView : 'normal',
       show_button_labels:  p.showButtonLabels,
       home_note_enabled:   p.homeNoteEnabled,
@@ -1800,15 +1804,9 @@ onMounted(async () => {
   try {
     const p = await getPrefs();
     prefs.value = {
-      // Keep null as null — do NOT coerce to "" here.
-      // The input placeholder handles the empty display; toNull() in savePrefs()
-      // converts "" → null on save, so round-tripping null → "" → null works.
-      // Coercing null → "" here then saving "" → null is fine, BUT coercing
-      // a real saved value like "userA" → "userA" and then saving "userA" → "userA"
-      // must also work — and it does. The only broken case was `|| null` in the
-      // old savePrefs converting "" to null even when the field was intentionally blank.
       displayName:       p.display_name ?? "",
       avatarFilename:    p.avatar_filename ?? null,
+      // null from backend (stored as App Default) → "" → dropdown shows "App Default"
       notesDefaultSort:  p.notes_default_sort ?? "",
       notesDefaultView:  (p.notes_default_view === 'fullscreen' || p.notes_default_view === 'wide') ? p.notes_default_view : 'normal',
       showButtonLabels:  p.show_button_labels !== false,

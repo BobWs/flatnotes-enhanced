@@ -380,8 +380,11 @@ def save_prefs(prefs: UserPrefsUpdate) -> None:
                 settings.display_name = prefs.display_name
             if prefs.avatar_filename is not None:
                 settings.avatar_filename = prefs.avatar_filename
+            # "" means "App Default" — store as NULL in DB.
+            # The guard must still run for "", so we check `is not None` only
+            # (not truthiness), and normalise "" → None for clean DB storage.
             if prefs.notes_default_sort is not None:
-                settings.notes_default_sort = prefs.notes_default_sort
+                settings.notes_default_sort = prefs.notes_default_sort or None
             # Always save notes_default_view — it's an explicit choice ('normal' or 'fullscreen'),
             # never omitted, so the None guard would incorrectly skip clearing it.
             if prefs.notes_default_view is not None:

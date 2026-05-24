@@ -167,11 +167,12 @@ getConfig()
     // We do this after auth is confirmed (getConfig succeeds only when authenticated).
     try {
       const prefs = await getPrefs();
-      globalStore.showButtonLabels = prefs.show_button_labels !== false;
-      globalStore.homeNoteEnabled  = prefs.home_note_enabled === true;
-      globalStore.homeNote         = prefs.home_note || '';
+      globalStore.showButtonLabels  = prefs.show_button_labels !== false;
+      globalStore.homeNoteEnabled   = prefs.home_note_enabled === true;
+      globalStore.homeNote          = prefs.home_note || '';
       const vm = prefs.notes_default_view;
-      globalStore.noteViewMode     = (vm === 'fullscreen' || vm === 'wide') ? vm : 'normal';
+      globalStore.noteViewMode      = (vm === 'fullscreen' || vm === 'wide') ? vm : 'normal';
+      globalStore.notesDefaultSort  = prefs.notes_default_sort || '';
       // If a custom home note is configured and we're currently on the
       // default home route, navigate there immediately on startup.
       if (

@@ -66,7 +66,7 @@ const router = createRouter({
       component: () => import("./views/SearchResults.vue"),
       props: (route) => ({
         searchTerm: route.query[constants.params.searchTerm],
-        sortBy: Number(route.query[constants.params.sortBy]) || undefined,
+        sortBy: route.query[constants.params.sortBy] !== undefined ? Number(route.query[constants.params.sortBy]) : undefined,
         folder: route.query[constants.params.folder] || null,
         initShowArchived: route.query.showArchived === "true",
         onlyArchived: route.query.onlyArchived === "true",

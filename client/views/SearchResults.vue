@@ -106,13 +106,16 @@ import NotePreview from "../components/NotePreview.vue";
 import PrimeMenu from "../components/PrimeMenu.vue";
 import Tag from "../components/Tag.vue";
 import { params, searchSortOptions } from "../constants.js";
+import { useGlobalStore } from "../globalStore.js";
 import SearchInput from "../partials/SearchInput.vue";
+
+const globalStore = useGlobalStore();
 
 const props = defineProps({
   searchTerm: String,
   sortBy: {
     type: Number,
-    default: searchSortOptions.score,
+    default: null, // null = no URL param; effectiveSortBy resolves the real default
   },
   // If set, only show notes whose title starts with this folder path
   folder: {
@@ -137,6 +140,25 @@ const router = useRouter();
 const sortMenu = ref();
 const toast = useToast();
 const showArchived = ref(props.initShowArchived);
+
+// Fallback chain for sort order:
+// 1. URL parameter (props.sortBy set by router) — highest priority
+// 2. User preference (Settings → Default note sort)
+// 3. Docker env (FLATNOTES_QUICK_ACCESS_SORT)
+// 4. App default (title)
+const _SORT_MAP = {
+  lastModified: searchSortOptions.lastModified,
+  title:        searchSortOptions.title,
+  score:        searchSortOptions.score,
+};
+const effectiveSortBy = computed(() => {
+  if (props.sortBy != null) {   // != covers both null and undefined; 0 (score) passes
+    return props.sortBy;
+  }
+  const userPref = globalStore.notesDefaultSort;
+  const envSort  = globalStore.config?.quickAccessSort;
+  return _SORT_MAP[userPref] ?? _SORT_MAP[envSort] ?? searchSortOptions.title;
+});
 
 // Preview state
 const previewEnabled = ref(true); // Will be loaded from localStorage
@@ -168,7 +190,7 @@ const sortByName = computed(() => ({
   [searchSortOptions.title]: "Title",
   [searchSortOptions.lastModified]: "Last Modified",
   [searchSortOptions.score]: "Score",
-}[props.sortBy] ?? "Score"));
+}[effectiveSortBy.value] ?? "Score"));
 
 // Apply folder and/or archive filters client-side
 const displayResults = computed(() => {
@@ -193,7 +215,7 @@ function resultFolder(result) {
 function clearFolder() {
   router.push({
     name: "search",
-    query: { [params.searchTerm]: props.searchTerm, [params.sortBy]: props.sortBy },
+    query: { [params.searchTerm]: props.searchTerm, [params.sortBy]: effectiveSortBy.value },
   });
 }
 
@@ -222,9 +244,9 @@ async function init() {
 }
 
 function sortResults(data) {
-  if (props.sortBy === searchSortOptions.title) {
+  if (effectiveSortBy.value === searchSortOptions.title) {
     return [...data].sort((a, b) => a.title.localeCompare(b.title));
-  } else if (props.sortBy === searchSortOptions.lastModified) {
+  } else if (effectiveSortBy.value === searchSortOptions.lastModified) {
     return [...data].sort((a, b) => b.lastModified - a.lastModified);
   } else {
     return [...data].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
@@ -258,7 +280,7 @@ function toggleSortMenu(event) {
 
 watch(() => props.searchTerm, init);
 watch(() => props.folder, init);
-watch(() => props.sortBy, reSortResults);
+watch(effectiveSortBy, reSortResults);
 onMounted(() => {
   loadPreviewSetting();
   init();

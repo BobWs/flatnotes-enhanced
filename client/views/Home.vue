@@ -44,7 +44,7 @@
             name: 'search',
             query: {
               term: globalStore.config.quickAccessTerm,
-              sortBy: searchSortOptions[globalStore.config.quickAccessSort],
+              sortBy: showMoreSort,
             },
           }"
           title="Show more"
@@ -61,7 +61,7 @@
 <script setup>
 import { mdiDotsHorizontal } from "@mdi/js";
 import { useToast } from "primevue/usetoast";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { RouterLink } from "vue-router";
 
 import { apiErrorHandler, getNotes } from "../api.js";
@@ -77,6 +77,21 @@ const globalStore = useGlobalStore();
 const loadingIndicator = ref();
 const notes = ref([]);
 const toast = useToast();
+
+// Fallback chain for "Show more" sort:
+// 1. User preference (Settings → Default note sort)
+// 2. Docker env (FLATNOTES_QUICK_ACCESS_SORT)
+// 3. App default (title)
+const SORT_MAP = {
+  lastModified: searchSortOptions.lastModified,
+  title:        searchSortOptions.title,
+  score:        searchSortOptions.score,
+};
+const showMoreSort = computed(() => {
+  const userPref = globalStore.notesDefaultSort;
+  const envSort  = globalStore.config?.quickAccessSort;
+  return SORT_MAP[userPref] ?? SORT_MAP[envSort] ?? searchSortOptions.title;
+});
 
 // Preview state
 const previewEnabled = ref(true);
