@@ -48,9 +48,9 @@
         <button
           @click="toggleExpandAll"
           class="text-theme-text-muted hover:text-theme-text transition-colors p-1 rounded"
-          :title="expandAll === true ? 'Collapse all' : 'Expand all'"
+          :title="lastExpandDirection === true ? 'Collapse all' : 'Expand all'"
         >
-          <svg v-if="expandAll !== true" viewBox="0 0 24 24" class="w-4 h-4 fill-current">
+          <svg v-if="lastExpandDirection !== true" viewBox="0 0 24 24" class="w-4 h-4 fill-current">
             <path d="M4,6H2V20A2,2 0 0,0 4,22H18V20H4V6M20,2H8A2,2 0 0,0 6,4V16A2,2 0 0,0 8,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M20,16H8V4H20V16M13,14L18,9L16.6,7.6L13,11.2L9.4,7.6L8,9L13,14Z"/>
           </svg>
           <svg v-else viewBox="0 0 24 24" class="w-4 h-4 fill-current">
@@ -401,6 +401,10 @@ import { useToast } from "primevue/usetoast";
 import { getFolders, getFolderNotes, updateNote, getNote, createNote, deleteNote } from "../api.js";
 import FolderItem from "./FolderItem.vue";
 import { getToastOptions } from "../helpers.js";
+import { useGlobalStore } from "../globalStore.js";
+import { searchSortOptions } from "../constants.js";
+
+const globalStore = useGlobalStore();
 
 const props = defineProps({ isOpen: Boolean });
 const emit = defineEmits(["close"]);
@@ -413,6 +417,9 @@ const loading      = ref(false);
 const activeFolder = ref(null);
 const activeNote   = ref(null);
 const expandAll    = ref(null);
+// Tracks which direction was last bulk-applied so the button icon/title
+// stays correct after expandAll resets to null (the one-tick pulse approach).
+const lastExpandDirection = ref(null);
 
 // Selection state
 const selectionMode = ref(false);
@@ -513,7 +520,20 @@ async function loadFolders() {
 }
 
 function toggleExpandAll() {
-  expandAll.value = expandAll.value !== true ? true : false;
+  // Set expandAll for exactly one tick (pulse). Because all FolderItem children
+  // are mounted via v-show (not v-if), every watcher at every depth fires in
+  // the same tick and syncs localExpanded. nextTick then resets expandAll to
+  // null so individual chevron clicks work freely at any depth afterwards.
+  if (lastExpandDirection.value !== true) {
+    expandAll.value = true;
+    lastExpandDirection.value = true;
+  } else {
+    expandAll.value = false;
+    lastExpandDirection.value = false;
+  }
+  nextTick(() => {
+    expandAll.value = null;
+  });
 }
 
 function toggleSelectionMode() {
@@ -788,10 +808,25 @@ async function handleDropNote({ noteTitle, targetFolder }) {
 function navigate(folderPath) {
   activeFolder.value = folderPath;
   activeNote.value   = null;
+
+  // Resolve sort using the same fallback chain as SearchResults/NavBar:
+  // user preference → Docker env → omit (SearchResults effectiveSortBy handles it)
+  const _sortMap = {
+    lastModified: searchSortOptions.lastModified,
+    title:        searchSortOptions.title,
+    score:        searchSortOptions.score,
+  };
+  const userPref = globalStore.notesDefaultSort;
+  const envSort  = globalStore.config?.quickAccessSort;
+  const resolvedSort = _sortMap[userPref] ?? _sortMap[envSort];
+  // Only include sortBy in the query when a preference is resolved;
+  // omitting it lets SearchResults fall through to its own effectiveSortBy default.
+  const sortQuery = resolvedSort !== undefined ? { sortBy: resolvedSort } : {};
+
   if (!folderPath) {
-    router.push({ name: "search", query: { term: "*", sortBy: 1 } });
+    router.push({ name: "search", query: { term: "*", ...sortQuery } });
   } else {
-    router.push({ name: "search", query: { term: "*", folder: folderPath, sortBy: 1 } });
+    router.push({ name: "search", query: { term: "*", folder: folderPath, ...sortQuery } });
   }
   if (selectionMode.value) toggleSelectionMode();
   // Auto-close sidebar on mobile (below md breakpoint = 768px)

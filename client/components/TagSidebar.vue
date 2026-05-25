@@ -23,9 +23,9 @@
         <button
           @click="toggleExpandAll"
           class="text-theme-text-muted hover:text-theme-text transition-colors p-1 rounded"
-          :title="expandAll === true ? 'Collapse all' : 'Expand all'"
+          :title="lastExpandDirection === true ? 'Collapse all' : 'Expand all'"
         >
-          <svg v-if="expandAll !== true" viewBox="0 0 24 24" class="w-4 h-4 fill-current">
+          <svg v-if="lastExpandDirection !== true" viewBox="0 0 24 24" class="w-4 h-4 fill-current">
             <path d="M4,6H2V20A2,2 0 0,0 4,22H18V20H4V6M20,2H8A2,2 0 0,0 6,4V16A2,2 0 0,0 8,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M20,16H8V4H20V16M13,14L18,9L16.6,7.6L13,11.2L9.4,7.6L8,9L13,14Z"/>
           </svg>
           <svg v-else viewBox="0 0 24 24" class="w-4 h-4 fill-current">
@@ -117,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { getTags } from "../api.js";
 import TagSidebarItem from "./TagSidebarItem.vue";
 
@@ -133,6 +133,9 @@ const filterText = ref("");
 const activeTags = ref([]);
 // null = no override, true = expand all, false = collapse all
 const expandAll = ref(null);
+// Tracks which direction was last bulk-applied so the button icon/title
+// stays correct after expandAll resets to null (the one-tick pulse approach).
+const lastExpandDirection = ref(null);
 
 // Filter out the "pin" tag from tagCounts
 const filteredTagCounts = computed(() => {
@@ -215,12 +218,20 @@ function toggleTag(tagPath) {
 }
 
 function toggleExpandAll() {
-  // Cycle: null → true (expand all) → false (collapse all) → null
-  if (expandAll.value !== true) {
+  // Set expandAll for exactly one tick (pulse). Because all TagSidebarItem
+  // children are mounted via v-show (not v-if), every watcher at every depth
+  // fires in the same tick and syncs localExpanded. nextTick then resets
+  // expandAll to null so individual chevron clicks work freely afterwards.
+  if (lastExpandDirection.value !== true) {
     expandAll.value = true;
+    lastExpandDirection.value = true;
   } else {
     expandAll.value = false;
+    lastExpandDirection.value = false;
   }
+  nextTick(() => {
+    expandAll.value = null;
+  });
 }
 
 function clearActiveTags() {

@@ -40,8 +40,10 @@
     </button>
 
     <!-- Children (nested tags) -->
+    <!-- v-show keeps ALL depth levels mounted at all times so the forceExpand
+         pulse reaches every nested TagSidebarItem simultaneously. -->
     <div
-      v-if="isExpanded && group.children && group.children.length > 0"
+      v-show="isExpanded && group.children && group.children.length > 0"
       class="ml-5 border-l-2 pl-1 mt-0.5 mb-0.5"
       :style="{ borderColor: color + '44' }"
     >

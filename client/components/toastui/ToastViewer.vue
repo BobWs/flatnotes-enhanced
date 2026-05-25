@@ -9,7 +9,7 @@ import { onMounted, ref, watch } from "vue";
 import baseOptions from "./baseOptions.js";
 import extendedAutolinks from "./extendedAutolinks.js";
 import { loadCallouts, getCalloutIcon, getCalloutColor, hexToRgb } from "../../calloutStore.js";
-import { loadHeaderColors, loadHighlightColors, loadQuoteStyle } from "../../appearanceStore.js";
+import { loadHeaderColors, loadHighlightColors, loadQuoteStyle, hasAnyHeaderEnabled, headerColors } from "../../appearanceStore.js";
 import { TASK_ICONS } from "../../taskIcons.js";
 import { loadTaskIcons, getTaskIconColor, isTaskIconsEnabled } from "../../taskIconStore.js";
 import { updateNote } from "../../api.js";
@@ -68,6 +68,7 @@ watch([() => props.title, () => props.created, () => props.updated, () => props.
     }
     // Re-run post-processors (also re-binds checkboxes after any re-render)
     setTimeout(() => {
+      applyCustomHeadersAttr(viewerElement.value);
       processCallouts(viewerElement.value);
       processDocumentLinks(viewerElement.value);
       processTaskIcons(viewerElement.value);
@@ -553,6 +554,23 @@ function processCheckboxes(el) {
   });
 }
 
+/**
+ * Apply or remove the data-custom-headers attribute on the viewer's
+ * .toastui-editor-contents element. This attribute gates the Quicksand font
+ * and custom color SCSS rules so they only fire when at least one heading
+ * level has a custom color enabled.
+ */
+function applyCustomHeadersAttr(container) {
+  if (!container) return;
+  const contentsEl = container.querySelector('.toastui-editor-contents');
+  if (!contentsEl) return;
+  if (hasAnyHeaderEnabled()) {
+    contentsEl.setAttribute('data-custom-headers', '');
+  } else {
+    contentsEl.removeAttribute('data-custom-headers');
+  }
+}
+
 onMounted(async () => {
   await Promise.all([
     loadCallouts(),
@@ -575,13 +593,34 @@ onMounted(async () => {
     initialValue: props.initialValue,
   });
 
+  // Initial post-processing after the viewer has rendered its DOM
   setTimeout(() => {
+    applyCustomHeadersAttr(viewerElement.value);
     processCallouts(viewerElement.value);
     processDocumentLinks(viewerElement.value);
     processTaskIcons(viewerElement.value);
     processCollapsibleGroups(viewerElement.value, props.title || '');
     processCheckboxes(viewerElement.value);
   }, 50);
+
+  // Re-apply data-custom-headers + re-render whenever the user saves header
+  // color settings. headerColors is a reactive ref exported from appearanceStore.
+  watch(headerColors, () => {
+    if (viewerInstance) {
+      // Re-render so inline color styles on <h1>…<h6> update immediately.
+      // setMarkdown recreates the .toastui-editor-contents DOM, so we must
+      // re-apply the attribute and all post-processors in the callback.
+      viewerInstance.setMarkdown(currentMarkdown || props.initialValue || '');
+      setTimeout(() => {
+        applyCustomHeadersAttr(viewerElement.value);
+        processCallouts(viewerElement.value);
+        processDocumentLinks(viewerElement.value);
+        processTaskIcons(viewerElement.value);
+        processCollapsibleGroups(viewerElement.value, props.title || '');
+        processCheckboxes(viewerElement.value);
+      }, 50);
+    }
+  }, { deep: true });
 });
 </script>
 

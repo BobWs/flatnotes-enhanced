@@ -47,8 +47,12 @@
     </div>
 
     <!-- Expanded content: sub-folders + notes -->
+    <!-- v-show keeps ALL depth levels mounted at all times. This is the key
+         to recursive expand/collapse: when forceExpand pulses, every nested
+         FolderItem watcher fires simultaneously regardless of depth, because
+         none of them are gated behind a v-if that would prevent mounting. -->
     <div
-      v-if="isExpanded"
+      v-show="isExpanded"
       class="ml-5 border-l-2 pl-1 mt-0.5 mb-0.5"
       style="border-color: rgba(136,145,161,0.4)"
     >

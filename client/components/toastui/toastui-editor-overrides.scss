@@ -419,11 +419,13 @@ body.dark .toastui-editor-contents code {
 
 
 // ── Headers H1–H6 ───────────────────────────────────────────
-// Colours match obsidian-headers.css exactly.
-// Quicksand is loaded from embedded woff2 in style.css (weight 400 & 500).
-// Font sizes defined above are preserved; we add color and font-family here.
+// Quicksand font and custom colors are applied ONLY when the viewer container
+// has the data-custom-headers attribute. This attribute is added/removed by
+// ToastViewer.vue based on whether any header color entry is enabled.
+// When the global toggle is off (no headers enabled), the attribute is absent
+// and headings fall back to the default Poppins font with no color override.
 
-.toastui-editor-contents {
+.toastui-editor-contents[data-custom-headers] {
 
   h1, h2, h3, h4, h5, h6 {
     font-family: "Quicksand", "Poppins", sans-serif;
@@ -902,4 +904,3 @@ body.dark .toastui-editor-contents li.task-group {
     color: rgb(var(--theme-text));
   }
 }
-

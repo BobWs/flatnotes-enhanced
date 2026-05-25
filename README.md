@@ -29,9 +29,10 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.6.2
+## 🆕 What's New in v1.6.3
 
-- **Consistent default sorting** – All "All Notes" entry points now respect your saved sort preference (with fallback to Docker env or Title)
+- **Bug fix:** Expand All now expands all nested folder and tag levels; individual expand/collapse works before AND after using Expand/Collapse All
+- **Bug fix:** Header colors and font (H1–H6) now correctly respect your Settings preferences – disabling headers reverts to default theme color and Poppins font
 
 [View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
 
@@ -302,6 +303,7 @@ Open your browser and navigate to `http://localhost:8080`
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.6.3` – Bug fixes: sidebar expand/collapse (deep nesting, individual toggles) + header colors/font now respect user preferences
 - `v1.6.2` – Consistent default sorting: all "All Notes" entry points respect your preference
 - `v1.6.1` – Bug fix: title truncation in editor header
 - `v1.6.0` – Note Views: Normal (999px), Wide (1400px), Full Screen

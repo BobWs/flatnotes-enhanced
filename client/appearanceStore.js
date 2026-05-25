@@ -95,9 +95,17 @@ export async function loadQuoteStyle(force = false) {
 
 export function getHeaderColor(level) {
   const found = headerColors.value.find((c) => c.level === level);
+  // If the header entry exists and is enabled, return its custom color.
+  // If disabled (individually or via the global toggle), return null so the
+  // renderer knows NOT to apply any color — allowing browser/CSS defaults.
+  // If headerColors hasn't loaded yet (empty array), also return null.
   if (found && found.enabled) return found.color;
-  const fallbacks = ["#ed7ea3", "#A3BE8C", "#66CCCC", "#95d5ea", "#999999", "#666666"];
-  return fallbacks[level - 1] || "#666666";
+  return null;
+}
+
+/** Returns true when at least one header level has a custom color enabled. */
+export function hasAnyHeaderEnabled() {
+  return headerColors.value.some((c) => c.enabled);
 }
 
 export function getDefaultHighlightColor() {
