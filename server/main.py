@@ -1,8 +1,101 @@
+import os
+from datetime import datetime, timezone
 from typing import List, Literal
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, UploadFile
+from fastapi import APIRouter, Body, Depends, FastAPI, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+
+import json
+from pathlib import Path
+
+def get_module_version() -> str:
+    """Read version from package.json in the app root"""
+    try:
+        # Path: /app/server/main.py -> go up twice to /app/package.json
+        package_json_path = Path(__file__).parent.parent / "package.json"
+        with open(package_json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return data.get("version", "unknown")
+    except Exception as e:
+        print(f"Warning: Could not read version from package.json: {e}")
+        return "unknown"
+
+MODULE_VERSION = get_module_version()
+
+
+def format_bytes(n: int) -> str:
+    """Return a human-readable byte size string (e.g. '2.1 MB')."""
+    for unit in ("B", "KB", "MB", "GB", "TB"):
+        if abs(n) < 1024.0:
+            return f"{n:.1f} {unit}"
+        n /= 1024.0
+    return f"{n:.1f} PB"
+
+# ── GitHub update check ───────────────────────────────────────────────────────
+import urllib.request as _urllib_request
+
+_GITHUB_API = "https://api.github.com/repos/BobWs/flatnotes-enhanced/releases/latest"
+_CACHE_TTL_HOURS = 24
+
+_update_cache: dict = {
+    "latest_version": None,
+    "release_url":    None,
+    "published_at":   None,
+    "checked_at":     None,
+    "error":          None,
+}
+
+
+def _is_newer(latest: str, current: str) -> bool:
+    """Return True if *latest* is strictly greater than *current* (semver tuples)."""
+    try:
+        def _t(v: str):
+            return tuple(int(x) for x in v.lstrip("v").split("."))
+        return _t(latest) > _t(current)
+    except Exception:
+        return False
+
+
+def get_latest_release() -> None:
+    """Fetch the latest GitHub release and populate _update_cache.
+
+    Never raises — all exceptions are caught and stored in _update_cache["error"].
+    Uses a 6-hour TTL so repeated requests are served from cache.
+    """
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc)
+
+    # Serve from cache if fresh enough
+    if _update_cache["checked_at"] is not None:
+        try:
+            last = datetime.fromisoformat(_update_cache["checked_at"])
+            age_hours = (now - last).total_seconds() / 3600
+            if age_hours < _CACHE_TTL_HOURS:
+                return
+        except Exception:
+            pass  # bad timestamp — fall through and re-fetch
+
+    try:
+        req = _urllib_request.Request(
+            _GITHUB_API,
+            headers={
+                "Accept":     "application/vnd.github+json",
+                "User-Agent": f"flatnotes-enhanced/{MODULE_VERSION}",
+            },
+        )
+        with _urllib_request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read().decode())
+
+        _update_cache["latest_version"] = data.get("tag_name", "").lstrip("v") or None
+        _update_cache["release_url"]    = data.get("html_url") or None
+        _update_cache["published_at"]   = data.get("published_at") or None
+        _update_cache["error"]          = None
+    except Exception as exc:
+        _update_cache["error"] = str(exc)
+    finally:
+        _update_cache["checked_at"] = now.isoformat()
 
 import api_messages
 from attachments.base import BaseAttachments
@@ -25,10 +118,22 @@ from user_settings import (
     get_tag_colors, save_tag_colors, TagColorSettings,
     get_table_style, get_quote_style,
     get_task_icons, save_task_icons, TaskIconSettings,
+    save_maintenance_setting, get_maintenance_setting,
 )
 from typing import List as TypingList
 
 from database import db_manager
+
+# ── Startup backup (once per calendar day) ────────────────────────────────────
+if db_manager.enabled:
+    try:
+        today = datetime.now(timezone.utc).strftime("%Y%m%d")
+        existing = db_manager.list_backups()
+        has_today = any(b["created_at"][:10].replace("-", "") == today for b in existing)
+        if not has_today:
+            db_manager.create_backup("startup")
+    except Exception as _be:
+        pass  # non-fatal
 
 global_config = GlobalConfig()
 auth: BaseAuth = global_config.load_auth()
@@ -461,7 +566,164 @@ def api_save_task_icons(task_icons: TaskIconSettings):
 # endregion
 
 
-# region Healthcheck
+# region Maintenance
+
+@router.get("/api/maintenance/backups", dependencies=auth_deps)
+def list_backups():
+    """List all available preference backups, newest first."""
+    return db_manager.list_backups()
+
+
+@router.post("/api/maintenance/backups", dependencies=auth_deps)
+def create_backup(body: dict = Body(default={})):
+    """Create a manual backup of the settings database."""
+    label = str(body.get("label", "manual"))[:32] or "manual"
+    try:
+        return db_manager.create_backup(label)
+    except Exception as exc:
+        raise HTTPException(500, f"Backup failed: {exc}")
+
+
+@router.post("/api/maintenance/backups/restore", dependencies=auth_deps)
+def restore_backup(body: dict = Body(default={})):
+    """Restore a backup. Automatically creates a pre-restore safety backup first."""
+    filename = body.get("filename", "")
+    try:
+        return db_manager.restore_backup(filename)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc))
+    except Exception as exc:
+        raise HTTPException(500, f"Restore failed: {exc}")
+
+
+@router.delete("/api/maintenance/backups/{filename}", dependencies=auth_deps)
+def delete_backup(filename: str):
+    """Permanently delete a single backup file."""
+    import re as _re
+    if not _re.match(r"^flatnotes_backup_[a-zA-Z0-9_-]+_\d{8}_\d{6}\.db$", filename):
+        raise HTTPException(400, "Invalid backup filename")
+    path = os.path.join(db_manager.BACKUP_DIR, filename)
+    if not os.path.exists(path):
+        raise HTTPException(404, "Backup not found")
+    try:
+        os.remove(path)
+        return {"success": True, "filename": filename}
+    except Exception as exc:
+        raise HTTPException(500, f"Delete failed: {exc}")
+
+
+@router.get("/api/maintenance/status", dependencies=auth_deps)
+def maintenance_status():
+    """Return a summary of application state for the Maintenance tab."""
+    # ── DB size ───────────────────────────────────────────────────────────────
+    db_path = db_manager.db_path if db_manager.enabled else None
+    try:
+        db_size_bytes = os.path.getsize(db_path) if db_path and os.path.exists(db_path) else 0
+    except Exception:
+        db_size_bytes = 0
+
+    # ── Note counts (single search, filter client-side) ───────────────────────
+    try:
+        all_results = note_storage.search(
+            "*",
+            sort="title",
+            order="asc",
+            limit=None,
+            include_archived=True,
+            include_trash=True,
+        )
+        note_count     = sum(1 for r in all_results if not r.title.startswith("_trash/") and not r.title.startswith("_archive/"))
+        trash_count    = sum(1 for r in all_results if r.title.startswith("_trash/"))
+        archive_count  = sum(1 for r in all_results if r.title.startswith("_archive/"))
+    except Exception:
+        note_count = trash_count = archive_count = 0
+
+    # ── Attachment count ──────────────────────────────────────────────────────
+    try:
+        attachment_count = len(attachment_storage.list_all())
+    except Exception:
+        attachment_count = 0
+
+    # ── Trash auto-delete config ──────────────────────────────────────────────
+    trash_days = global_config.trash_auto_delete_days or None
+
+    # ── Last cleanup timestamp ────────────────────────────────────────────────
+    last_cleanup = get_maintenance_setting("last_trash_cleanup", None)
+
+    # ── Update check (non-blocking; uses 6-hour cache) ────────────────────────
+    get_latest_release()
+    _lv = _update_cache["latest_version"]
+
+    return {
+        "version":               MODULE_VERSION,
+        "db_path":               db_path,
+        "db_size_bytes":         db_size_bytes,
+        "db_size_human":         format_bytes(db_size_bytes),
+        "note_count":            note_count,
+        "trash_count":           trash_count,
+        "archive_count":         archive_count,
+        "attachment_count":      attachment_count,
+        "trash_auto_delete_days": trash_days,
+        "last_trash_cleanup":    last_cleanup,
+        # update-check fields
+        "latest_version":        _lv,
+        "update_available":      _is_newer(_lv, MODULE_VERSION) if _lv else False,
+        "release_url":           _update_cache["release_url"],
+        "update_checked_at":     _update_cache["checked_at"],
+        "update_check_error":    _update_cache["error"],
+    }
+
+
+@router.post("/api/maintenance/trash/empty", dependencies=auth_deps)
+def maintenance_empty_trash(body: dict = Body(default={})):
+    """Empty all or part of the trash.
+
+    Body: {"days": <int>}
+      days = 0  → delete ALL trash items regardless of age
+      days > 0  → delete items older than *days* days (delegates to empty_old_trash)
+    """
+    days = int(body.get("days", 0))
+
+    try:
+        if days == 0:
+            # Delete every note currently in _trash/
+            all_results = note_storage.search(
+                "*",
+                sort="title",
+                order="asc",
+                limit=None,
+                include_archived=False,
+                include_trash=True,
+            )
+            trash_titles = [r.title for r in all_results if r.title.startswith("_trash/")]
+            deleted = []
+            for title in trash_titles:
+                try:
+                    note_storage.permanently_delete(title)
+                    deleted.append(title)
+                except Exception:
+                    pass
+        else:
+            deleted = note_storage.empty_old_trash(days)
+    except Exception as exc:
+        raise HTTPException(500, f"Trash empty failed: {exc}")
+
+    # Persist timestamp
+    ts = datetime.now(timezone.utc).isoformat()
+    save_maintenance_setting("last_trash_cleanup", ts)
+
+    return {
+        "deleted_count":  len(deleted),
+        "deleted_titles": deleted,
+        "timestamp":      ts,
+    }
+
+# endregion
+
+
+
 @router.get("/health")
 def healthcheck() -> str:
     return "OK"

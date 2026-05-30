@@ -1,41 +1,5 @@
 <template>
-  <div class="mx-auto flex h-full max-w-[999px] flex-col">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-4">
-      <div>
-        <h1 class="text-2xl font-semibold text-theme-text">Archive</h1>
-        <p class="text-xs text-theme-text-muted mt-0.5">
-          {{ results.length }} archived note{{ results.length !== 1 ? 's' : '' }}
-          · Notes moved here are hidden from regular search but can be restored or permanently deleted.
-        </p>
-      </div>
-      <div class="flex gap-2">
-        <button
-          v-if="results.length > 0"
-          @click="confirmEmptyArchive"
-          class="inline-flex items-center gap-1 px-3 py-1 rounded text-sm font-medium
-                 text-red-500 border border-red-400/40 hover:bg-red-500/10 transition-colors"
-          title="Empty archive"
-        >
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current">
-            <path :d="mdiDeleteForever"/>
-          </svg>
-          Empty Archive
-        </button>
-        <button
-          @click="loadArchive"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm
-                 bg-theme-background-elevated hover:bg-theme-border transition-colors text-theme-text-muted"
-          title="Refresh"
-        >
-          <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"
-               :class="{ 'animate-spin': loading }">
-            <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
-          </svg>
-          Refresh
-        </button>
-      </div>
-    </div>
+  <LoadingIndicator ref="loadingIndicator" class="mx-auto flex h-full max-w-[999px] flex-col">
 
     <!-- Confirm single permanent delete -->
     <ConfirmModal
@@ -67,36 +31,149 @@
       @confirm="doEmptyArchive"
     />
 
-    <LoadingIndicator ref="loadingIndicator" class="flex-1">
-      <!-- Empty state -->
-      <div
-        v-if="results.length === 0 && !loading"
-        class="flex flex-col items-center justify-center py-16 text-theme-text-very-muted"
-      >
-        <svg viewBox="0 0 64 64" class="w-16 h-16 mb-3 opacity-40">
-          <path fill="currentColor" d="M3,3H21V7H3V3M4,8H20V21H4V8M9,11V13H15V11H9M3,23H21V27H3V23M4,28H20V41H4V28M9,31V33H15V31H9M3,43H21V47H3V43M4,48H20V61H4V48M9,51V53H15V51H9Z"/>
-        </svg>
-        <p class="text-sm">Archive is empty</p>
-        <p class="text-xs mt-1 text-theme-text-very-muted">Archived notes will appear here</p>
+    <!-- Header row -->
+    <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
+      <div class="shrink-0">
+        <h1 class="text-2xl font-semibold text-theme-text">Archive</h1>
+        <p class="text-sm text-theme-text-muted mt-0.5">
+          {{ filteredResults.length }}
+          <template v-if="filteredResults.length !== results.length">
+            of {{ results.length }}
+          </template>
+          archived note{{ filteredResults.length !== 1 ? 's' : '' }}
+        </p>
       </div>
 
-      <!-- Archive items -->
+      <!-- Search + sort + action controls -->
+      <div class="flex items-center gap-2 flex-wrap justify-end ml-auto">
+
+        <!-- Search field -->
+        <div class="relative">
+          <svg viewBox="0 0 24 24" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 fill-current text-theme-text-very-muted pointer-events-none">
+            <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+          </svg>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search archive…"
+            class="pl-8 pr-8 py-1.5 rounded text-sm bg-theme-background-elevated border border-theme-border
+                   text-theme-text placeholder:text-theme-text-very-muted
+                   focus:outline-none focus:border-theme-brand transition-colors w-52"
+          />
+          <!-- Clear button -->
+          <button
+            v-if="searchQuery"
+            @click="searchQuery = ''"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-theme-text-very-muted hover:text-theme-text transition-colors"
+            title="Clear search"
+          >
+            <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current">
+              <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Sort dropdown -->
+        <div class="relative">
+          <select
+            v-model="sortKey"
+            class="appearance-none pl-3 pr-7 py-1.5 rounded text-sm bg-theme-background-elevated
+                   border border-theme-border text-theme-text-muted
+                   focus:outline-none focus:border-theme-brand transition-colors cursor-pointer"
+            title="Sort by"
+          >
+            <option value="lastModified">Last modified</option>
+            <option value="title">Title A–Z</option>
+            <option value="titleDesc">Title Z–A</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+          <!-- Chevron icon -->
+          <svg viewBox="0 0 24 24" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-4 h-4 fill-current text-theme-text-very-muted pointer-events-none">
+            <path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/>
+          </svg>
+        </div>
+
+        <!-- Empty archive button -->
+        <button
+          v-if="results.length > 0"
+          @click="confirmEmptyArchive"
+          class="inline-flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium
+                 text-red-500 border border-red-400/40 hover:bg-red-500/10 transition-colors"
+          title="Empty archive"
+        >
+          <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current">
+            <path :d="mdiDeleteForever"/>
+          </svg>
+          Empty
+        </button>
+
+        <!-- Refresh -->
+        <button
+          @click="loadArchive"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm
+                 bg-theme-background-elevated hover:bg-theme-border border border-theme-border transition-colors text-theme-text-muted"
+          title="Refresh"
+        >
+          <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"
+               :class="{ 'animate-spin': loading }">
+            <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+          </svg>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty state: no archived notes at all -->
+    <div
+      v-if="!loading && results.length === 0"
+      class="flex flex-col items-center justify-center flex-1 text-theme-text-very-muted gap-3"
+    >
+      <svg viewBox="0 0 24 24" class="w-16 h-16 fill-current opacity-30">
+        <path d="M3,3H21V7H3V3M4,8H20V21H4V8M9,11V13H15V11H9Z"/>
+      </svg>
+      <p class="text-sm">Archive is empty</p>
+      <p class="text-xs text-theme-text-very-muted">Archived notes will appear here</p>
+    </div>
+
+    <!-- Empty state: no results after filtering -->
+    <div
+      v-else-if="!loading && results.length > 0 && filteredResults.length === 0"
+      class="flex flex-col items-center justify-center flex-1 text-theme-text-very-muted gap-3"
+    >
+      <svg viewBox="0 0 24 24" class="w-16 h-16 fill-current opacity-30">
+        <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+      </svg>
+      <p class="text-sm">No archived notes match your search.</p>
+      <button
+        @click="clearFilters"
+        class="text-xs text-theme-brand hover:underline"
+      >Clear search</button>
+    </div>
+
+    <!-- Archive list -->
+    <div v-else class="flex flex-col gap-3 overflow-y-auto flex-1 pb-4">
       <div
-        v-for="note in results"
+        v-for="note in filteredResults"
         :key="note.title"
-        class="mb-2 rounded-xl border border-theme-border bg-theme-background-elevated px-4 py-3 flex items-start justify-between gap-3"
+        class="rounded-xl border border-theme-border bg-theme-background-elevated px-4 py-3 flex items-start justify-between gap-3"
       >
+        <!-- Left side: info -->
         <div class="min-w-0 flex-1 cursor-pointer" @click="previewNote(note.title)">
+          <!-- Folder breadcrumb -->
           <p v-if="displayFolder(note.title)" class="text-xs text-theme-text-very-muted mb-0.5">
             {{ displayFolder(note.title) }}
           </p>
+          <!-- Title -->
           <p class="font-medium text-theme-text truncate hover:text-theme-brand transition-colors">
             {{ displayName(note.title) }}
           </p>
+          <!-- Date -->
           <p class="text-xs text-theme-text-muted mt-0.5">{{ note.lastModifiedAsString }}</p>
         </div>
+
+        <!-- Right side: action buttons -->
         <div class="flex gap-2 shrink-0">
-          <!-- Restore button (gray, matches Trash.vue) -->
+          <!-- Restore button -->
           <button
             @click="promptRestore(note.title)"
             class="inline-flex items-center gap-1 px-3 py-1 rounded text-sm font-medium
@@ -109,8 +186,8 @@
             </svg>
             Restore
           </button>
-          
-          <!-- Delete button (RED, matches Trash.vue and Attachments.vue) -->
+
+          <!-- Delete button -->
           <button
             @click="promptDelete(note.title)"
             class="inline-flex items-center gap-1 px-3 py-1 rounded text-sm font-medium
@@ -120,18 +197,18 @@
             <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current">
               <path :d="mdiDeleteForever"/>
             </svg>
-          <!--  Delete -->
           </button>
         </div>
       </div>
-    </LoadingIndicator>
-  </div>
+    </div>
+
+  </LoadingIndicator>
 </template>
 
 <script setup>
 import { mdiDeleteForever, mdiRestore } from "@mdi/js";
 import { useToast } from "primevue/usetoast";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import {
@@ -149,13 +226,53 @@ const loading = ref(false);
 const results = ref([]);
 const toast = useToast();
 const router = useRouter();
+
 const isConfirmDeleteVisible = ref(false);
 const isConfirmRestoreVisible = ref(false);
 const isConfirmEmptyVisible = ref(false);
 const pendingDeleteTitle = ref("");
 const pendingRestoreTitle = ref("");
 
-// Strip _archive/ prefix then return just the filename (no extension shown)
+// ── Search / sort state ───────────────────────────────────────────────────────
+const searchQuery = ref("");
+const sortKey = ref("lastModified"); // 'lastModified' | 'title' | 'titleDesc' | 'oldest'
+
+function clearFilters() {
+  searchQuery.value = "";
+}
+
+// ── Derived list ──────────────────────────────────────────────────────────────
+const filteredResults = computed(() => {
+  let list = results.value;
+
+  // 1. Text search (title)
+  const q = searchQuery.value.trim().toLowerCase();
+  if (q) {
+    list = list.filter((n) =>
+      displayName(n.title).toLowerCase().includes(q) ||
+      displayFolder(n.title).toLowerCase().includes(q)
+    );
+  }
+
+  // 2. Sort
+  list = [...list].sort((a, b) => {
+    if (sortKey.value === "title") {
+      return displayName(a.title).localeCompare(displayName(b.title), undefined, { sensitivity: "base" });
+    } else if (sortKey.value === "titleDesc") {
+      return displayName(b.title).localeCompare(displayName(a.title), undefined, { sensitivity: "base" });
+    } else if (sortKey.value === "oldest") {
+      return (a.lastModified || 0) - (b.lastModified || 0);
+    }
+    // Default: lastModified descending
+    return (b.lastModified || 0) - (a.lastModified || 0);
+  });
+
+  return list;
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+// Strip _archive/ prefix then return just the filename
 function displayName(title) {
   const stripped = (title || "").replace(/^_archive\//, "");
   const parts = stripped.split("/");
@@ -173,13 +290,13 @@ function previewNote(title) {
   router.push({ name: "note", params: { title } });
 }
 
+// ── Data loading ──────────────────────────────────────────────────────────────
+
 async function loadArchive() {
   loading.value = true;
   loadingIndicator.value?.setLoading();
   try {
-    // Use include_archived=true to get archived notes
     const all = await getNotes("*", "lastModified", "desc", null, true, false);
-    // Filter client-side to only notes that are actually in _archive/
     results.value = all.filter((n) => n.title.startsWith("_archive/"));
     loadingIndicator.value?.setLoaded();
   } catch (error) {
@@ -188,6 +305,13 @@ async function loadArchive() {
   } finally {
     loading.value = false;
   }
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+
+function promptRestore(title) {
+  pendingRestoreTitle.value = title;
+  isConfirmRestoreVisible.value = true;
 }
 
 async function doRestore() {
@@ -199,11 +323,6 @@ async function doRestore() {
   } catch (error) {
     apiErrorHandler(error, toast);
   }
-}
-
-function promptRestore(title) {
-  pendingRestoreTitle.value = title;
-  isConfirmRestoreVisible.value = true;
 }
 
 function promptDelete(title) {
@@ -228,7 +347,6 @@ function confirmEmptyArchive() {
 
 async function doEmptyArchive() {
   try {
-    // Delete one at a time to avoid race conditions
     for (const note of results.value) {
       await permanentDeleteArchivedNote(note.title);
     }

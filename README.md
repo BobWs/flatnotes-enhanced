@@ -29,10 +29,13 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.6.3
+## 🆕 What's New in v1.7.0
 
-- **Bug fix:** Expand All now expands all nested folder and tag levels; individual expand/collapse works before AND after using Expand/Collapse All
-- **Bug fix:** Header colors and font (H1–H6) now correctly respect your Settings preferences – disabling headers reverts to default theme color and Poppins font
+- **Redesigned Archive Page** – Search, sort, and filter archived notes (matching the Attachments page design)
+- **New Maintenance Tab** – Trash manager, content summary, and system info in a clean two-column layout
+- **Preferences Backup & Restore** – Automatic daily backups, manual backups, and restore with safety confirmation
+- **Live Version Check** – Automatic update detection shows when a new release is available
+- **Settings Page Refactor** – Split into dedicated components for faster loading and easier maintenance
 
 [View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
 
@@ -142,7 +145,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Note Editor | WYSIWYG/Markdown editing with all enhancements. |
 | Folders | Browse and manage notes by folder structure. |
 | Tags | Browse and manage notes by tags. |
-| Archive | View and restore archived notes. |
+| Archive | Browse, search, sort, and restore archived notes. Empty archive with confirmation. |
 | Trash | Manage soft-deleted notes. |
 | Bookmarks | View all pinned notes. |
 | Templates | Manage note templates. |
@@ -161,6 +164,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Tags | Global tag colors + per-tag overrides. |
 | Task Icons | Custom colors for task markers. |
 | Preferences | Display name, avatar, default sort, note view (Normal/Wide/Full Screen), note preview toggle, button label toggle, custom home note. |
+| Maintenance | Trash manager, content summary, backups, version check, system info. |
 
 ---
 
@@ -180,6 +184,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Settings page (Tags tab) | ![Settings - Tags](images/settings_tags_1.png), <br> ![Settings - Tags](images/settings_tags_2.png) |
 | Settings page (Task Icons tab) | ![Settings - Task Icons](images/settings_task_1.png), <br> ![Settings - Task Icons](images/settings_task_2.png) |
 | Settings page (Account tab) | ![Settings - Account](images/settings_account.png) |
+| Settings page (Maintenance tab) | ![Settings - Maintenance](images/settings_maintenance_1.png), <br> ![Settings - Maintenance Backup & Restore](images/settings_maintenance_2.png) |
 | Note Editor (insert wikilink) | ![ToastEditor - Wikilink button](images/wikilink_editor_button.png), <br>  ![ToastEditor - popup modal](images/wikilink_popup_modal.png) |
 ---
 
@@ -287,10 +292,27 @@ Open your browser and navigate to `http://localhost:8080`
 | `FLATNOTES_PATH` | Path to notes storage | `/data` |
 | `FLATNOTES_HOST` | Host to bind the server to | `0.0.0.0` |
 | `FLATNOTES_PORT` | Port to bind the server to | `8080` |
+| `FLATNOTES_TRASH_DAYS` | Auto-delete trash older than N days (0 = disabled) | `0` |
 | `ENABLE_DATABASE` | Enable SQLite database for settings | `true` |
 | `DATABASE_PATH` | Path to SQLite database file | `/data/.flatnotes/flatnotes.db` |
 | `DATABASE_ECHO` | Enable database SQL logging | `false` |
 | `LOGLEVEL` | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) | `INFO` |
+
+---
+
+## 💾 Preferences Backup & Restore
+
+Your preferences (colors, callouts, tag settings, appearance, etc.) are automatically backed up daily. Backups are stored in `/data/.flatnotes/backups/`.
+
+| Feature | Description |
+|---------|-------------|
+| **Automatic backups** | Created once per calendar day on app startup |
+| **Retention** | Keep last N backups (default 7) – auto-pruned |
+| **Manual backup** | Click "Backup now" in Maintenance tab |
+| **Restore** | Select any backup and confirm (requires typing `RESTORE`) |
+| **Safety** | Automatic `pre_restore` backup before any restore operation |
+
+> **Note:** Backups contain **settings only** – your notes are stored as plain markdown files and are never touched by backup/restore.
 
 ---
 
@@ -303,6 +325,7 @@ Open your browser and navigate to `http://localhost:8080`
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.7.0` – Redesigned Archive Page, Maintenance Tab, Preferences Backup & Restore, Live Version Check
 - `v1.6.3` – Bug fixes: sidebar expand/collapse (deep nesting, individual toggles) + header colors/font now respect user preferences
 - `v1.6.2` – Consistent default sorting: all "All Notes" entry points respect your preference
 - `v1.6.1` – Bug fix: title truncation in editor header

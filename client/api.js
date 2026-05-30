@@ -449,3 +449,58 @@ export async function saveTaskIcons(settings) {
     return Promise.reject(response);
   }
 }
+
+// ── Maintenance API ───────────────────────────────────────────────────────────
+
+export async function getMaintenanceStatus() {
+  try {
+    const response = await api.get("api/maintenance/status");
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function emptyTrashNow(days = 0) {
+  try {
+    const response = await api.post("api/maintenance/trash/empty", { days });
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function getBackups() {
+  try {
+    const response = await api.get("api/maintenance/backups");
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function createBackup(label = "manual") {
+  try {
+    const response = await api.post("api/maintenance/backups", { label });
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function restoreBackup(filename) {
+  try {
+    const response = await api.post("api/maintenance/backups/restore", { filename });
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function deleteBackup(filename) {
+  try {
+    await api.delete(`api/maintenance/backups/${encodeURIComponent(filename)}`);
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}

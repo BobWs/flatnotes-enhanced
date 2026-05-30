@@ -4,9 +4,8 @@
     <div class="flex items-center justify-between mb-4">
       <div>
         <h1 class="text-2xl font-semibold text-theme-text">Trash</h1>
-        <p class="text-xs text-theme-text-muted mt-0.5">
+        <p class="text-sm text-theme-text-muted mt-0.5">
           {{ results.length }} trashed note{{ results.length !== 1 ? 's' : '' }}
-          · Notes moved here are hidden from search.
         </p>
       </div>
       <div class="flex gap-2">

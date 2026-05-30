@@ -17,7 +17,9 @@ Robustness guarantees
 """
 import json
 import os
+import re
 import shutil
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import (
@@ -404,6 +406,144 @@ class DatabaseManager:
             db.rollback()
         finally:
             db.close()
+
+    # ── Backup / Restore ──────────────────────────────────────────────────────
+
+    _BACKUP_FILENAME_RE = re.compile(
+        r"^flatnotes_backup_([a-zA-Z0-9_-]+)_(\d{8}_\d{6})\.db$"
+    )
+
+    @property
+    def BACKUP_DIR(self) -> str:
+        return os.path.join(os.path.dirname(self.db_path), "backups")
+
+    def _format_bytes(self, n: int) -> str:
+        for unit in ("B", "KB", "MB", "GB"):
+            if abs(n) < 1024.0:
+                return f"{n:.1f} {unit}"
+            n /= 1024.0
+        return f"{n:.1f} TB"
+
+    def _get_retain_count(self) -> int:
+        """Read backup_retain_count from UserSettings.extra, defaulting to 7."""
+        db = self.get_session()
+        if db is None:
+            return 7
+        try:
+            settings = db.query(UserSettings).join(User).filter(
+                User.username == "default"
+            ).first()
+            if settings and settings.extra:
+                return int(settings.extra.get("backup_retain_count", 7))
+        except Exception:
+            pass
+        finally:
+            db.close()
+        return 7
+
+    def create_backup(self, label: str = "auto") -> dict:
+        """Copy the current DB file to backups/ with a timestamped filename.
+
+        Returns a dict with filename, path, size_bytes, and created_at.
+        Prunes old backups afterwards to respect retain_count.
+        Raises RuntimeError if the database is not enabled or the file is missing.
+        """
+        if not self.enabled:
+            raise RuntimeError("Database is not enabled")
+        if not os.path.exists(self.db_path):
+            raise RuntimeError(f"Database file not found: {self.db_path}")
+
+        # Sanitise label — alphanumerics, hyphens, underscores only
+        safe_label = re.sub(r"[^a-zA-Z0-9_-]", "_", label)[:32] or "auto"
+
+        os.makedirs(self.BACKUP_DIR, exist_ok=True)
+
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        filename = f"flatnotes_backup_{safe_label}_{ts}.db"
+        dest_path = os.path.join(self.BACKUP_DIR, filename)
+
+        shutil.copy2(self.db_path, dest_path)
+        size = os.path.getsize(dest_path)
+        logger.info(f"Backup created: {filename} ({self._format_bytes(size)})")
+
+        self._prune_old_backups(self._get_retain_count())
+
+        return {
+            "filename":   filename,
+            "path":       dest_path,
+            "size_bytes": size,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    def _prune_old_backups(self, retain_count: int) -> None:
+        """Delete oldest backups until only retain_count files remain."""
+        if not os.path.isdir(self.BACKUP_DIR):
+            return
+        backups = [
+            f for f in os.listdir(self.BACKUP_DIR)
+            if self._BACKUP_FILENAME_RE.match(f)
+        ]
+        if len(backups) <= retain_count:
+            return
+        # Sort by mtime ascending (oldest first)
+        backups.sort(key=lambda f: os.path.getmtime(os.path.join(self.BACKUP_DIR, f)))
+        to_delete = backups[:len(backups) - retain_count]
+        for fname in to_delete:
+            try:
+                os.remove(os.path.join(self.BACKUP_DIR, fname))
+                logger.info(f"Pruned old backup: {fname}")
+            except Exception as exc:
+                logger.warning(f"Could not prune backup {fname}: {exc}")
+
+    def list_backups(self) -> list:
+        """Return backup metadata dicts sorted newest-first."""
+        if not os.path.isdir(self.BACKUP_DIR):
+            return []
+        result = []
+        for fname in os.listdir(self.BACKUP_DIR):
+            m = self._BACKUP_FILENAME_RE.match(fname)
+            if not m:
+                continue
+            fpath = os.path.join(self.BACKUP_DIR, fname)
+            try:
+                size = os.path.getsize(fpath)
+                mtime = os.path.getmtime(fpath)
+                result.append({
+                    "filename":   fname,
+                    "path":       fpath,
+                    "size_bytes": size,
+                    "size_human": self._format_bytes(size),
+                    "created_at": datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat(),
+                    "label":      m.group(1),
+                })
+            except Exception:
+                continue
+        result.sort(key=lambda x: x["created_at"], reverse=True)
+        return result
+
+    def restore_backup(self, filename: str) -> dict:
+        """Restore a backup file over the live database.
+
+        Safety steps:
+        1. Validate filename (no path traversal, must match pattern).
+        2. Create a pre-restore safety backup of the current DB.
+        3. Copy the chosen backup over the live DB.
+        Returns {"success": True, "pre_restore_backup": safety_filename}.
+        """
+        if not self._BACKUP_FILENAME_RE.match(filename):
+            raise ValueError(f"Invalid backup filename: {filename!r}")
+
+        backup_path = os.path.join(self.BACKUP_DIR, filename)
+        if not os.path.exists(backup_path):
+            raise FileNotFoundError(f"Backup not found: {filename}")
+
+        # Safety backup of current state
+        safety = self.create_backup(label="pre_restore")
+        safety_filename = safety["filename"]
+
+        shutil.copy2(backup_path, self.db_path)
+        logger.info(f"Restored backup {filename}; pre-restore safety saved as {safety_filename}")
+        return {"success": True, "pre_restore_backup": safety_filename}
 
     # ── Public API ────────────────────────────────────────────────────────────
 

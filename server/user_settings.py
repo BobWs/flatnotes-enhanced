@@ -88,6 +88,7 @@ class UserPrefs(CustomBaseModel):
     show_button_labels: bool = Field(True)
     home_note_enabled: bool = Field(False)
     home_note: Optional[str] = Field(None)
+    backup_retain_count: int = Field(7)
 
 
 class UserPrefsUpdate(CustomBaseModel):
@@ -103,7 +104,8 @@ class UserPrefsUpdate(CustomBaseModel):
     quote_style: Optional[QuoteStyleDefinition] = Field(None)
     show_button_labels: Optional[bool] = Field(None)
     home_note_enabled: Optional[bool] = Field(None)
-    home_note: Optional[str] = Field(None)    
+    home_note: Optional[str] = Field(None)
+    backup_retain_count: Optional[int] = Field(None)
 
 
 # ── Built-in defaults ─────────────────────────────────────────────────────────
@@ -339,6 +341,7 @@ def get_prefs() -> UserPrefs:
                     show_button_labels=(settings.extra or {}).get("show_button_labels", True),
                     home_note_enabled=(settings.extra or {}).get("home_note_enabled", False),
                     home_note=(settings.extra or {}).get("home_note", None),
+                    backup_retain_count=int((settings.extra or {}).get("backup_retain_count", 7)),
                 )
         except Exception as e:
             logger.error(f"Database error in get_prefs: {e}")
@@ -412,6 +415,11 @@ def save_prefs(prefs: UserPrefsUpdate) -> None:
                 extra = dict(settings.extra or {})
                 extra["home_note_enabled"] = prefs.home_note_enabled
                 extra["home_note"] = prefs.home_note
+                settings.extra = extra
+
+            if prefs.backup_retain_count is not None:
+                extra = dict(settings.extra or {})
+                extra["backup_retain_count"] = max(1, min(30, int(prefs.backup_retain_count)))
                 settings.extra = extra
 
             db.commit()
@@ -562,3 +570,52 @@ def save_task_icons(task_icons: TaskIconSettings) -> None:
     with open(_task_icons_path(), "w", encoding="utf-8") as f:
         json.dump(task_icons.dict(), f, indent=2)
     logger.info("Saved task icons to JSON")
+
+
+# ── Maintenance key/value helpers (stored in UserSettings.extra) ──────────────
+
+def save_maintenance_setting(key: str, value) -> None:
+    """Persist an arbitrary key/value pair inside UserSettings.extra.
+
+    Uses the same extra-dict pattern as show_button_labels.
+    Falls back silently to a no-op when the DB is unavailable — maintenance
+    metadata is non-critical and must never crash a save operation.
+    """
+    if db_manager.enabled:
+        db = db_manager.get_session()
+        try:
+            user_id = _get_user_id()
+            settings = db.query(UserSettings).filter(UserSettings.user_id == user_id).first()
+            if not settings:
+                settings = UserSettings(user_id=user_id)
+                db.add(settings)
+            extra = dict(settings.extra or {})
+            extra[key] = value
+            settings.extra = extra
+            db.commit()
+            logger.debug(f"Saved maintenance setting '{key}'")
+        except Exception as exc:
+            logger.error(f"Database error in save_maintenance_setting: {exc}")
+            db.rollback()
+        finally:
+            db.close()
+
+
+def get_maintenance_setting(key: str, default=None):
+    """Retrieve a single key from UserSettings.extra.
+
+    Returns *default* when the DB is unavailable, the row doesn't exist,
+    or the key has never been written.
+    """
+    if db_manager.enabled:
+        db = db_manager.get_session()
+        try:
+            user_id = _get_user_id()
+            settings = db.query(UserSettings).filter(UserSettings.user_id == user_id).first()
+            if settings and settings.extra:
+                return settings.extra.get(key, default)
+        except Exception as exc:
+            logger.error(f"Database error in get_maintenance_setting: {exc}")
+        finally:
+            db.close()
+    return default
