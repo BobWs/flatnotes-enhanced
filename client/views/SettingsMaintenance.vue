@@ -250,7 +250,11 @@
             <p
               v-else-if="status.latest_version != null && status.update_checked_at"
               class="text-xs text-theme-text-very-muted mt-1"
-            >Checked {{ formatRelativeTime(status.update_checked_at) }}</p>
+            >Checked {{ formatRelativeTime(status.update_checked_at) }}
+              <span v-if="status.update_check_source" class="opacity-60">
+                via {{ status.update_check_source === 'dockerhub' ? 'Docker Hub' : 'GitHub' }}
+              </span>
+            </p>
           </div>
 
           <div class="p-3 rounded-lg bg-theme-background-elevated">
@@ -385,11 +389,12 @@
 
               <!-- Filename + meta -->
               <div class="flex-1 min-w-0">
-                <p class="text-xs font-mono text-theme-text truncate" :title="backup.filename">
+                <p class="text-xs font-mono text-theme-text truncate" :title="'Backup filename (timestamp in UTC): ' + backup.filename">
                   {{ backup.filename }}
                 </p>
-                <p class="text-xs text-theme-text-very-muted mt-0.5">
-                  {{ formatBackupDate(backup.created_at) }} · {{ backup.size_human }}
+                <p class="text-xs text-theme-text-very-muted mt-0.5"
+                   :title="'When the database file was last saved (' + formatBackupDate(backup.created_at) + ')'">
+                  Database Last Saved: {{ formatBackupDate(backup.created_at) }} · {{ backup.size_human }}
                   <span
                     v-if="backup.label && backup.label !== 'manual' && backup.label !== 'startup'"
                     class="ml-1 px-1 py-0.5 rounded bg-theme-background-elevated font-medium"

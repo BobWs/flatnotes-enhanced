@@ -32,11 +32,28 @@ def format_bytes(n: int) -> str:
         n /= 1024.0
     return f"{n:.1f} PB"
 
-# ── GitHub update check ───────────────────────────────────────────────────────
+# ── Version update check (Docker Hub primary → GitHub fallback) ───────────────
+#
+# Docker Hub tags API is unauthenticated, public, and has generous rate limits
+# (metadata reads are not counted against pull quotas).  GitHub's unauthenticated
+# API is limited to 60 req/hour per IP — shared across the whole host, so
+# Synology/NAS users hit it quickly.  We therefore try Docker Hub first and only
+# fall back to GitHub if Docker Hub fails.
+#
+# Both sources share the same 6-hour in-process cache so only one outbound HTTP
+# request is made per server lifetime per TTL window.
+import re as _re
 import urllib.request as _urllib_request
 
-_GITHUB_API = "https://api.github.com/repos/BobWs/flatnotes-enhanced/releases/latest"
-_CACHE_TTL_HOURS = 24
+_DOCKERHUB_TAGS_API = (
+    "https://hub.docker.com/v2/repositories/dockerbobw/flatnotes-enhanced"
+    "/tags?page_size=25&ordering=last_updated"
+)
+_GITHUB_RELEASES_API = (
+    "https://api.github.com/repos/BobWs/flatnotes-enhanced/releases/latest"
+)
+_GITHUB_RELEASE_URL = "https://github.com/BobWs/flatnotes-enhanced/releases/latest"
+_CACHE_TTL_HOURS    = 6
 
 _update_cache: dict = {
     "latest_version": None,
@@ -44,58 +61,150 @@ _update_cache: dict = {
     "published_at":   None,
     "checked_at":     None,
     "error":          None,
+    "source":         None,   # "dockerhub" | "github" | None
 }
+
+# Semver pattern — only tags like "1.6.3" or "v1.6.3" (no arch suffixes etc.)
+_SEMVER_RE = _re.compile(r"^v?(\d+)\.(\d+)\.(\d+)$")
+
+
+def _semver_tuple(v: str):
+    """Parse a version string into a comparable int tuple, or raise ValueError."""
+    m = _SEMVER_RE.match(v.strip())
+    if not m:
+        raise ValueError(f"Not a semver tag: {v!r}")
+    return (int(m.group(1)), int(m.group(2)), int(m.group(3)))
 
 
 def _is_newer(latest: str, current: str) -> bool:
-    """Return True if *latest* is strictly greater than *current* (semver tuples)."""
+    """Return True if *latest* is strictly greater than *current*.
+
+    Returns False on any parsing error so the UI never shows a false positive.
+    """
     try:
-        def _t(v: str):
-            return tuple(int(x) for x in v.lstrip("v").split("."))
-        return _t(latest) > _t(current)
+        return _semver_tuple(latest) > _semver_tuple(current)
     except Exception:
         return False
 
 
-def get_latest_release() -> None:
-    """Fetch the latest GitHub release and populate _update_cache.
+def _fetch_url(url: str, extra_headers: dict | None = None) -> dict:
+    """Fetch *url* and return parsed JSON.  Raises on HTTP error or timeout."""
+    headers = {"User-Agent": f"flatnotes-enhanced/{MODULE_VERSION}"}
+    if extra_headers:
+        headers.update(extra_headers)
+    req = _urllib_request.Request(url, headers=headers)
+    with _urllib_request.urlopen(req, timeout=5) as resp:
+        return json.loads(resp.read().decode())
 
-    Never raises — all exceptions are caught and stored in _update_cache["error"].
-    Uses a 6-hour TTL so repeated requests are served from cache.
+
+def _latest_from_dockerhub() -> tuple[str, str | None]:
+    """Return (version_string, release_url_or_None) from Docker Hub tags.
+
+    Filters tags to semver-shaped ones only, picks the highest by tuple comparison.
+    Raises on any failure so the caller can fall back.
+    """
+    data = _fetch_url(_DOCKERHUB_TAGS_API)
+    results = data.get("results", [])
+    candidates = []
+    for tag in results:
+        name = tag.get("name", "")
+        try:
+            tup = _semver_tuple(name)
+            candidates.append((tup, name.lstrip("v")))
+        except ValueError:
+            pass  # skip "latest", "arm64", etc.
+
+    if not candidates:
+        raise ValueError("No semver tags found on Docker Hub")
+
+    candidates.sort(reverse=True)
+    best_version = candidates[0][1]
+    # Link to the GitHub release page — Docker Hub doesn't have release notes
+    return best_version, _GITHUB_RELEASE_URL
+
+
+def _latest_from_github() -> tuple[str, str | None]:
+    """Return (version_string, release_url_or_None) from GitHub Releases API.
+
+    Raises on any failure (including rate-limit 403) so the caller can handle it.
+    """
+    data = _fetch_url(
+        _GITHUB_RELEASES_API,
+        extra_headers={"Accept": "application/vnd.github+json"},
+    )
+    # GitHub returns {"message": "API rate limit exceeded…"} with a 200-ish body
+    # when rate-limited via some CDN paths, so check for that explicitly.
+    if "message" in data and "rate limit" in data["message"].lower():
+        raise RuntimeError(f"GitHub rate limit: {data['message']}")
+
+    tag = data.get("tag_name", "").lstrip("v")
+    if not tag:
+        raise ValueError("GitHub response contained no tag_name")
+    url = data.get("html_url") or _GITHUB_RELEASE_URL
+    return tag, url
+
+
+def get_latest_release() -> None:
+    """Populate _update_cache with the latest available version.
+
+    Strategy (never raises):
+      1. Docker Hub tags API  — primary, generous rate limits
+      2. GitHub Releases API  — fallback, 60 req/hr per IP
+      3. Both fail            — cache["error"] is set, latest_version stays None
+
+    A 6-hour TTL means at most one outbound request per TTL window regardless
+    of how many users hit the status endpoint.
     """
     from datetime import datetime, timezone
 
     now = datetime.now(timezone.utc)
 
-    # Serve from cache if fresh enough
+    # ── TTL check ─────────────────────────────────────────────────────────────
     if _update_cache["checked_at"] is not None:
         try:
-            last = datetime.fromisoformat(_update_cache["checked_at"])
+            last      = datetime.fromisoformat(_update_cache["checked_at"])
             age_hours = (now - last).total_seconds() / 3600
             if age_hours < _CACHE_TTL_HOURS:
-                return
+                return          # still fresh — serve from cache
         except Exception:
-            pass  # bad timestamp — fall through and re-fetch
+            pass                # bad timestamp; fall through and re-fetch
 
+    errors = []
+
+    # ── 1. Docker Hub (primary) ───────────────────────────────────────────────
     try:
-        req = _urllib_request.Request(
-            _GITHUB_API,
-            headers={
-                "Accept":     "application/vnd.github+json",
-                "User-Agent": f"flatnotes-enhanced/{MODULE_VERSION}",
-            },
+        version, url = _latest_from_dockerhub()
+        _update_cache.update(
+            latest_version=version,
+            release_url=url,
+            error=None,
+            source="dockerhub",
         )
-        with _urllib_request.urlopen(req, timeout=5) as resp:
-            data = json.loads(resp.read().decode())
-
-        _update_cache["latest_version"] = data.get("tag_name", "").lstrip("v") or None
-        _update_cache["release_url"]    = data.get("html_url") or None
-        _update_cache["published_at"]   = data.get("published_at") or None
-        _update_cache["error"]          = None
-    except Exception as exc:
-        _update_cache["error"] = str(exc)
-    finally:
         _update_cache["checked_at"] = now.isoformat()
+        return
+    except Exception as exc:
+        errors.append(f"DockerHub: {exc}")
+
+    # ── 2. GitHub Releases (fallback) ─────────────────────────────────────────
+    try:
+        version, url = _latest_from_github()
+        _update_cache.update(
+            latest_version=version,
+            release_url=url,
+            error=None,
+            source="github",
+        )
+        _update_cache["checked_at"] = now.isoformat()
+        return
+    except Exception as exc:
+        errors.append(f"GitHub: {exc}")
+
+    # ── Both failed ───────────────────────────────────────────────────────────
+    _update_cache["error"]      = "; ".join(errors)
+    _update_cache["source"]     = None
+    _update_cache["checked_at"] = now.isoformat()
+    # Leave latest_version / release_url unchanged so a previous good result
+    # survives a transient network blip within the same server process.
 
 import api_messages
 from attachments.base import BaseAttachments
@@ -673,6 +782,7 @@ def maintenance_status():
         "release_url":           _update_cache["release_url"],
         "update_checked_at":     _update_cache["checked_at"],
         "update_check_error":    _update_cache["error"],
+        "update_check_source":   _update_cache["source"],   # "dockerhub"|"github"|None
     }
 
 

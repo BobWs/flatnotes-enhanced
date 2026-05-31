@@ -29,15 +29,13 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.7.0
+## 🆕 What's New in v1.7.1
 
-- **Redesigned Archive Page** – Search, sort, and filter archived notes (matching the Attachments page design)
-- **New Maintenance Tab** – Trash manager, content summary, and system info in a clean two-column layout
-- **Preferences Backup & Restore** – Automatic daily backups, manual backups, and restore with safety confirmation
-- **Live Version Check** – Automatic update detection shows when a new release is available
-- **Settings Page Refactor** – Split into dedicated components for faster loading and easier maintenance
+- **Bug fix:** Backup list now shows clearer date timestamps with file size and helpful tooltips
+- **Bug fix:** Version check now uses Docker Hub API (primary) with GitHub fallback – more reliable, no more false "Offline" due to rate limits
 
 [View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
+See the [Changelog](CHANGELOG.md) for complete version history.
 
 ---
 
@@ -325,6 +323,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.7.1` – Bug fixes: backup list clarity + more reliable version check (Docker Hub API)
 - `v1.7.0` – Redesigned Archive Page, Maintenance Tab, Preferences Backup & Restore, Live Version Check
 - `v1.6.3` – Bug fixes: sidebar expand/collapse (deep nesting, individual toggles) + header colors/font now respect user preferences
 - `v1.6.2` – Consistent default sorting: all "All Notes" entry points respect your preference
@@ -370,11 +369,11 @@ Want to land on your dashboard, weekly planner, or project overview every time y
 ### Future Features
 
 - Wikilink Popup Modal - done!
+- Auto-delete trash after N days - done!
+- Automatic database backup - done!
 - Modal table editor – planned!
 - Spreadsheet in notes – planned!
-- Auto-delete trash after N days
 - Multi-user support
-- Automatic database backup
 
 ---
 
