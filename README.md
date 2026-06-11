@@ -29,13 +29,13 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.7.1
+## 🆕 What's New in v1.7.2
 
-- **Bug fix:** Backup list now shows clearer date timestamps with file size and helpful tooltips
-- **Bug fix:** Version check now uses Docker Hub API (primary) with GitHub fallback – more reliable, no more false "Offline" due to rate limits
+- **Non-ASCII character support** – Usernames and passwords can now contain umlauts (ä, ö, ü, ß) and other accented characters
 
-[View full changelog](https://github.com/BobWs/flatnotes-enhanced/releases)
-See the [Changelog](CHANGELOG.md) for complete version history.
+
+- View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
+- See the [Changelog](CHANGELOG.md) file for complete version history.
 
 ---
 
@@ -131,6 +131,7 @@ See the [Changelog](CHANGELOG.md) for complete version history.
 |---------|-------------|
 | TOTP Support | Two-factor authentication with QR code setup (on Login page). |
 | Multiple Auth Types | None, Read-Only, Password, or TOTP. |
+| Non-ASCII Support | Usernames and passwords support umlauts (ä, ö, ü, ß) and accented characters. |
 
 ---
 
@@ -323,6 +324,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.7.2` – Non-ASCII characters in usernames and passwords (umlauts, accented characters)
 - `v1.7.1` – Bug fixes: backup list clarity + more reliable version check (Docker Hub API)
 - `v1.7.0` – Redesigned Archive Page, Maintenance Tab, Preferences Backup & Restore, Live Version Check
 - `v1.6.3` – Bug fixes: sidebar expand/collapse (deep nesting, individual toggles) + header colors/font now respect user preferences

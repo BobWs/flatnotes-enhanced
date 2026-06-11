@@ -44,8 +44,11 @@ class LocalAuth(BaseAuth):
 
     def login(self, data: Login) -> Token:
         # Check Username
+        # Encode to UTF-8 bytes so secrets.compare_digest works correctly with
+        # non-ASCII characters (umlauts, accented characters, etc.)
         username_correct = secrets.compare_digest(
-            self.username.lower(), data.username.lower()
+            self.username.lower().encode("utf-8"),
+            data.username.lower().encode("utf-8"),
         )
 
         # Check Password & TOTP
@@ -54,7 +57,8 @@ class LocalAuth(BaseAuth):
             current_totp = self.totp.now()
             expected_password += current_totp
         password_correct = secrets.compare_digest(
-            expected_password, data.password
+            expected_password.encode("utf-8"),
+            data.password.encode("utf-8"),
         )
 
         # Raise error if incorrect

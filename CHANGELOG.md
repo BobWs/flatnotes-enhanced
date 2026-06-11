@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.7.2] - 2026-06-11
+
+### Added
+- Non-ASCII character support for usernames and passwords (umlauts, accented characters)
+
+### Fixed
+- Login no longer fails when passwords contain characters like `ä`, `ö`, `ü`, `ß`, `é`, `è`, `ç`, `ñ`
+- Backend no longer crashes with `TypeError` when non-ASCII characters are used in credentials
+
+--- 
+
 ## [1.7.1] - 2026-05-31
 
 ### Fixed
