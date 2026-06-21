@@ -122,6 +122,26 @@
                       after:transition-transform peer-checked:after:translate-x-5"></div>
         </label>
       </div>
+
+      <!-- Offline caching (PWA) -->
+      <div class="flex items-center justify-between p-4 rounded-lg border border-theme-border bg-theme-background">
+        <div class="min-w-0 pr-3">
+          <p class="text-sm font-medium text-theme-text">Enable offline caching</p>
+          <p class="text-xs text-theme-text-muted mt-0.5 leading-relaxed">
+            Cache notes and assets so you can read them when the server is unreachable.
+            Also enables installing Flatnotes as a standalone app.
+            <span class="block mt-1 text-theme-text-very-muted">Notes are stored as markdown files and are not affected by this setting.</span>
+          </p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+          <input type="checkbox" v-model="prefs.offlineCacheEnabled" class="sr-only peer" />
+          <div class="w-11 h-6 bg-theme-border rounded-full peer
+                      peer-checked:bg-theme-brand transition-colors
+                      after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                      after:bg-white after:rounded-full after:h-5 after:w-5
+                      after:transition-transform peer-checked:after:translate-x-5"></div>
+        </label>
+      </div>
     </div>
 
     <!-- ── Row 4: Custom Home Note (full width) ── -->
@@ -197,6 +217,7 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { getPrefs, savePrefs as apiSavePrefs, createAttachment } from "../api.js";
 import { useGlobalStore } from "../globalStore.js";
+import { setOfflineCache, unregisterAll, init as initPwa } from "../pwaService.js";
 
 const globalStore = useGlobalStore();
 
@@ -209,6 +230,7 @@ const prefs = ref({
   showButtonLabels: true,
   homeNoteEnabled: false,
   homeNote: "",
+  offlineCacheEnabled: false,
 });
 const prefsSaving = ref(false);
 const prefsSaveMsg = ref("");
@@ -241,6 +263,17 @@ watch(() => prefs.value.homeNote, (val) => {
 watch(() => prefs.value.notesDefaultSort, (val) => {
   globalStore.notesDefaultSort = val || '';
 }, { immediate: true });
+
+watch(() => prefs.value.offlineCacheEnabled, async (val) => {
+  globalStore.offlineCacheEnabled = val;
+  if (val) {
+    await initPwa();
+    setOfflineCache(true);
+  } else {
+    setOfflineCache(false);
+    await unregisterAll();
+  }
+}, { immediate: false });
 
 // ── Avatar helpers ────────────────────────────────────────────────────────────
 async function uploadAvatar(e) {
@@ -276,13 +309,14 @@ async function savePrefs() {
     const p = prefs.value;
     const toNull = (v) => (v === "" || v === undefined) ? null : v;
     await apiSavePrefs({
-      display_name:        toNull(p.displayName),
-      avatar_filename:     toNull(p.avatarFilename),
-      notes_default_sort:  p.notesDefaultSort ?? "",
-      notes_default_view:  (p.notesDefaultView === 'fullscreen' || p.notesDefaultView === 'wide') ? p.notesDefaultView : 'normal',
-      show_button_labels:  p.showButtonLabels,
-      home_note_enabled:   p.homeNoteEnabled,
-      home_note:           p.homeNote ? p.homeNote.trim() : null,
+      display_name:          toNull(p.displayName),
+      avatar_filename:       toNull(p.avatarFilename),
+      notes_default_sort:    p.notesDefaultSort ?? "",
+      notes_default_view:    (p.notesDefaultView === 'fullscreen' || p.notesDefaultView === 'wide') ? p.notesDefaultView : 'normal',
+      show_button_labels:    p.showButtonLabels,
+      home_note_enabled:     p.homeNoteEnabled,
+      home_note:             p.homeNote ? p.homeNote.trim() : null,
+      offline_cache_enabled: p.offlineCacheEnabled,
     });
     prefsSaveOk.value = true;
     prefsSaveMsg.value = "Saved ✓";
@@ -301,13 +335,14 @@ onMounted(async () => {
   try {
     const p = await getPrefs();
     prefs.value = {
-      displayName:       p.display_name ?? "",
-      avatarFilename:    p.avatar_filename ?? null,
-      notesDefaultSort:  p.notes_default_sort ?? "",
-      notesDefaultView:  (p.notes_default_view === 'fullscreen' || p.notes_default_view === 'wide') ? p.notes_default_view : 'normal',
-      showButtonLabels:  p.show_button_labels !== false,
-      homeNoteEnabled:   p.home_note_enabled === true,
-      homeNote:          p.home_note || "",
+      displayName:          p.display_name ?? "",
+      avatarFilename:       p.avatar_filename ?? null,
+      notesDefaultSort:     p.notes_default_sort ?? "",
+      notesDefaultView:     (p.notes_default_view === 'fullscreen' || p.notes_default_view === 'wide') ? p.notes_default_view : 'normal',
+      showButtonLabels:     p.show_button_labels !== false,
+      homeNoteEnabled:      p.home_note_enabled === true,
+      homeNote:             p.home_note || "",
+      offlineCacheEnabled:  p.offline_cache_enabled === true,
     };
   } catch {
     // defaults already set

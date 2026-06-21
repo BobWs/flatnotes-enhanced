@@ -32,6 +32,17 @@ export function apiErrorHandler(error, toast) {
       name: "login",
       query: { [constants.params.redirect]: redirectPath },
     });
+  } else if (error.request && !error.response) {
+    // No response received — the server is unreachable (network failure, timeout,
+    // or the service worker had no cached entry for this request).
+    // Show a specific offline message rather than the generic "Unknown Error".
+    toast.add(
+      getToastOptions(
+        "This content isn't available offline. Connect to your server to access it.",
+        "Not Available Offline",
+        "warn",
+      ),
+    );
   } else {
     console.error(error);
     toast.add(

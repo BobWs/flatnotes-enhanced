@@ -30,6 +30,8 @@ export default {
         // Static
         "theme-success": colors.emerald[600],
         "theme-danger": colors.rose[600],
+        "theme-warn": colors.amber[600],
+        "theme-info": colors.cyan[600],        
       },
     },
   },

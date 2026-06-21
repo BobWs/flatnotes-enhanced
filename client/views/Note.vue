@@ -486,7 +486,7 @@ async function togglePin() {
       updatedNote = await pinNote(note.value.title);
     }
     note.value = updatedNote;
-    toast.add(getToastOptions(`Note ${isPinned.value ? 'unpinned' : 'pinned'} ✓`, "Success", "success"));
+    toast.add(getToastOptions(`Note ${isPinned.value ? 'pinned' : 'unpinned'} ✓`, "Success", "success"));
     globalStore.bumpPinned();
   } catch (error) {
     apiErrorHandler(error, toast);

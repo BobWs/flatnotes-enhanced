@@ -89,6 +89,7 @@ class UserPrefs(CustomBaseModel):
     home_note_enabled: bool = Field(False)
     home_note: Optional[str] = Field(None)
     backup_retain_count: int = Field(7)
+    offline_cache_enabled: bool = Field(False)
 
 
 class UserPrefsUpdate(CustomBaseModel):
@@ -106,6 +107,7 @@ class UserPrefsUpdate(CustomBaseModel):
     home_note_enabled: Optional[bool] = Field(None)
     home_note: Optional[str] = Field(None)
     backup_retain_count: Optional[int] = Field(None)
+    offline_cache_enabled: Optional[bool] = Field(None)
 
 
 # ── Built-in defaults ─────────────────────────────────────────────────────────
@@ -342,6 +344,7 @@ def get_prefs() -> UserPrefs:
                     home_note_enabled=(settings.extra or {}).get("home_note_enabled", False),
                     home_note=(settings.extra or {}).get("home_note", None),
                     backup_retain_count=int((settings.extra or {}).get("backup_retain_count", 7)),
+                    offline_cache_enabled=bool((settings.extra or {}).get("offline_cache_enabled", False)),
                 )
         except Exception as e:
             logger.error(f"Database error in get_prefs: {e}")
@@ -420,6 +423,11 @@ def save_prefs(prefs: UserPrefsUpdate) -> None:
             if prefs.backup_retain_count is not None:
                 extra = dict(settings.extra or {})
                 extra["backup_retain_count"] = max(1, min(30, int(prefs.backup_retain_count)))
+                settings.extra = extra
+
+            if prefs.offline_cache_enabled is not None:
+                extra = dict(settings.extra or {})
+                extra["offline_cache_enabled"] = bool(prefs.offline_cache_enabled)
                 settings.extra = extra
 
             db.commit()

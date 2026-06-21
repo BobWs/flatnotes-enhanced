@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Offline – flatnotes</title>
+  <style>
+    :root {
+      --brand: 248 166 107;
+      --bg: 255 255 255;
+      --text: 44 49 57;
+      --muted: 136 145 161;
+      --elevated: 243 244 245;
+      --border: 236 238 240;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: 34 38 44;
+        --text: 193 199 208;
+        --muted: 136 145 161;
+        --elevated: 44 49 57;
+        --border: 94 107 128;
+      }
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Poppins", system-ui, -apple-system, sans-serif;
+      background-color: rgb(var(--bg));
+      color: rgb(var(--text));
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .card {
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+    .icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1.25rem;
+      fill: rgb(var(--brand));
+      opacity: 0.85;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      font-size: 0.9rem;
+      color: rgb(var(--muted));
+      line-height: 1.6;
+      margin-bottom: 1.75rem;
+    }
+    .hint {
+      font-size: 0.8rem;
+      color: rgb(var(--muted));
+      background: rgb(var(--elevated));
+      border: 1px solid rgb(var(--border));
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+    .hint strong {
+      color: rgb(var(--text));
+    }
+    button {
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.6rem 1.5rem;
+      border-radius: 8px;
+      border: 1.5px solid rgb(var(--brand));
+      background: rgb(var(--brand) / 0.12);
+      color: rgb(var(--brand));
+      transition: background 0.15s;
+    }
+    button:hover { background: rgb(var(--brand) / 0.22); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <!-- Cloud-offline icon -->
+    <svg class="icon" viewBox="0 0 24 24">
+      <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95A5.469 5.469 0 0 1 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11A2.98 2.98 0 0 1 22 15c0 1.65-1.35 3-3 3zm-9-3.5l1.41 1.41L13 14.33l1.59 1.58L16 14.5 14.41 12.92 16 11.33l-1.41-1.41L13 11.5l-1.58-1.58L10 11.33l1.59 1.59z"/>
+    </svg>
+    <h1>You're offline</h1>
+    <p>
+      Flatnotes can't reach the server right now.<br>
+      Notes you've opened before may still be available below.
+    </p>
+    <div class="hint">
+      <strong>Tip:</strong> Go back and open a note — if you visited it while online,
+      it's cached and readable offline. New notes or search results may not be available.
+    </div>
+    <button onclick="window.location.reload()">Try again</button>
+  </div>
+</body>
+</html>

@@ -29,10 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.7.2
+## 🆕 What's New in v1.8.0
 
-- **Non-ASCII character support** – Usernames and passwords can now contain umlauts (ä, ö, ü, ß) and other accented characters
-
+- **Progressive Web App (PWA)** – Install Flatnotes-Enhanced as a standalone app and access previously viewed notes offline
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -324,6 +323,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.8.0` – Progressive Web App (PWA) – offline read-only access, installable as standalone app
 - `v1.7.2` – Non-ASCII characters in usernames and passwords (umlauts, accented characters)
 - `v1.7.1` – Bug fixes: backup list clarity + more reliable version check (Docker Hub API)
 - `v1.7.0` – Redesigned Archive Page, Maintenance Tab, Preferences Backup & Restore, Live Version Check
@@ -365,6 +365,34 @@ Want to land on your dashboard, weekly planner, or project overview every time y
 * **Opt-in** — users who prefer the default quick-access home page are unaffected
 
 **Setup:** Settings → Preferences → Custom home note → toggle on → enter note title → Save.
+
+
+## PWA Offline Access
+
+Flatnotes-Enhanced can be installed as a Progressive Web App (PWA) and caches notes for offline access.
+
+**To enable:**
+1. Go to **Settings → Preferences**
+2. Toggle **"Enable offline caching (PWA)"**
+3. Install the app from your browser (Chrome/Edge: address bar install icon)
+
+**What works offline:**
+- Reading notes you've opened before
+- Browsing folders and tags
+- Searching cached content
+
+**What doesn't work offline:**
+- Editing or creating notes
+- Attachments
+- Content you haven't viewed while online
+
+**How it works:**
+- The app checks server reachability every 15 seconds
+- An amber banner appears when offline
+- Cache clears automatically when you disable the feature
+
+> **Note:** Offline access is read-only. For full functionality, you need a server connection.
+
 
 ---
 

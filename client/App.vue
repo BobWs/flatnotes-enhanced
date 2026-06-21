@@ -47,6 +47,21 @@
           contentWidthClass,
         ]"
       >
+        <!-- Offline banner — inside the centering wrapper so it respects the same
+             max-width as the NavBar and content (999px normal, 1400px wide, full
+             in fullscreen mode). Grows with the user's view preference, and slides
+             right with the rest of the content when a sidebar opens. -->
+        <div
+          v-if="!globalStore.isOnline"
+          class="shrink-0 mb-2 flex items-center gap-2 px-3 py-1.5 rounded-lg
+                 bg-amber-500/10 border border-amber-400/40 text-xs text-amber-600 dark:text-amber-400"
+        >
+          <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current shrink-0">
+            <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95A5.469 5.469 0 0 1 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11A2.98 2.98 0 0 1 22 15c0 1.65-1.35 3-3 3zm-9-3.5l1.41 1.41L13 14.33l1.59 1.58L16 14.5 14.41 12.92 16 11.33l-1.41-1.41L13 11.5l-1.58-1.58L10 11.33l1.59 1.59z"/>
+          </svg>
+          You're offline — viewing cached notes only.
+        </div>
+
         <!-- NavBar — always shrink-0, inherits the same width as content below -->
         <div class="shrink-0">
           <NavBar
@@ -102,6 +117,7 @@ import LoadingIndicator from "./components/LoadingIndicator.vue";
 import router from "./router.js";
 import { initSettingsStore } from "./calloutStore.js";
 import { loadTagColors } from "./tagColorStore.js";
+import { init as initPwa, setOfflineCache } from "./pwaService.js";
 
 const globalStore = useGlobalStore();
 const isSearchModalVisible = ref(false);
@@ -173,6 +189,12 @@ getConfig()
       const vm = prefs.notes_default_view;
       globalStore.noteViewMode      = (vm === 'fullscreen' || vm === 'wide') ? vm : 'normal';
       globalStore.notesDefaultSort  = prefs.notes_default_sort || '';
+      // Offline cache (PWA)
+      const offlineEnabled = prefs.offline_cache_enabled === true;
+      globalStore.offlineCacheEnabled = offlineEnabled;
+      if (offlineEnabled) {
+        initPwa().then(() => setOfflineCache(true));
+      }
       // If a custom home note is configured and we're currently on the
       // default home route, navigate there immediately on startup.
       if (
@@ -258,15 +280,82 @@ function handleTagsChanged(tags) {
   }
 }
 
+// ── Server reachability — heartbeat poller ────────────────────────────────────
+//
+// navigator.onLine is device-level: it's true whenever the device has ANY
+// network (WiFi, mobile data) even if the Flatnotes server is unreachable.
+// This means users at a café, on mobile data, or on someone else's WiFi all
+// get onLine=true but can't reach their server.
+//
+// Fix: actively probe /health every POLL_INTERVAL ms. If the probe fails —
+// regardless of whether the device has general network — we treat the server
+// as unreachable and set isOnline=false, letting the SW serve cached content.
+//
+// navigator.onLine is kept as a fast-path only: flight mode / no network at
+// all is detected immediately without waiting for a poll cycle to time out.
+
+const POLL_INTERVAL = 15_000;  // 15 s between polls when reachable
+const POLL_TIMEOUT  = 5_000;   // 5 s before a probe is considered failed
+let _pollTimer = null;
+
+async function _probeServer() {
+  // Fast-path: if the device has no network at all, skip the fetch.
+  if (!navigator.onLine) {
+    globalStore.isOnline = false;
+    return;
+  }
+  try {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), POLL_TIMEOUT);
+    // /health is unauthenticated and tiny — perfect probe target.
+    const resp = await fetch('health', { signal: controller.signal, cache: 'no-store' });
+    clearTimeout(tid);
+    globalStore.isOnline = resp.ok;
+  } catch {
+    // fetch threw (network error, timeout, abort) → server unreachable
+    globalStore.isOnline = false;
+  }
+}
+
+function _startPoller() {
+  _stopPoller();
+  // Probe immediately on start, then on every interval.
+  _probeServer();
+  _pollTimer = setInterval(_probeServer, POLL_INTERVAL);
+}
+
+function _stopPoller() {
+  if (_pollTimer !== null) {
+    clearInterval(_pollTimer);
+    _pollTimer = null;
+  }
+}
+
 // Initialize theme on mount
 onMounted(() => {
   loadTheme();
-loadTagColors(); // pre-load tag color config so chips render correctly on first paint
+  loadTagColors(); // pre-load tag color config so chips render correctly on first paint
   initThemeListener();
+
+  // Start the server reachability poller.
+  // Also wire navigator.onLine events as fast-path triggers so flight mode /
+  // full network loss is reflected immediately without waiting for a poll cycle.
+  _startPoller();
+  const onOnline  = () => _probeServer();   // network came back — probe right away
+  const onOffline = () => { globalStore.isOnline = false; }; // instant: no network
+  window.addEventListener('online',  onOnline);
+  window.addEventListener('offline', onOffline);
+
+  onUnmounted(() => {
+    _stopPoller();
+    window.removeEventListener('online',  onOnline);
+    window.removeEventListener('offline', onOffline);
+  });
 });
 
 // Cleanup on unmount
 onUnmounted(() => {
   cleanupThemeListener();
+  _stopPoller();
 });
 </script>

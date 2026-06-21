@@ -16,10 +16,17 @@ export const useGlobalStore = defineStore("global", () => {
   // Default sort for "All Notes" page: '' | 'title' | 'lastModified' | 'score'
   // Empty string means "app default" (falls back to title sort).
   const notesDefaultSort = ref('');
+  // PWA offline caching toggle — when true, the service worker caches API responses.
+  const offlineCacheEnabled = ref(false);
+  // Current server reachability (true = server responding, false = unreachable).
+  // Starts optimistically true; the heartbeat poller in App.vue corrects it
+  // within the first poll cycle (5 s timeout). This avoids a false offline
+  // flash on startup when navigator.onLine would have been unreliable anyway.
+  const isOnline = ref(true);
 
   function bumpPinned() {
     pinnedVersion.value++;
   }
 
-  return { config, pinnedVersion, bumpPinned, showButtonLabels, homeNoteEnabled, homeNote, noteViewMode, notesDefaultSort };
+  return { config, pinnedVersion, bumpPinned, showButtonLabels, homeNoteEnabled, homeNote, noteViewMode, notesDefaultSort, offlineCacheEnabled, isOnline };
 });

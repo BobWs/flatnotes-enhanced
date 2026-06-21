@@ -13,6 +13,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.0] - 2026-06-21
+
+### Added
+- **Progressive Web App (PWA) support** – Install Flatnotes-Enhanced as a standalone app
+- **Offline read-only caching** – Access previously viewed notes when server is unreachable
+- **Server reachability detection** – Active polling every 15 seconds to detect offline state
+- **Offline banner** – Subtle amber banner appears when server is unreachable
+- **Toggle in Settings → Preferences** – Enable/disable offline caching (opt-in, default off)
+
+### Changed
+- Service worker registers unconditionally (required for installability), but API caching only when enabled
+
+### Technical
+- Uses `vite-plugin-pwa` with `injectManifest` mode
+- Workbox runtime caching: NetworkFirst for API (3s timeout), CacheFirst for static assets
+- Cache limits: 200 API responses, 100 assets
+- Caches clear immediately when feature is disabled
+
+---
+
 ## [1.7.2] - 2026-06-11
 
 ### Added

@@ -14,6 +14,8 @@ const style = {
       {
         "border-l-theme-success": props.message.severity == "success",
         "border-l-theme-danger": props.message.severity == "error",
+        "border-l-theme-warn": props.message.severity == "warn",
+        "border-l-theme-info": props.message.severity == "info",        
       },
     ],
   }),
