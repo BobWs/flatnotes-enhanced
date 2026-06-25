@@ -1,4 +1,5 @@
 import router from "./router.js";
+import { formatDate, formatDateIso } from "./dateFormatter.js";
 
 class Note {
   constructor(note) {
@@ -14,24 +15,23 @@ class Note {
     return new Date(this.lastModified * 1000);
   }
 
+  /**
+   * Human-readable last-modified string, respecting the user's locale/style
+   * preferences from the global store.  Includes date + time.
+   */
   get lastModifiedAsString() {
-    return this.lastModifiedAsDate.toLocaleString();
+    return formatDate(this.lastModified, true);
   }
 
-  /** Format an ISO timestamp for display, e.g. "16 Mar 2026, 14:00" */
+  /**
+   * Format an ISO 8601 timestamp for display (e.g. created/updated metadata).
+   * Respects the user's locale/style preferences.  Always includes time.
+   *
+   * Returns null for falsy input so callers can use v-if guards as before.
+   */
   static formatTimestamp(iso) {
     if (!iso) return null;
-    try {
-      return new Date(iso).toLocaleString(undefined, {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return iso;
-    }
+    return formatDateIso(iso);
   }
 
   get createdAsString() {

@@ -92,6 +92,7 @@ import { useRouter } from "vue-router";
 import { getNote } from "../api.js";
 import { tagColor as tagColorSolid, tagColorLight as tagColorLightFn } from "../tagColor.js";
 import ToastViewer from "./toastui/ToastViewer.vue";
+import { formatDateIso } from "../dateFormatter.js";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 const props = defineProps({
@@ -187,8 +188,8 @@ async function loadPreview() {
   try {
     const note = await getNote(props.noteTitle);
     noteFolder.value = extractFolder(props.noteTitle);
-    noteCreated.value = note.created || "";
-    noteUpdated.value = note.updated || "";
+    noteCreated.value = formatDateIso(note.created) || "";
+    noteUpdated.value = formatDateIso(note.updated) || "";
     tags.value = extractTags(note.content || "");
     // Set content last so the ToastViewer mounts with everything ready
     noteContent.value = note.content || "";

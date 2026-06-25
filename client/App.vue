@@ -195,6 +195,9 @@ getConfig()
       if (offlineEnabled) {
         initPwa().then(() => setOfflineCache(true));
       }
+      // Date formatting preferences
+      globalStore.dateLocale = prefs.date_locale || 'system';
+      globalStore.dateStyle  = prefs.date_style  || 'medium';
       // If a custom home note is configured and we're currently on the
       // default home route, navigate there immediately on startup.
       if (

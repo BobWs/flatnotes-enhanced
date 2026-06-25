@@ -90,6 +90,9 @@ class UserPrefs(CustomBaseModel):
     home_note: Optional[str] = Field(None)
     backup_retain_count: int = Field(7)
     offline_cache_enabled: bool = Field(False)
+    # Date formatting — 'system' = browser/OS default, any BCP 47 tag is valid.
+    date_locale: str = Field("system")
+    date_style: str = Field("medium")
 
 
 class UserPrefsUpdate(CustomBaseModel):
@@ -108,6 +111,8 @@ class UserPrefsUpdate(CustomBaseModel):
     home_note: Optional[str] = Field(None)
     backup_retain_count: Optional[int] = Field(None)
     offline_cache_enabled: Optional[bool] = Field(None)
+    date_locale: Optional[str] = Field(None)
+    date_style: Optional[str] = Field(None)
 
 
 # ── Built-in defaults ─────────────────────────────────────────────────────────
@@ -345,6 +350,8 @@ def get_prefs() -> UserPrefs:
                     home_note=(settings.extra or {}).get("home_note", None),
                     backup_retain_count=int((settings.extra or {}).get("backup_retain_count", 7)),
                     offline_cache_enabled=bool((settings.extra or {}).get("offline_cache_enabled", False)),
+                    date_locale=(settings.extra or {}).get("date_locale", "system"),
+                    date_style=(settings.extra or {}).get("date_style", "medium"),
                 )
         except Exception as e:
             logger.error(f"Database error in get_prefs: {e}")
@@ -430,6 +437,16 @@ def save_prefs(prefs: UserPrefsUpdate) -> None:
                 extra["offline_cache_enabled"] = bool(prefs.offline_cache_enabled)
                 settings.extra = extra
 
+            if prefs.date_locale is not None:
+                extra = dict(settings.extra or {})
+                extra["date_locale"] = prefs.date_locale
+                settings.extra = extra
+
+            if prefs.date_style is not None:
+                extra = dict(settings.extra or {})
+                extra["date_style"] = prefs.date_style
+                settings.extra = extra
+
             db.commit()
             logger.info("Saved preferences to database")
             return
@@ -451,6 +468,8 @@ def save_prefs(prefs: UserPrefsUpdate) -> None:
         table_style=prefs.table_style if prefs.table_style is not None else existing.table_style,
         quote_style=prefs.quote_style if prefs.quote_style is not None else existing.quote_style,
         tag_colors=existing.tag_colors,
+        date_locale=prefs.date_locale if prefs.date_locale is not None else existing.date_locale,
+        date_style=prefs.date_style if prefs.date_style is not None else existing.date_style,
     )
     with open(_prefs_path(), "w", encoding="utf-8") as f:
         json.dump(merged.dict(), f, indent=2)

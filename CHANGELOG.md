@@ -13,6 +13,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.0] - 2026-06-25
+
+### Added
+- **Customisable Date Formatting** – Users can now select preferred locale (language/region) and date style (Short/Medium/Long) in Settings → Preferences
+- Live preview of date format when changing settings
+- Date formatting now applies to all date displays across the app (search results, note lists, archive, trash, bookmarks, templates, maintenance tab, etc.)
+- Memoised `Intl.DateTimeFormat` formatter with automatic store integration – `formatDate()` and `formatDateIso()` helpers
+
+### Changed
+- **Backend** – Added `date_locale` and `date_style` to `UserPrefs` and `UserPrefsUpdate` models; `get_prefs()` and `save_prefs()` now handle the new fields
+- **Database** – Schema migration adds `date_locale` and `date_style` columns to `user_settings` table (idempotent via `_migrate_schema()`)
+- **Frontend** – All date displays now use the `formatDate()` helper instead of pre-computed strings
+- **`classes.js`** – `lastModifiedAsString` and `formatTimestamp()` now delegate to `dateFormatter.js`
+- **`SettingsPrefs.vue`** – New "Date Format" section with locale dropdown (16 options), style dropdown, and live preview
+- **`Templates.vue`** – Fixed pre-existing bug: sorting now uses raw `lastModified` timestamp instead of parsing formatted string
+- **`NotePreview.vue`** – `created`/`updated` variables now formatted via `formatDateIso()` before being passed to `ToastViewer`
+
+### Technical
+- New `client/dateFormatter.js` – Memoised formatter with cache invalidation on preference save
+- `clearDateFormatterCache()` called on save so new preferences take effect immediately without page reload
+- `dateLocale` defaults to `'system'` (browser default); `dateStyle` defaults to `'medium'`
+- Default behaviour unchanged until user sets preferences
+
+### Fixed
+- Templates page sorting now correctly uses raw timestamps (was parsing formatted date strings, causing incorrect sort order with non-default locales)
+
+---
+
 ## [1.8.0] - 2026-06-21
 
 ### Added

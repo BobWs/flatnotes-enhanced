@@ -520,6 +520,7 @@ import {
   getBackups, createBackup, restoreBackup, deleteBackup,
   getPrefs, savePrefs,
 } from "../api.js";
+import { formatDate, formatDateIso } from "../dateFormatter.js";
 
 // ── Status / trash state ──────────────────────────────────────────────────────
 const status     = ref(null);
@@ -607,14 +608,7 @@ const retainSaveOk  = ref(true);
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function formatBackupDate(iso) {
   if (!iso) return "";
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      year: "numeric", month: "short", day: "numeric",
-      hour: "2-digit", minute: "2-digit",
-    });
-  } catch {
-    return iso;
-  }
+  return formatDateIso(iso) ?? iso;
 }
 
 function formatRelativeTime(iso) {

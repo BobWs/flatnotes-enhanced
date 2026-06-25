@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between mb-4">
       <div>
         <h1 class="text-2xl font-semibold text-theme-text">Templates</h1>
-        <p class="text-sm text-theme-text-muted mt-0.5">
+        <p class="text-xs text-theme-text-muted mt-0.5">
           {{ templates.length }} template{{ templates.length !== 1 ? 's' : '' }}
           · Create notes in the <code class="bg-theme-background-elevated px-1 rounded">_templates</code> folder to use them here
         </p>
@@ -135,6 +135,9 @@ async function loadTemplates() {
         templateDetails.push({
           title: note.title,
           displayName: name,
+          // Store the raw Unix timestamp (seconds) for reliable sorting,
+          // and the formatted string for display.
+          lastModified: note.lastModified,
           lastModifiedAsString: note.lastModifiedAsString,
           content: note.content,
         });
@@ -142,12 +145,9 @@ async function loadTemplates() {
         console.warn(`Failed to load template ${name}:`, error);
       }
     }
-    // Sort by last modified descending (most recent first)
-    templateDetails.sort((a, b) => {
-      const dateA = new Date(a.lastModifiedAsString);
-      const dateB = new Date(b.lastModifiedAsString);
-      return dateB - dateA;
-    });
+    // Sort by raw timestamp descending (most recent first) — never parse
+    // the display string back to a Date, which breaks with locale formatting.
+    templateDetails.sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0));
     templates.value = templateDetails;
     loadingIndicator.value?.setLoaded();
   } catch (error) {

@@ -23,10 +23,28 @@ export const useGlobalStore = defineStore("global", () => {
   // within the first poll cycle (5 s timeout). This avoids a false offline
   // flash on startup when navigator.onLine would have been unreliable anyway.
   const isOnline = ref(true);
+  // Date formatting preferences.
+  // dateLocale: 'system' uses the browser/OS default; any BCP 47 tag is valid.
+  // dateStyle:  'short' | 'medium' | 'long'  (default: 'medium')
+  const dateLocale = ref('system');
+  const dateStyle  = ref('medium');
 
   function bumpPinned() {
     pinnedVersion.value++;
   }
 
-  return { config, pinnedVersion, bumpPinned, showButtonLabels, homeNoteEnabled, homeNote, noteViewMode, notesDefaultSort, offlineCacheEnabled, isOnline };
+  return {
+    config,
+    pinnedVersion,
+    bumpPinned,
+    showButtonLabels,
+    homeNoteEnabled,
+    homeNote,
+    noteViewMode,
+    notesDefaultSort,
+    offlineCacheEnabled,
+    isOnline,
+    dateLocale,
+    dateStyle,
+  };
 });

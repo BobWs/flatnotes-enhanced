@@ -198,6 +198,79 @@
       </div>
     </div>
 
+    <!-- ── Row 5: Date Format ── -->
+    <div class="mb-5">
+      <div class="rounded-lg border border-theme-border bg-theme-background overflow-hidden">
+        <div class="px-4 py-3 border-b border-theme-border">
+          <p class="text-sm font-medium text-theme-text">Date Format</p>
+          <p class="text-xs text-theme-text-muted mt-0.5 leading-relaxed">
+            Choose how dates appear throughout the app — in note lists, search results, archive, and trash.
+          </p>
+        </div>
+
+        <div class="px-4 py-3 space-y-4">
+          <!-- Locale + Style row -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Locale -->
+            <div>
+              <label class="block text-xs font-medium text-theme-text-muted mb-1.5 uppercase tracking-wide">Language / Region</label>
+              <select
+                v-model="prefs.dateLocale"
+                class="w-full text-sm bg-theme-background-elevated border border-theme-border rounded px-3 py-2
+                       outline-none focus:border-theme-brand text-theme-text"
+              >
+                <option value="system">System default</option>
+                <option value="nl">Dutch (nl)</option>
+                <option value="en-GB">English — United Kingdom (en-GB)</option>
+                <option value="en-US">English — United States (en-US)</option>
+                <option value="de">German (de)</option>
+                <option value="fr">French (fr)</option>
+                <option value="es">Spanish (es)</option>
+                <option value="it">Italian (it)</option>
+                <option value="pt">Portuguese (pt)</option>
+                <option value="sv">Swedish (sv)</option>
+                <option value="nb">Norwegian (nb)</option>
+                <option value="da">Danish (da)</option>
+                <option value="fi">Finnish (fi)</option>
+                <option value="pl">Polish (pl)</option>
+                <option value="ja">Japanese (ja)</option>
+                <option value="zh-CN">Chinese Simplified (zh-CN)</option>
+              </select>
+            </div>
+
+            <!-- Style -->
+            <div>
+              <label class="block text-xs font-medium text-theme-text-muted mb-1.5 uppercase tracking-wide">Date Style</label>
+              <select
+                v-model="prefs.dateStyle"
+                class="w-full text-sm bg-theme-background-elevated border border-theme-border rounded px-3 py-2
+                       outline-none focus:border-theme-brand text-theme-text"
+              >
+                <option value="short">Short (e.g. 24/06/2026)</option>
+                <option value="medium">Medium (e.g. 24 Jun 2026) — Default</option>
+                <option value="long">Long (e.g. 24 June 2026)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Live preview -->
+          <div class="px-3 py-2.5 rounded-lg bg-theme-background-elevated border border-theme-border">
+            <p class="text-xs text-theme-text-muted mb-1.5">Preview:</p>
+            <div class="flex flex-wrap gap-x-6 gap-y-1">
+              <span class="text-sm text-theme-text">
+                <span class="text-xs text-theme-text-very-muted mr-1">Date</span>
+                {{ previewDate }}
+              </span>
+              <span class="text-sm text-theme-text">
+                <span class="text-xs text-theme-text-very-muted mr-1">Date + time</span>
+                {{ previewDateTime }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Save ── -->
     <div class="flex items-center gap-3">
       <button
@@ -218,6 +291,7 @@ import { ref, computed, watch, onMounted } from "vue";
 import { getPrefs, savePrefs as apiSavePrefs, createAttachment } from "../api.js";
 import { useGlobalStore } from "../globalStore.js";
 import { setOfflineCache, unregisterAll, init as initPwa } from "../pwaService.js";
+import { clearDateFormatterCache } from "../dateFormatter.js";
 
 const globalStore = useGlobalStore();
 
@@ -231,6 +305,8 @@ const prefs = ref({
   homeNoteEnabled: false,
   homeNote: "",
   offlineCacheEnabled: false,
+  dateLocale: "system",
+  dateStyle: "medium",
 });
 const prefsSaving = ref(false);
 const prefsSaveMsg = ref("");
@@ -242,6 +318,32 @@ const avatarUrl = computed(() => {
   if (!prefs.value.avatarFilename) return null;
   return `attachments/${prefs.value.avatarFilename}`;
 });
+
+// Live date preview — recomputed whenever locale or style changes
+const _PREVIEW_TS = new Date(2026, 5, 24, 14, 5); // 24 Jun 2026, 14:05 (fixed sample)
+const _DATE_OPTS = {
+  short:  { year: 'numeric', month: '2-digit', day: '2-digit' },
+  medium: { year: 'numeric', month: 'short',   day: 'numeric' },
+  long:   { year: 'numeric', month: 'long',    day: 'numeric' },
+};
+
+function _buildPreview(includeTime) {
+  const locale = prefs.value.dateLocale;
+  const style  = prefs.value.dateStyle;
+  const resolved = locale === 'system' ? undefined : locale;
+  const opts = {
+    ...(_DATE_OPTS[style] ?? _DATE_OPTS.medium),
+    ...(includeTime ? { hour: '2-digit', minute: '2-digit' } : {}),
+  };
+  try {
+    return new Intl.DateTimeFormat(resolved, opts).format(_PREVIEW_TS);
+  } catch {
+    return new Intl.DateTimeFormat(undefined, opts).format(_PREVIEW_TS);
+  }
+}
+
+const previewDate     = computed(() => _buildPreview(false));
+const previewDateTime = computed(() => _buildPreview(true));
 
 // ── Watchers — keep globalStore in sync for live preview ─────────────────────
 watch(() => prefs.value.showButtonLabels, (val) => {
@@ -317,7 +419,14 @@ async function savePrefs() {
       home_note_enabled:     p.homeNoteEnabled,
       home_note:             p.homeNote ? p.homeNote.trim() : null,
       offline_cache_enabled: p.offlineCacheEnabled,
+      date_locale:           p.dateLocale,
+      date_style:            p.dateStyle,
     });
+    // Persist to store and clear formatter cache so new preference takes
+    // effect immediately across all components without a page reload.
+    globalStore.dateLocale = p.dateLocale;
+    globalStore.dateStyle  = p.dateStyle;
+    clearDateFormatterCache();
     prefsSaveOk.value = true;
     prefsSaveMsg.value = "Saved ✓";
   } catch {
@@ -343,6 +452,8 @@ onMounted(async () => {
       homeNoteEnabled:      p.home_note_enabled === true,
       homeNote:             p.home_note || "",
       offlineCacheEnabled:  p.offline_cache_enabled === true,
+      dateLocale:           p.date_locale || "system",
+      dateStyle:            p.date_style  || "medium",
     };
   } catch {
     // defaults already set

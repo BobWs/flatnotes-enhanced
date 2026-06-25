@@ -1,6 +1,6 @@
 {
   "name": "flatnotes-enhanced",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "type": "module",
   "description": "A professional-grade, feature-rich fork of Flatnotes with folders, nested tags, popup previews and more.",
   "main": "client/index.html",
@@ -30,7 +30,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "6.0.1",
     "autoprefixer": "10.4.21",
-    "postcss": "8.5.6",
+    "postcss": "^8.5.15",
     "prettier": "3.6.2",
     "prettier-plugin-tailwindcss": "0.6.14",
     "sass-embedded": "1.93.2",

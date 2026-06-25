@@ -29,9 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.8.0
+## 🆕 What's New in v1.9.0
 
-- **Progressive Web App (PWA)** – Install Flatnotes-Enhanced as a standalone app and access previously viewed notes offline
+- **Customisable Date Formatting** – Choose your preferred locale and date style (Short/Medium/Long) across the entire app
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -161,7 +161,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Advanced | Table styling, quote styling. |
 | Tags | Global tag colors + per-tag overrides. |
 | Task Icons | Custom colors for task markers. |
-| Preferences | Display name, avatar, default sort, note view (Normal/Wide/Full Screen), note preview toggle, button label toggle, custom home note. |
+| Preferences | Display name, avatar, default sort, note view (Normal/Wide/Full Screen), note preview toggle, button label toggle, offline caching (PWA), custom home note, date formatting (locale + style). |
 | Maintenance | Trash manager, content summary, backups, version check, system info. |
 
 ---
@@ -323,6 +323,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.9.0` – Customisable Date Formatting – choose locale and style (Short/Medium/Long)
 - `v1.8.0` – Progressive Web App (PWA) – offline read-only access, installable as standalone app
 - `v1.7.2` – Non-ASCII characters in usernames and passwords (umlauts, accented characters)
 - `v1.7.1` – Bug fixes: backup list clarity + more reliable version check (Docker Hub API)
@@ -393,6 +394,15 @@ Flatnotes-Enhanced can be installed as a Progressive Web App (PWA) and caches no
 
 > **Note:** Offline access is read-only. For full functionality, you need a server connection.
 
+
+## Date Formatting
+
+Flatnotes-Enhanced supports customisable date formatting through **Settings → Preferences**.
+
+- **Locale** – Choose your preferred language/region (Dutch, English GB/US, German, French, Spanish, and more)
+- **Style** – Short (24/06/2026), Medium (24 Jun 2026), or Long (24 June 2026)
+
+Dates across the entire app (search results, note lists, archive, trash, etc.) will update to match your preferences.
 
 ---
 
