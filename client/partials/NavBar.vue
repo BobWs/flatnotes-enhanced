@@ -1,5 +1,5 @@
 <template>
-  <nav class="mb-2 md:mb-12">
+  <nav class="mb-2 md:mb-2">
 
     <!-- ── Single-row layout on sm+ (original behaviour) ── -->
     <div class="nav-buttons hidden sm:flex items-start justify-end gap-1">
@@ -227,8 +227,9 @@ const menuItems = computed(() => [
       // Falls back to title sort when no preference is set ("app default").
       const sortMap = {
         lastModified: searchSortOptions.lastModified,
-        score:        searchSortOptions.score,
         title:        searchSortOptions.title,
+        titleDesc:    searchSortOptions.titleDesc,
+        score:        searchSortOptions.score,        
       };
       const savedSort = globalStore.notesDefaultSort;
       const resolvedSort = sortMap[savedSort] ?? searchSortOptions.title;

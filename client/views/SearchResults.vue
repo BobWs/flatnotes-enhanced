@@ -37,6 +37,20 @@
             @click="toggleSortMenu"
           />
           <PrimeMenu ref="sortMenu" :model="menuItems" :popup="true" />
+          <!-- Direction toggle — only shown when Title sort is active -->
+          <button
+            v-if="effectiveSortBy === searchSortOptions.title || effectiveSortBy === searchSortOptions.titleDesc"
+            @click="toggleTitleDirection"
+            class="flex items-center justify-center w-8 h-8 rounded border border-theme-border
+                   bg-theme-background text-theme-text-muted hover:bg-theme-background-elevated
+                   transition-colors"
+            :title="effectiveSortBy === searchSortOptions.title ? 'A→Z — click for Z→A' : 'Z→A — click for A→Z'"
+          >
+            <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current transition-transform"
+                 :class="effectiveSortBy === searchSortOptions.titleDesc ? 'rotate-180' : ''">
+              <path d="M3,13H15V11H3M3,6V8H21V6M3,18H9V16H3V18Z"/>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -149,6 +163,7 @@ const showArchived = ref(props.initShowArchived);
 const _SORT_MAP = {
   lastModified: searchSortOptions.lastModified,
   title:        searchSortOptions.title,
+  titleDesc:    searchSortOptions.titleDesc,
   score:        searchSortOptions.score,
 };
 const effectiveSortBy = computed(() => {
@@ -187,9 +202,10 @@ function onPreviewClick(event, noteTitle) {
 }
 
 const sortByName = computed(() => ({
-  [searchSortOptions.title]: "Title",
+  [searchSortOptions.title]:        "Title A–Z",
+  [searchSortOptions.titleDesc]:    "Title Z–A",
   [searchSortOptions.lastModified]: "Last Modified",
-  [searchSortOptions.score]: "Score",
+  [searchSortOptions.score]:        "Score",
 }[effectiveSortBy.value] ?? "Score"));
 
 // Apply folder and/or archive filters client-side
@@ -246,6 +262,8 @@ async function init() {
 function sortResults(data) {
   if (effectiveSortBy.value === searchSortOptions.title) {
     return [...data].sort((a, b) => a.title.localeCompare(b.title));
+  } else if (effectiveSortBy.value === searchSortOptions.titleDesc) {
+    return [...data].sort((a, b) => b.title.localeCompare(a.title));
   } else if (effectiveSortBy.value === searchSortOptions.lastModified) {
     return [...data].sort((a, b) => b.lastModified - a.lastModified);
   } else {
@@ -269,10 +287,19 @@ function updateSortByParam(sortBy) {
 }
 
 const menuItems = [
-  { label: "Sort By: Score", command: () => updateSortByParam(searchSortOptions.score) },
-  { label: "Sort By: Title", command: () => updateSortByParam(searchSortOptions.title) },
+  { label: "Sort By: Score",         command: () => updateSortByParam(searchSortOptions.score) },
+  { label: "Sort By: Title A–Z",     command: () => updateSortByParam(searchSortOptions.title) },
+  { label: "Sort By: Title Z–A",     command: () => updateSortByParam(searchSortOptions.titleDesc) },
   { label: "Sort By: Last Modified", command: () => updateSortByParam(searchSortOptions.lastModified) },
 ];
+
+function toggleTitleDirection() {
+  const current = effectiveSortBy.value;
+  const next = current === searchSortOptions.title
+    ? searchSortOptions.titleDesc
+    : searchSortOptions.title;
+  updateSortByParam(next);
+}
 
 function toggleSortMenu(event) {
   sortMenu.value.toggle(event);

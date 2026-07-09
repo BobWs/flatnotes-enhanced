@@ -28,6 +28,11 @@ export const useGlobalStore = defineStore("global", () => {
   // dateStyle:  'short' | 'medium' | 'long'  (default: 'medium')
   const dateLocale = ref('system');
   const dateStyle  = ref('medium');
+  // Saved searches — mirrored from backend so sidebar stays reactive.
+  // savedSearchesEnabled: whether to show the section in the sidebar.
+  // savedSearches: the ordered array of {id, name, query, sort_by, ...} objects.
+  const savedSearchesEnabled = ref(false);
+  const savedSearches = ref([]);
 
   function bumpPinned() {
     pinnedVersion.value++;
@@ -46,5 +51,7 @@ export const useGlobalStore = defineStore("global", () => {
     isOnline,
     dateLocale,
     dateStyle,
+    savedSearchesEnabled,
+    savedSearches,
   };
 });

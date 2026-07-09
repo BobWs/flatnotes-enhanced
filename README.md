@@ -29,9 +29,12 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.9.0
+## 🆕 What's New in v1.10.0
 
-- **Customisable Date Formatting** – Choose your preferred locale and date style (Short/Medium/Long) across the entire app
+- **Saved Searches** – Save and reuse search queries with one click from the sidebar
+- **Title Z–A Sort** – Sort by title in descending order (alphabetical Z to A)
+- **NavBar spacing reduction** – Reclaimed 40px of vertical space at the top of the app
+- **Fixed Tag Pollution** – Hex colors, port numbers, and config comments no longer appear as tags in the sidebar
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -60,6 +63,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Custom Colors | Assign unique colors to tags with live preview. |
 | Tag Sidebar | Searchable tag list with collapse/expand functionality. |
 | Visual Chips | Pill-shaped tags with nested path display (e.g., `projects › ux`). |
+| Clean Tagging | Tags must start with a letter – no more hex colors, port numbers, or config comments cluttering your sidebar.|
 
 ### 📝 Enhanced Editor
 
@@ -161,7 +165,8 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Advanced | Table styling, quote styling. |
 | Tags | Global tag colors + per-tag overrides. |
 | Task Icons | Custom colors for task markers. |
-| Preferences | Display name, avatar, default sort, note view (Normal/Wide/Full Screen), note preview toggle, button label toggle, offline caching (PWA), custom home note, date formatting (locale + style). |
+| Preferences | Display name, avatar, default sort, note view, note preview toggle, button label toggle, custom home note, offline caching (PWA), **show saved searches in sidebar**, date formatting (locale + style). |
+| Searches | Create, edit, delete, and reorder saved searches. Run searches directly from the Settings page. |
 | Maintenance | Trash manager, content summary, backups, version check, system info. |
 
 ---
@@ -181,7 +186,8 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Settings page (Advanced tab) | ![Settings - Table](images/settings_table.png), <br> ![Settings - Quote](images/settings_quote.png) |
 | Settings page (Tags tab) | ![Settings - Tags](images/settings_tags_1.png), <br> ![Settings - Tags](images/settings_tags_2.png) |
 | Settings page (Task Icons tab) | ![Settings - Task Icons](images/settings_task_1.png), <br> ![Settings - Task Icons](images/settings_task_2.png) |
-| Settings page (Account tab) | ![Settings - Account](images/settings_account.png) |
+| Settings page (Account tab) | ![Settings - Account](images/settings_account_1.png), <br> ![Settings - Account](images/settings_account_2.png) |
+| Settings page (Searches tab) | ![Settings - Searches](images/settings_searches.png) |
 | Settings page (Maintenance tab) | ![Settings - Maintenance](images/settings_maintenance_1.png), <br> ![Settings - Maintenance Backup & Restore](images/settings_maintenance_2.png) |
 | Note Editor (insert wikilink) | ![ToastEditor - Wikilink button](images/wikilink_editor_button.png), <br>  ![ToastEditor - popup modal](images/wikilink_popup_modal.png) |
 ---
@@ -316,6 +322,10 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 
 ## 🐛 Known Issues & Roadmap
 
+### Known Limitations
+
+- **Numbered tags** – Tags must start with a letter (e.g., `#project123` instead of `#123`). If you need numbered tags, please open a discussion and I'll consider adding a preference option.
+
 ### Current Status
 
 - ✅ All other features – stable
@@ -323,6 +333,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.10.0` – Saved Searches, Title Z–A Sort, NavBar spacing reduction, Tag Pollution Fix
 - `v1.9.0` – Customisable Date Formatting – choose locale and style (Short/Medium/Long)
 - `v1.8.0` – Progressive Web App (PWA) – offline read-only access, installable as standalone app
 - `v1.7.2` – Non-ASCII characters in usernames and passwords (umlauts, accented characters)
@@ -403,6 +414,31 @@ Flatnotes-Enhanced supports customisable date formatting through **Settings → 
 - **Style** – Short (24/06/2026), Medium (24 Jun 2026), or Long (24 June 2026)
 
 Dates across the entire app (search results, note lists, archive, trash, etc.) will update to match your preferences.
+
+
+## Saved Searches
+
+Save your most-used search queries and access them with one click.
+
+**To enable:**
+
+1. Go to **Settings → Searches** to create your saved searches
+2. Toggle **"Show saved searches in sidebar"** in Settings → Preferences
+3. Your saved searches appear in a collapsible section below your folders in the sidebar
+
+**Each saved search stores:**
+- A name (e.g., "Work Notes")
+- A search query (e.g., `tags:work`)
+- An optional default sort order
+
+**Sidebar features:**
+- Click any saved search to run it instantly
+- Active saved search is highlighted
+
+**Settings features:**
+- Create, edit, delete saved searches
+- Run any saved search directly from the Settings page
+- Drag and drop to reorder
 
 ---
 

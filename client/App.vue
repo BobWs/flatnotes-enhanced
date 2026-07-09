@@ -105,7 +105,7 @@ import { useToast } from "primevue/usetoast";
 import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import { RouterView, useRoute } from "vue-router";
 
-import { apiErrorHandler, getConfig, getPrefs } from "./api.js";
+import { apiErrorHandler, getConfig, getPrefs, getSavedSearches } from "./api.js";
 import PrimeToast from "./components/PrimeToast.vue";
 import TagSidebar from "./components/TagSidebar.vue";
 import FolderSidebar from "./components/FolderSidebar.vue";
@@ -209,6 +209,14 @@ getConfig()
       }
     } catch {
       // Non-fatal: defaults apply
+    }
+    // Load saved searches (non-fatal — sidebar just stays empty on failure)
+    try {
+      const ss = await getSavedSearches();
+      globalStore.savedSearchesEnabled = ss.enabled === true;
+      globalStore.savedSearches = Array.isArray(ss.searches) ? ss.searches : [];
+    } catch {
+      // Leave defaults (disabled, empty)
     }
     loadingIndicator.value.setLoaded();
   })

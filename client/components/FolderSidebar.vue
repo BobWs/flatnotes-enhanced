@@ -137,6 +137,54 @@
           @updateSelection="updateSelection"
           @dropNote="handleDropNote"
         />
+
+        <!-- ── Saved Searches section ─────────────────────────────────────── -->
+        <template v-if="globalStore.savedSearchesEnabled && globalStore.savedSearches.length > 0">
+          <div class="border-t border-theme-border my-2 mx-2"></div>
+
+          <!-- Section header -->
+          <button
+            @click="savedSearchesExpanded = !savedSearchesExpanded"
+            class="w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-sm
+                   text-theme-text-muted hover:bg-theme-background-elevated transition-colors"
+          >
+            <div class="flex items-center gap-2 min-w-0">
+              <!-- Folder with magnifying glass icon -->
+              <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current shrink-0 opacity-60">
+                <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4M15.5,11H17V13H15.5V14.5H13.5V13H12V11H13.5V9.5H15.5V11Z"/>
+              </svg>
+              <span class="text-xs font-bold uppercase tracking-wider text-theme-text-very-muted">
+                Saved Searches
+              </span>
+            </div>
+            <svg
+              viewBox="0 0 24 24"
+              class="w-3 h-3 fill-current shrink-0 transition-transform duration-150"
+              :class="savedSearchesExpanded ? 'rotate-90' : ''"
+            >
+              <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/>
+            </svg>
+          </button>
+
+          <!-- Saved search items -->
+          <div v-show="savedSearchesExpanded" class="mt-0.5">
+            <button
+              v-for="search in globalStore.savedSearches"
+              :key="search.id"
+              @click="runSavedSearch(search)"
+              class="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors text-left"
+              :class="activeSavedSearchId === search.id
+                ? 'bg-theme-brand/10 text-theme-brand font-medium'
+                : 'text-theme-text-muted hover:bg-theme-background-elevated hover:text-theme-text'"
+              :title="search.query"
+            >
+              <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-current shrink-0 opacity-70">
+                <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+              </svg>
+              <span class="truncate text-sm">{{ search.name }}</span>
+            </button>
+          </div>
+        </template>
       </template>
     </div>
 
@@ -424,6 +472,58 @@ const lastExpandDirection = ref(null);
 // Selection state
 const selectionMode = ref(false);
 const selectedNotes = ref(new Set());
+
+// ── Saved searches sidebar state ──────────────────────────────────────────────
+// Expand/collapse state persisted in localStorage
+const savedSearchesExpanded = ref(
+  localStorage.getItem("fn_saved_searches_expanded") !== "false"
+);
+watch(savedSearchesExpanded, (val) => {
+  localStorage.setItem("fn_saved_searches_expanded", String(val));
+});
+
+// Track which saved search is currently active (matched by query + sortBy)
+const activeSavedSearchId = computed(() => {
+  const currentTerm   = router.currentRoute.value.query.term;
+  const currentSortBy = router.currentRoute.value.query.sortBy;
+  if (!currentTerm) return null;
+
+  const SORT_MAP = {
+    lastModified: searchSortOptions.lastModified,
+    title:        searchSortOptions.title,
+    titleDesc:    searchSortOptions.titleDesc,
+    score:        searchSortOptions.score,
+  };
+
+  for (const s of globalStore.savedSearches) {
+    if (s.query !== currentTerm) continue;
+    // If the saved search has a sort preference, check it matches
+    if (s.sort_by) {
+      const expectedNumeric = SORT_MAP[s.sort_by];
+      if (expectedNumeric !== undefined && String(currentSortBy) !== String(expectedNumeric)) continue;
+    }
+    return s.id;
+  }
+  return null;
+});
+
+function runSavedSearch(search) {
+  const SORT_MAP = {
+    lastModified: searchSortOptions.lastModified,
+    title:        searchSortOptions.title,
+    titleDesc:    searchSortOptions.titleDesc,
+    score:        searchSortOptions.score,
+  };
+  const q = { term: search.query };
+  if (search.sort_by && SORT_MAP[search.sort_by] !== undefined) {
+    q.sortBy = SORT_MAP[search.sort_by];
+  }
+  router.push({ name: "search", query: q });
+  // Auto-close sidebar on mobile
+  if (window.innerWidth < 768) {
+    emit("close");
+  }
+}
 
 const showMoveDialog  = ref(false);
 const operationMode   = ref("move"); // 'move' | 'duplicate'
@@ -814,6 +914,7 @@ function navigate(folderPath) {
   const _sortMap = {
     lastModified: searchSortOptions.lastModified,
     title:        searchSortOptions.title,
+    titleDesc:    searchSortOptions.titleDesc,
     score:        searchSortOptions.score,
   };
   const userPref = globalStore.notesDefaultSort;

@@ -228,6 +228,7 @@ from user_settings import (
     get_table_style, get_quote_style,
     get_task_icons, save_task_icons, TaskIconSettings,
     save_maintenance_setting, get_maintenance_setting,
+    get_saved_searches, save_saved_searches, SavedSearchSettings,
 )
 from typing import List as TypingList
 
@@ -668,6 +669,27 @@ def api_save_task_icons(task_icons: TaskIconSettings):
     try:
         save_task_icons(task_icons)
         return get_task_icons().dict()
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+# ── Saved Searches ────────────────────────────────────────────────────────────
+
+@router.get("/api/settings/saved-searches", dependencies=auth_deps)
+def api_get_saved_searches():
+    """Return saved search settings (enabled flag + searches list)."""
+    return get_saved_searches().dict()
+
+
+@router.put("/api/settings/saved-searches", dependencies=auth_deps)
+def api_save_saved_searches(saved_searches: SavedSearchSettings):
+    """Save saved search settings (full list replace).
+
+    Sole owner of the saved_searches column.
+    """
+    try:
+        save_saved_searches(saved_searches)
+        return get_saved_searches().dict()
     except Exception as e:
         raise HTTPException(500, str(e))
 

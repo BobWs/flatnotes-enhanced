@@ -515,3 +515,23 @@ export async function deleteBackup(filename) {
     return Promise.reject(response);
   }
 }
+
+// ── Saved Searches API ────────────────────────────────────────────────────────
+
+export async function getSavedSearches() {
+  try {
+    const response = await api.get("api/settings/saved-searches");
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function saveSavedSearches(settings) {
+  try {
+    const response = await api.put("api/settings/saved-searches", settings);
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}

@@ -517,7 +517,10 @@ const folderParts = computed(() => {
 const noteTags = computed(() => {
   if (!note.value.content) return [];
   const tags = [];
-  const tagMatches = note.value.content.match(/(?:^|\s)#[a-zA-Z0-9_/-]+/g);
+  // Strip code blocks to prevent code comment indexing on the client-side
+  const cleanContent = note.value.content.replace(/```[\s\S]*?```/g, "").replace(/`[^`]*`/g, "");
+  // Require tags to start with an alphabetical letter to avoid hex colors and numbers
+  const tagMatches = cleanContent.match(/(?:^|\s)#[a-zA-Z][a-zA-Z0-9_/-]*/g);
   if (tagMatches) {
     tags.push(...tagMatches.map(t => t.trim().substring(1)));
   }

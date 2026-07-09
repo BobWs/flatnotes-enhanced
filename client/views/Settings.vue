@@ -23,26 +23,31 @@
     </div>
 
     <!-- Tab content -->
-    <SettingsCallouts    v-if="activeTab === 'callouts'" />
-    <SettingsAppearance  v-if="activeTab === 'appearance'" />
-    <SettingsAdvanced    v-if="activeTab === 'advanced'" />
-    <SettingsTags        v-if="activeTab === 'tags'" />
-    <SettingsTaskIcons   v-if="activeTab === 'taskicons'" />
-    <SettingsPrefs       v-if="activeTab === 'prefs'" />
-    <SettingsMaintenance v-if="activeTab === 'maintenance'" />
+    <SettingsCallouts       v-if="activeTab === 'callouts'" />
+    <SettingsAppearance     v-if="activeTab === 'appearance'" />
+    <SettingsAdvanced       v-if="activeTab === 'advanced'" />
+    <SettingsTags           v-if="activeTab === 'tags'" />
+    <SettingsTaskIcons      v-if="activeTab === 'taskicons'" />
+    <SettingsPrefs          v-if="activeTab === 'prefs'" @switchTab="(tab) => activeTab = tab" />
+    <SettingsSavedSearches  v-if="activeTab === 'searches'" />
+    <SettingsMaintenance    v-if="activeTab === 'maintenance'" />
 
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
-import SettingsCallouts    from "./SettingsCallouts.vue";
-import SettingsAppearance  from "./SettingsAppearance.vue";
-import SettingsAdvanced    from "./SettingsAdvanced.vue";
-import SettingsTags        from "./SettingsTags.vue";
-import SettingsTaskIcons   from "./SettingsTaskIcons.vue";
-import SettingsPrefs       from "./SettingsPrefs.vue";
-import SettingsMaintenance from "./SettingsMaintenance.vue";
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import SettingsCallouts      from "./SettingsCallouts.vue";
+import SettingsAppearance    from "./SettingsAppearance.vue";
+import SettingsAdvanced      from "./SettingsAdvanced.vue";
+import SettingsTags          from "./SettingsTags.vue";
+import SettingsTaskIcons     from "./SettingsTaskIcons.vue";
+import SettingsPrefs         from "./SettingsPrefs.vue";
+import SettingsSavedSearches from "./SettingsSavedSearches.vue";
+import SettingsMaintenance   from "./SettingsMaintenance.vue";
+
+const route = useRoute();
 
 const tabs = [
   { id: "callouts",    label: "Callouts" },
@@ -51,10 +56,21 @@ const tabs = [
   { id: "tags",        label: "Tags" },
   { id: "taskicons",   label: "Task Icons" },
   { id: "prefs",       label: "Preferences" },
+  { id: "searches",    label: "Searches" },
   { id: "maintenance", label: "Maintenance" },
 ];
 
+const VALID_TABS = new Set(tabs.map(t => t.id));
+
+// Default to callouts; honour ?tab=xxx query param if valid
 const activeTab = ref("callouts");
+
+onMounted(() => {
+  const requested = route.query.tab;
+  if (requested && VALID_TABS.has(requested)) {
+    activeTab.value = requested;
+  }
+});
 </script>
 
 <style scoped>

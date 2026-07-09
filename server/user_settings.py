@@ -74,6 +74,22 @@ class TaskIconSettings(CustomBaseModel):
     colors: List[TaskIconColorDefinition] = Field(default_factory=list)
 
 
+class SavedSearch(CustomBaseModel):
+    """A single saved search entry."""
+    id: str                          # client-generated UUID
+    name: str
+    query: str
+    sort_by: Optional[str] = Field(None)   # 'score' | 'title' | 'lastModified' | None
+    created_at: str                  # ISO 8601
+    updated_at: str                  # ISO 8601
+
+
+class SavedSearchSettings(CustomBaseModel):
+    """Container stored in the saved_searches JSON column."""
+    enabled: bool = Field(default=False)
+    searches: List[SavedSearch] = Field(default_factory=list)
+
+
 class UserPrefs(CustomBaseModel):
     display_name: Optional[str] = Field(None)
     avatar_filename: Optional[str] = Field(None)
@@ -378,7 +394,7 @@ def get_prefs() -> UserPrefs:
 
 def save_prefs(prefs: UserPrefsUpdate) -> None:
     """Save account/appearance preferences.
-    Does NOT touch tag_colors or task_icons — those have their own endpoints.
+    Does NOT touch tag_colors, task_icons, or saved_searches — those have their own endpoints.
     """
     if db_manager.enabled:
         db = db_manager.get_session()
@@ -646,3 +662,52 @@ def get_maintenance_setting(key: str, default=None):
         finally:
             db.close()
     return default
+
+
+# ── Saved Searches (Database-first) ──────────────────────────────────────────
+
+def _dict_to_saved_searches(data: dict) -> SavedSearchSettings:
+    if not data:
+        return SavedSearchSettings()
+    try:
+        return SavedSearchSettings(**data)
+    except Exception:
+        return SavedSearchSettings()
+
+
+def get_saved_searches() -> SavedSearchSettings:
+    """Return saved search settings — DB first, then default."""
+    if db_manager.enabled:
+        db = db_manager.get_session()
+        try:
+            user_id = _get_user_id()
+            settings = db.query(UserSettings).filter(UserSettings.user_id == user_id).first()
+            if settings:
+                return _dict_to_saved_searches(settings.saved_searches or {})
+        except Exception as e:
+            logger.error(f"Database error in get_saved_searches: {e}")
+        finally:
+            db.close()
+    return SavedSearchSettings()
+
+
+def save_saved_searches(saved_searches: SavedSearchSettings) -> None:
+    """Persist saved search settings — DB first, silent no-op on failure."""
+    if db_manager.enabled:
+        db = db_manager.get_session()
+        try:
+            user_id = _get_user_id()
+            settings = db.query(UserSettings).filter(UserSettings.user_id == user_id).first()
+            if not settings:
+                settings = UserSettings(user_id=user_id)
+                db.add(settings)
+            settings.saved_searches = dict(saved_searches.dict())
+            db.commit()
+            logger.info("Saved searches saved to database")
+            return
+        except Exception as e:
+            logger.error(f"Database error in save_saved_searches: {e}")
+            db.rollback()
+        finally:
+            db.close()
+    logger.warning("save_saved_searches: database not available, skipping")

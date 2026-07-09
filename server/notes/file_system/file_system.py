@@ -48,10 +48,10 @@ class IndexSchema(SchemaClass):
 
 
 class FileSystemNotes(BaseNotes):
-    TAGS_RE = re.compile(r"(?:(?<=^#)|(?<=\s#))[a-zA-Z0-9_][a-zA-Z0-9_/-]*(?=\s|$)")
-    CODEBLOCK_RE = re.compile(r"`{1,3}.*?`{1,3}", re.DOTALL)
+    TAGS_RE = re.compile(r"(?:(?<=^#)|(?<=\s#))[a-zA-Z][a-zA-Z0-9_/-]*(?=\s|$)")
+    CODEBLOCK_RE = re.compile(r"```.*?```|`[^`]*`", re.DOTALL)
     TAGS_WITH_HASH_RE = re.compile(
-        r"(?:(?<=^)|(?<=\s))#[a-zA-Z0-9_][a-zA-Z0-9_/-]*(?=\s|$)"
+        r"(?:(?<=^)|(?<=\s))#[a-zA-Z][a-zA-Z0-9_/-]*(?=\s|$)"
     )
     # Allow forward-slash in paths but not other reserved chars
     INVALID_PATH_CHARS_RE = re.compile(r'[<>:"\\|?*]')

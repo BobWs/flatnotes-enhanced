@@ -84,7 +84,8 @@ class UserSettings(Base):
     table_style       = Column(JSON, default=dict)
     quote_style       = Column(JSON, default=dict)
     tag_colors        = Column(JSON, default=dict)
-    task_icons        = Column(JSON, default=dict)   # ← NEW
+    task_icons        = Column(JSON, default=dict)
+    saved_searches    = Column(JSON, default=dict)   # ← saved searches blob {enabled, searches:[]}
     extra             = Column(JSON, default=dict)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -143,6 +144,7 @@ class DatabaseManager:
             "quote_style":          "JSON",
             "tag_colors":           "JSON",
             "task_icons":           "JSON",   # ← NEW
+            "saved_searches":       "JSON",
             "extra":                "JSON",
             "created_at":           "DATETIME",
             "updated_at":           "DATETIME",

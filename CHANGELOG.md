@@ -13,6 +13,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.10.0] - 2026-07-12
+
+### Added
+- **Saved Searches** – Save and reuse search queries with one click from the sidebar
+  - Settings → Searches tab for managing saved searches (create, edit, delete, reorder)
+  - Sidebar collapsible section below folders (opt-in via Preferences toggle)
+  - Drag and drop to reorder saved searches
+  - Active saved search highlighted in sidebar
+- **Title Z–A Sort** – Sort by title in descending order (alphabetical Z to A)
+  - Added to search results toolbar (toggle button)
+  - Added to default note sort in Preferences
+  - Added to saved search sort picker
+  - Full round-trip support in FolderSidebar and saved search navigation
+- **NavBar spacing reduction** – Bottom margin reduced from `48px` to `8px`, reclaiming `40px` of vertical space
+
+### Changed
+- Preferences tab redesigned into a balanced 5-row grid layout for cleaner organisation
+- `constants.js` now includes `titleDesc: 3` as a sort option
+- All sort dropdowns (search results, preferences, saved searches) include Title Z–A
+- `SearchResults.vue` now displays a direction toggle button when Title sort is active
+
+### Fixed
+- Saved searches now correctly preserve sort direction when saved and re-run
+- Folder sidebar active search highlighting now works with Title Z–A sort
+- `SearchResults.vue` sort menu now correctly displays the active sort label for all four options
+- **Tag Pollution** – Hex colors, port numbers, and config comments no longer appear as tags in the sidebar
+  - Tag regex now requires an alphabetical starting character (`[a-zA-Z]`) – no more `#125d0d`, `#14496`, `#07072026` as tags
+  - Code-block stripping now handles single and triple backticks separately (````.*?```|`[^`]*` ``) – code comments stay inside code blocks
+  - Frontend `noteTags` computed property now strips code blocks and enforces alphabetical tag starts
+
+### Known Limitation
+- Numbered tags (e.g., `#456789`) are no longer supported. A preference option may be added in a future release if there's demand.
+
+### Technical
+- New `saved_searches` JSON column in `user_settings` table (schema migration via `_EXPECTED_COLUMNS`)
+- Backend: `GET /api/settings/saved-searches` and `PUT /api/settings/saved-searches` endpoints
+- Frontend: `SavedSearchModal.vue` and `SettingsSavedSearches.vue` components
+- Drag-and-drop reordering uses native HTML5 Drag and Drop API
+- `FolderSidebar.vue` now includes collapsible saved searches section with drag-to-reorder
+
+---
+
 ## [1.9.0] - 2026-06-25
 
 ### Added

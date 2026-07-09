@@ -85,6 +85,7 @@ const toast = useToast();
 const SORT_MAP = {
   lastModified: searchSortOptions.lastModified,
   title:        searchSortOptions.title,
+  titleDesc:    searchSortOptions.titleDesc,  
   score:        searchSortOptions.score,
 };
 const showMoreSort = computed(() => {
