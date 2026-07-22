@@ -16,6 +16,7 @@ class GlobalConfig:
         self.quick_access_limit: int = self._quick_access_limit()
         self.path_prefix: str = self._load_path_prefix()
         self.trash_auto_delete_days: int = self._load_trash_days()
+        self.search_disabled: bool = self._load_search_disabled()
 
     def load_auth(self):
         if self.auth_type in (AuthType.NONE, AuthType.READ_ONLY):
@@ -96,6 +97,12 @@ class GlobalConfig:
         key = "FLATNOTES_TRASH_DAYS"
         return get_env(key, mandatory=False, default=0, cast_int=True)
 
+    def _load_search_disabled(self):
+        """When True, the /api/search and /api/tags endpoints return empty results
+        and the frontend hides the search UI entirely."""
+        key = "FLATNOTES_SEARCH_DISABLED"
+        return get_env(key, mandatory=False, default=False, cast_bool=True)
+
     def _load_path_prefix(self):
         key = "FLATNOTES_PATH_PREFIX"
         value = get_env(key, mandatory=False, default="")
@@ -122,3 +129,4 @@ class GlobalConfigResponseModel(CustomBaseModel):
     quick_access_term: str
     quick_access_sort: str
     quick_access_limit: int
+    search_disabled: bool

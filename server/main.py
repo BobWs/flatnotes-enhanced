@@ -448,6 +448,8 @@ def search(
     include_archived: bool = False,
     include_trash: bool = False,
 ):
+    if global_config.search_disabled:
+        return []
     if sort == "lastModified":
         sort = "last_modified"
     return note_storage.search(
@@ -459,6 +461,8 @@ def search(
 
 @router.get("/api/tags", dependencies=auth_deps)
 def get_tags(include_archived: bool = False):
+    if global_config.search_disabled:
+        return {}
     return note_storage.get_tags(include_archived=include_archived)
 
 
@@ -483,6 +487,7 @@ def get_config():
         quick_access_term=global_config.quick_access_term,
         quick_access_sort=global_config.quick_access_sort,
         quick_access_limit=global_config.quick_access_limit,
+        search_disabled=global_config.search_disabled,
     )
 # endregion
 

@@ -2,7 +2,21 @@
   <div class="flex h-full justify-center">
     <div class="flex max-w-[500px] flex-1 flex-col items-center pt-[25vh]">
       <Logo class="mb-5" />
-      <SearchInput class="mb-5 shadow-[0_0_20px] shadow-theme-shadow" />
+
+      <!-- Showcase mode: read-only notice -->
+      <div
+        v-if="globalStore.config.searchDisabled"
+        class="mb-5 flex items-center gap-2 px-4 py-2.5 rounded-lg
+               border border-theme-brand/30 bg-theme-brand/8
+               text-sm text-theme-text-muted text-center"
+      >
+        <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current shrink-0 text-theme-brand/70">
+          <path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/>
+        </svg>
+        These are read-only shared notes. Nothing can be edited.
+      </div>
+
+      <SearchInput v-if="!globalStore.config.searchDisabled" class="mb-5 shadow-[0_0_20px] shadow-theme-shadow" />
       <LoadingIndicator
         ref="loadingIndicator"
         class="flex min-h-56 flex-col items-center"
@@ -115,7 +129,7 @@ function onPreviewClick(event, noteTitle) {
 }
 
 function init() {
-  if (globalStore.config.quickAccessHide) {
+  if (globalStore.config.quickAccessHide || globalStore.config.searchDisabled) {
     return;
   }
   getNotes(

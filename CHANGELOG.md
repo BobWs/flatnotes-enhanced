@@ -13,6 +13,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.11.0] - 2026-07-28
+
+### Added
+- **Showcase Mode** – Public read-only presentation layer for sharing curated notes (`FLATNOTES_SEARCH_DISABLED=true`)
+  - Disables search API (`/api/search` returns empty results)
+  - Hides UI elements: search, new note, edit, delete, archive, trash, tags sidebar, bookmarks, templates, attachments, settings
+  - Home page shows read-only banner instead of quick-access notes
+  - Folder breadcrumbs render as plain text (no search navigation)
+  - All other API endpoints remain functional (note retrieval, folder listing)
+  - Direct note URLs (`/note/title`) still work
+
+### Security
+- Added warning that Showcase Mode is a UI restriction, not a security control
+- Recommended to use with `FLATNOTES_AUTH_TYPE=read_only` for public instances
+
+### Technical
+- New environment variable: `FLATNOTES_SEARCH_DISABLED` (default: `false`)
+- Backend: gated `/api/search` and `/api/tags` endpoints
+- Backend: `search_disabled` field added to `/api/config` response
+- Frontend: router `beforeEach` guard redirects blocked routes to home
+- Frontend: hidden UI elements across NavBar, App, Note, FolderSidebar, and Home pages
+
+### Known Limitation
+- Showcase Mode does not protect API endpoints – use with `read_only` auth for public instances
+
+---
+
 ## [1.10.0] - 2026-07-12
 
 ### Added

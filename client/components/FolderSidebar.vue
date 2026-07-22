@@ -20,7 +20,7 @@
       <div class="flex items-center gap-1">
         <!-- Move/Copy button (only shows if selection mode is active) -->
         <button
-          v-if="selectionMode"
+          v-if="selectionMode && !globalStore.config.searchDisabled"
           @click="openMoveModal"
           class="text-theme-text-muted hover:text-theme-text transition-colors p-1 rounded"
           title="Move or copy selected notes"
@@ -33,7 +33,7 @@
         </button>
         <!-- Trash button (only shows if selection mode is active) -->
         <button
-          v-if="selectionMode"
+          v-if="selectionMode && !globalStore.config.searchDisabled"
           @click="openDeleteModal"
           class="text-theme-text-muted hover:text-red-500 transition-colors p-1 rounded"
           title="Delete selected notes"
@@ -68,8 +68,9 @@
             <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
           </svg>
         </button>
-        <!-- Selection mode toggle -->
+        <!-- Selection mode toggle — hidden in showcase mode -->
         <button
+          v-if="!globalStore.config.searchDisabled"
           @click="toggleSelectionMode"
           class="text-theme-text-muted hover:text-theme-text transition-colors p-1 rounded"
           :class="{ 'text-theme-brand': selectionMode }"
@@ -139,7 +140,7 @@
         />
 
         <!-- ── Saved Searches section ─────────────────────────────────────── -->
-        <template v-if="globalStore.savedSearchesEnabled && globalStore.savedSearches.length > 0">
+        <template v-if="globalStore.savedSearchesEnabled && globalStore.savedSearches.length > 0 && !globalStore.config.searchDisabled">
           <div class="border-t border-theme-border my-2 mx-2"></div>
 
           <!-- Section header -->

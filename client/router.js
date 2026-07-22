@@ -5,6 +5,12 @@ import { createRouter, createWebHistory } from "vue-router";
 import { authCheck } from "./api.js";
 import Archive from "./views/Archive.vue";
 
+// Routes that are hidden in public showcase mode (FLATNOTES_SEARCH_DISABLED=true).
+// Direct URL navigation to these is redirected to home.
+const SHOWCASE_BLOCKED_ROUTES = new Set([
+  "search", "trash", "archive", "attachments", "templates", "settings", "bookmarks", "new",
+]);
+
 const router = createRouter({
   history: createWebHistory(""),
   routes: [
@@ -79,6 +85,13 @@ const router = createRouter({
 let authChecked = false;
 router.beforeEach(async (to) => {
   if (authChecked || to.name === "login") {
+    // Showcase mode: block internal pages even after auth is established.
+    // Import lazily to avoid circular dependency with the store.
+    const { useGlobalStore } = await import("./globalStore.js");
+    const globalStore = useGlobalStore();
+    if (globalStore.config.searchDisabled && SHOWCASE_BLOCKED_ROUTES.has(to.name)) {
+      return { name: "home" };
+    }
     return;
   }
   try {

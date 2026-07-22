@@ -61,9 +61,11 @@
             <template v-if="noteFolder">
               <span v-for="(part, i) in folderParts" :key="i" class="flex items-center gap-1 min-w-0">
                 <RouterLink
+                  v-if="!globalStore.config.searchDisabled"
                   :to="{ name: 'search', query: { term: '*', folder: part.path, sortBy: 1 } }"
                   class="hover:text-theme-brand transition-colors truncate"
                 >{{ part.name }}</RouterLink>
+                <span v-else class="truncate">{{ part.name }}</span>
                 <span v-if="i < folderParts.length - 1">/</span>
               </span>
               <span>/</span>
@@ -149,9 +151,11 @@
             <template v-if="noteFolder">
               <span v-for="(part, i) in folderParts" :key="i" class="flex items-center gap-1 min-w-0">
                 <RouterLink
+                  v-if="!globalStore.config.searchDisabled"
                   :to="{ name: 'search', query: { term: '*', folder: part.path, sortBy: 1 } }"
                   class="hover:text-theme-brand transition-colors truncate"
                 >{{ part.name }}</RouterLink>
+                <span v-else class="truncate">{{ part.name }}</span>
                 <span v-if="i < folderParts.length - 1">/</span>
               </span>
               <span>/</span>
@@ -188,7 +192,7 @@
 
             <!-- Pin/Unpin -->
             <CustomButton
-              v-show="canModify && !isNewNote"
+              v-show="canModify && !isNewNote && !globalStore.config.searchDisabled"
               :iconPath="isPinned ? mdiPin : mdiPinOutline"
               :label="isPinned ? 'Unpin' : 'Pin'"
               @click="togglePin"
@@ -196,14 +200,14 @@
             />
             <!-- Archive/Unarchive -->
             <CustomButton
-              v-show="canModify && !isNewNote"
+              v-show="canModify && !isNewNote && !globalStore.config.searchDisabled"
               :label="isArchivedNote ? 'Unarchive' : 'Archive'"
               :iconPath="mdiArchive"
               @click="isArchivedNote ? unarchiveHandler() : archiveHandler()"
             />
             <!-- Trash -->
             <CustomButton
-              v-show="canModify && !isNewNote"
+              v-show="canModify && !isNewNote && !globalStore.config.searchDisabled"
               label=""
               :iconPath="mdilDelete"
               @click="deleteHandler"
@@ -211,7 +215,7 @@
             />
             <!-- Edit Toggle -->
             <Toggle
-              v-if="canModify"
+              v-if="canModify && !globalStore.config.searchDisabled"
               label="Edit"
               :isOn="editMode"
               class="ml-1"
@@ -875,7 +879,7 @@ function loadDraft() {
 }
 
 Mousetrap.bind("e", () => {
-  if (editMode.value === false && canModify.value) {
+  if (editMode.value === false && canModify.value && !globalStore.config.searchDisabled) {
     editHandler();
   }
 });

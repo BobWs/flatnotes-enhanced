@@ -29,12 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.10.0
+## 🆕 What's New in v1.11.0
 
-- **Saved Searches** – Save and reuse search queries with one click from the sidebar
-- **Title Z–A Sort** – Sort by title in descending order (alphabetical Z to A)
-- **NavBar spacing reduction** – Reclaimed 40px of vertical space at the top of the app
-- **Fixed Tag Pollution** – Hex colors, port numbers, and config comments no longer appear as tags in the sidebar
+- **Showcase Mode** – Transform your instance into a public read-only note viewer (`FLATNOTES_SEARCH_DISABLED=true`). Perfect for sharing curated notes with the world.
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -135,6 +132,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | TOTP Support | Two-factor authentication with QR code setup (on Login page). |
 | Multiple Auth Types | None, Read-Only, Password, or TOTP. |
 | Non-ASCII Support | Usernames and passwords support umlauts (ä, ö, ü, ß) and accented characters. |
+| Showcase Mode | **For public instances:** Use `FLATNOTES_AUTH_TYPE=read_only` together with `FLATNOTES_SEARCH_DISABLED=true` to create a genuinely read-only showcase instance. |
 
 ---
 
@@ -301,6 +299,7 @@ Open your browser and navigate to `http://localhost:8080`
 | `DATABASE_PATH` | Path to SQLite database file | `/data/.flatnotes/flatnotes.db` |
 | `DATABASE_ECHO` | Enable database SQL logging | `false` |
 | `LOGLEVEL` | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) | `INFO` |
+| `FLATNOTES_SEARCH_DISABLED` | Disable search and hide UI elements (Showcase Mode) | `false` |
 
 ---
 
@@ -333,6 +332,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.11.0` – **Showcase Mode** (`FLATNOTES_SEARCH_DISABLED`) – public read-only presentation layer for sharing curated notes
 - `v1.10.0` – Saved Searches, Title Z–A Sort, NavBar spacing reduction, Tag Pollution Fix
 - `v1.9.0` – Customisable Date Formatting – choose locale and style (Short/Medium/Long)
 - `v1.8.0` – Progressive Web App (PWA) – offline read-only access, installable as standalone app
@@ -439,6 +439,51 @@ Save your most-used search queries and access them with one click.
 - Create, edit, delete saved searches
 - Run any saved search directly from the Settings page
 - Drag and drop to reorder
+
+
+## Showcase Mode (Public Read-Only)
+
+Transform a Flatnotes-Enhanced instance into a clean, read-only note viewer for public audiences. Perfect for sharing curated notes, documentation, or blog posts.
+
+### How to enable
+
+**Set the following environment variable:**
+
+```env
+FLATNOTES_SEARCH_DISABLED=true
+```
+
+**Recommended for public instances:**
+
+```env
+FLATNOTES_AUTH_TYPE=read_only
+FLATNOTES_SEARCH_DISABLED=true
+FLATNOTES_QUICK_ACCESS_HIDE=true   # optional: keeps home page minimal
+```
+
+### What changes
+
+| Feature | Normal mode | Showcase mode |
+|---------|-------------|---------------|
+| Search | ✅ Available | ❌ Disabled (returns empty results) |
+| Edit/Create/Delete | ✅ Available | ❌ Hidden (UI-level) |
+| New Note button | ✅ Available | ❌ Hidden |
+| Settings/Trash/Archive | ✅ Available | ❌ Hidden |
+| Tags sidebar | ✅ Available | ❌ Hidden |
+| Bookmarks | ✅ Available | ❌ Hidden |
+| Note viewer | ✅ Full | ✅ Read-only (navigation only) |
+| Folder sidebar | ✅ Full | ✅ Navigation only (expand, collapse) |
+| Direct note URLs | ✅ Available | ✅ Still work |
+
+### ⚠️ Important Security Note
+
+**Showcase Mode is a UI restriction, not a security control.**
+
+- API endpoints are still accessible to anyone who knows the URL structure
+- Notes can be retrieved by guessing their titles
+- Attachments are not protected
+
+**Always use with `FLATNOTES_AUTH_TYPE=read_only`** for public instances. For truly sensitive content, use network-level restrictions (reverse proxy authentication, VPN, IP allowlisting).
 
 ---
 

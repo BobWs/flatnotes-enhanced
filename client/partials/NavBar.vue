@@ -6,7 +6,7 @@
       <CustomButton :iconPath="mdiHome" label="Home" @click="goHome" title="Go home (Ctrl+Alt+H)" :forceLabel="false" />
 
       <button
-        v-if="showNewButton"
+        v-if="showNewButton && !globalStore.config.searchDisabled"
         @click="openNewNoteModal"
         title="Create a new note (Ctrl+Alt+N)"
         class="text-nowrap rounded px-2 py-1 inline-flex items-center gap-1
@@ -19,8 +19,8 @@
         <span v-show="globalStore.showButtonLabels" class="hidden sm:inline">New Note</span>
       </button>
 
-      <CustomButton v-if="hasPinnedNotes" :iconPath="mdiBookmark" label="Bookmarks" @click="goToPinned" title="View pinned notes" :forceLabel="false" />
-      <CustomButton :iconPath="mdiTagMultiple" label="Tags" @click="$emit('toggleSidebar')"
+      <CustomButton v-if="hasPinnedNotes && !globalStore.config.searchDisabled" :iconPath="mdiBookmark" label="Bookmarks" @click="goToPinned" title="View pinned notes" :forceLabel="false" />
+      <CustomButton v-if="!globalStore.config.searchDisabled" :iconPath="mdiTagMultiple" label="Tags" @click="$emit('toggleSidebar')"
         :title="isSidebarOpen ? 'Close tag sidebar (Ctrl+Alt+T)' : 'Open tag sidebar (Ctrl+Alt+T)'"
         :class="{ 'sidebar-active': isSidebarOpen }" :forceLabel="false" />
       <CustomButton :iconPath="mdiFolderMultiple" label="Folders" @click="$emit('toggleFolderSidebar')"
@@ -44,7 +44,7 @@
         <CustomButton :iconPath="mdiHome" label="Home" @click="goHome" title="Go home" :forceLabel="false" />
 
         <button
-          v-if="showNewButton"
+          v-if="showNewButton && !globalStore.config.searchDisabled"
           @click="openNewNoteModal"
           title="Create a new note"
           class="text-nowrap rounded px-2 py-1 inline-flex items-center gap-1
@@ -56,12 +56,12 @@
           </svg>
         </button>
 
-        <CustomButton v-if="hasPinnedNotes" :iconPath="mdiBookmark" label="Bookmarks" @click="goToPinned" title="View pinned notes" :forceLabel="false" />
+        <CustomButton v-if="hasPinnedNotes && !globalStore.config.searchDisabled" :iconPath="mdiBookmark" label="Bookmarks" @click="goToPinned" title="View pinned notes" :forceLabel="false" />
       </div>
 
       <!-- Row 2: navigation/utility — Tags, Folders, Menu -->
       <div :class="globalStore.showButtonLabels ? 'flex items-center gap-1' : 'contents'">
-        <CustomButton :iconPath="mdiTagMultiple" label="Tags" @click="$emit('toggleSidebar')"
+        <CustomButton v-if="!globalStore.config.searchDisabled" :iconPath="mdiTagMultiple" label="Tags" @click="$emit('toggleSidebar')"
           :title="isSidebarOpen ? 'Close tag sidebar' : 'Open tag sidebar'"
           :class="{ 'sidebar-active': isSidebarOpen }" :forceLabel="false" />
         <CustomButton :iconPath="mdiFolderMultiple" label="Folders" @click="$emit('toggleFolderSidebar')"
@@ -211,89 +211,99 @@ function getThemeTitle() {
 }
 
 // Make menu items reactive with computed
-const menuItems = computed(() => [
-  {
-    label: "Search",
-    icon: mdilMagnify,
-    command: () => emit("toggleSearchModal"),
-    keyboardShortcut: "/",
-    title: "Search notes (press / to open)",
-  },
-  {
-    label: "All Notes",
-    icon: mdilNoteMultiple,
-    command: () => {
-      // Map the user's saved sort preference string to the numeric constant.
-      // Falls back to title sort when no preference is set ("app default").
-      const sortMap = {
-        lastModified: searchSortOptions.lastModified,
-        title:        searchSortOptions.title,
-        titleDesc:    searchSortOptions.titleDesc,
-        score:        searchSortOptions.score,        
-      };
-      const savedSort = globalStore.notesDefaultSort;
-      const resolvedSort = sortMap[savedSort] ?? searchSortOptions.title;
-      router.push({
-        name: "search",
-        query: {
-          [params.searchTerm]: "*",
-          [params.sortBy]: resolvedSort,
-        },
-      });
+const menuItems = computed(() => {
+  const showcaseMode = globalStore.config.searchDisabled;
+  return [
+    {
+      label: "Search",
+      icon: mdilMagnify,
+      command: () => emit("toggleSearchModal"),
+      keyboardShortcut: "/",
+      title: "Search notes (press / to open)",
+      visible: !showcaseMode,
     },
-    title: "View all notes",
-  },
-  {
-    label: "Templates",
-    icon: mdiFileDocumentOutline,
-    command: () => router.push({ name: "templates" }),
-    title: "Manage note templates",
-  },
-  {
-    label: "Attachments",
-    icon: mdiPaperclip,
-    command: () => router.push({ name: "attachments" }),
-    title: "View and manage attachments",
-  },
-  {
-    label: "Archive",
-    icon: mdiArchive,
-    command: () => router.push({ name: "archive" }),
-    title: "View archived notes",
-  },
-  {
-    label: "Settings",
-    icon: mdiCog,
-    command: () => router.push({ name: "settings" }),
-    title: "Application settings",
-  },
-  {
-    label: "Trash",
-    icon: mdiDeleteClock,
-    command: () => router.push({ name: "trash" }),
-    title: "View deleted notes",
-  },
-  {
-    separator: true,
-  },
-  {
-    label: getThemeLabel(),
-    icon: mdiThemeLightDark,
-    command: cycleTheme,
-    title: getThemeTitle(),
-  },
-  {
-    separator: true,
-    visible: showLogOutButton,
-  },
-  {
-    label: "Log Out",
-    icon: mdilLogout,
-    command: logOut,
-    title: "Sign out of your account",
-    visible: showLogOutButton,
-  },
-]);
+    {
+      label: "All Notes",
+      icon: mdilNoteMultiple,
+      command: () => {
+        // Map the user's saved sort preference string to the numeric constant.
+        // Falls back to title sort when no preference is set ("app default").
+        const sortMap = {
+          lastModified: searchSortOptions.lastModified,
+          title:        searchSortOptions.title,
+          titleDesc:    searchSortOptions.titleDesc,
+          score:        searchSortOptions.score,        
+        };
+        const savedSort = globalStore.notesDefaultSort;
+        const resolvedSort = sortMap[savedSort] ?? searchSortOptions.title;
+        router.push({
+          name: "search",
+          query: {
+            [params.searchTerm]: "*",
+            [params.sortBy]: resolvedSort,
+          },
+        });
+      },
+      title: "View all notes",
+      visible: !showcaseMode,
+    },
+    {
+      label: "Templates",
+      icon: mdiFileDocumentOutline,
+      command: () => router.push({ name: "templates" }),
+      title: "Manage note templates",
+      visible: !showcaseMode,
+    },
+    {
+      label: "Attachments",
+      icon: mdiPaperclip,
+      command: () => router.push({ name: "attachments" }),
+      title: "View and manage attachments",
+      visible: !showcaseMode,
+    },
+    {
+      label: "Archive",
+      icon: mdiArchive,
+      command: () => router.push({ name: "archive" }),
+      title: "View archived notes",
+      visible: !showcaseMode,
+    },
+    {
+      label: "Settings",
+      icon: mdiCog,
+      command: () => router.push({ name: "settings" }),
+      title: "Application settings",
+      visible: !showcaseMode,
+    },
+    {
+      label: "Trash",
+      icon: mdiDeleteClock,
+      command: () => router.push({ name: "trash" }),
+      title: "View deleted notes",
+      visible: !showcaseMode,
+    },
+    {
+      separator: true,
+    },
+    {
+      label: getThemeLabel(),
+      icon: mdiThemeLightDark,
+      command: cycleTheme,
+      title: getThemeTitle(),
+    },
+    {
+      separator: true,
+      visible: showLogOutButton,
+    },
+    {
+      label: "Log Out",
+      icon: mdilLogout,
+      command: logOut,
+      title: "Sign out of your account",
+      visible: showLogOutButton,
+    },
+  ];
+});
 
 const showNewButton = computed(() => {
   return globalStore.config.authType !== authTypes.readOnly;

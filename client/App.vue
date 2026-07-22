@@ -6,13 +6,14 @@
   -->
   <LoadingIndicator
     ref="loadingIndicator"
-    class="flex h-screen flex-col py-4 print:max-w-full w-full px-2 md:px-4"
+    class="flex h-screen flex-col pt-2 pb-4 print:max-w-full w-full px-2 md:px-4"
   >
     <PrimeToast />
-    <SearchModal v-model="isSearchModalVisible" />
+    <SearchModal v-if="!globalStore.config.searchDisabled" v-model="isSearchModalVisible" />
 
     <!-- Tag Sidebar (fixed-position, overlays content) -->
     <TagSidebar
+      v-if="!globalStore.config.searchDisabled"
       :isOpen="isSidebarOpen"
       @close="isSidebarOpen = false"
       @tagsChanged="handleTagsChanged"
@@ -141,7 +142,7 @@ const toast = useToast();
 
 // '/' to search
 Mousetrap.bind("/", () => {
-  if (route.name !== "login") {
+  if (route.name !== "login" && !globalStore.config.searchDisabled) {
     toggleSearchModal();
     return false;
   }
@@ -149,7 +150,7 @@ Mousetrap.bind("/", () => {
 
 // 'CTRL + ALT/OPT + N' to create new note
 Mousetrap.bindGlobal("ctrl+alt+n", () => {
-  if (route.name !== "login") {
+  if (route.name !== "login" && !globalStore.config.searchDisabled) {
     router.push({ name: "new" });
     return false;
   }
@@ -169,7 +170,7 @@ Mousetrap.bindGlobal("ctrl+alt+h", () => {
 
 // 'CTRL + ALT/OPT + T' to toggle tag sidebar (mutually exclusive)
 Mousetrap.bindGlobal("ctrl+alt+t", () => {
-  if (route.name !== "login") {
+  if (route.name !== "login" && !globalStore.config.searchDisabled) {
     openTagSidebar();
     return false;
   }
