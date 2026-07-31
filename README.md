@@ -29,9 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.11.0
+## 🆕 What's New in v1.12.0
 
-- **Showcase Mode** – Transform your instance into a public read-only note viewer (`FLATNOTES_SEARCH_DISABLED=true`). Perfect for sharing curated notes with the world.
+- **Hide Frontmatter** – Opt-in toggle to remove YAML/TOML metadata blocks (`---...---`) from view and preview. Perfect for notes imported from Obsidian, Markleaf, and other tools.
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -163,7 +163,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Advanced | Table styling, quote styling. |
 | Tags | Global tag colors + per-tag overrides. |
 | Task Icons | Custom colors for task markers. |
-| Preferences | Display name, avatar, default sort, note view, note preview toggle, button label toggle, custom home note, offline caching (PWA), **show saved searches in sidebar**, date formatting (locale + style). |
+| Preferences | Display name, avatar, default sort, note view, note preview toggle, button label toggle, custom home note, offline caching (PWA), show saved searches in sidebar, date formatting (locale + style), hide frontmatter in view & preview. |
 | Searches | Create, edit, delete, and reorder saved searches. Run searches directly from the Settings page. |
 | Maintenance | Trash manager, content summary, backups, version check, system info. |
 
@@ -332,7 +332,8 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
-- `v1.11.0` – **Showcase Mode** (`FLATNOTES_SEARCH_DISABLED`) – public read-only presentation layer for sharing curated notes
+- `v1.12.0` – Hide Frontmatter in View & Preview – clean up notes imported from Obsidian, Markleaf, and other tools
+- `v1.11.0` – Showcase Mode (`FLATNOTES_SEARCH_DISABLED`) – public read-only presentation layer for sharing curated notes
 - `v1.10.0` – Saved Searches, Title Z–A Sort, NavBar spacing reduction, Tag Pollution Fix
 - `v1.9.0` – Customisable Date Formatting – choose locale and style (Short/Medium/Long)
 - `v1.8.0` – Progressive Web App (PWA) – offline read-only access, installable as standalone app
@@ -484,6 +485,42 @@ FLATNOTES_QUICK_ACCESS_HIDE=true   # optional: keeps home page minimal
 - Attachments are not protected
 
 **Always use with `FLATNOTES_AUTH_TYPE=read_only`** for public instances. For truly sensitive content, use network-level restrictions (reverse proxy authentication, VPN, IP allowlisting).
+
+
+## Frontmatter Support
+
+Flatnotes-Enhanced can now hide YAML and TOML frontmatter blocks (`---...---` or `+++...+++`) from view and preview.
+
+**Why this is useful:**
+
+- Notes imported from **Obsidian**, **Markleaf**, or other apps often have metadata blocks at the top
+- These blocks clutter the reading experience
+- This feature lets you hide them without modifying the file on disk
+
+**How to enable:**
+
+1. Go to **Settings → Preferences**
+2. Scroll to the **"Frontmatter"** section
+3. Enable **"Hide frontmatter in view & preview"**
+4. Click **Save preferences**
+
+**What happens:**
+
+| Scenario | Result |
+|----------|--------|
+| Toggle ON, note with frontmatter | Frontmatter block removed from view and preview |
+| Toggle OFF (default) | Frontmatter renders as-is – no change |
+| Toggle ON, note without frontmatter | Note renders normally – no change |
+| Toggle ON, note with tags above frontmatter | Tags are preserved, frontmatter hidden |
+
+**What is never affected:**
+
+- The file on disk – frontmatter is always preserved
+- The editor – raw markdown is always visible and editable
+- Horizontal rules (`---`) elsewhere in the note – only the top-of-file block is affected
+- Any other features (tag pills, callouts, task icons, etc.)
+
+**Supports both YAML (`---`) and TOML (`+++`) fence formats.**
 
 ---
 

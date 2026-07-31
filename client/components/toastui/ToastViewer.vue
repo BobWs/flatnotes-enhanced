@@ -13,6 +13,8 @@ import { loadHeaderColors, loadHighlightColors, loadQuoteStyle, hasAnyHeaderEnab
 import { TASK_ICONS } from "../../taskIcons.js";
 import { loadTaskIcons, getTaskIconColor, isTaskIconsEnabled } from "../../taskIconStore.js";
 import { updateNote } from "../../api.js";
+import { stripFrontmatter } from "../../frontmatter.js";
+import { stripFrontmatterEnabled, loadFrontmatterPrefs } from "../../frontmatterStore.js";
 
 const props = defineProps({
   initialValue: String,
@@ -64,7 +66,7 @@ watch([() => props.title, () => props.created, () => props.updated, () => props.
     // This avoids a flash + unnecessary DOM rebuild after a checkbox toggle.
     if (incoming !== currentMarkdown) {
       currentMarkdown = incoming;
-      viewerInstance.setMarkdown(incoming);
+      viewerInstance.setMarkdown(displayMarkdown(incoming));
     }
     // Re-run post-processors (also re-binds checkboxes after any re-render)
     setTimeout(() => {
@@ -471,6 +473,19 @@ function processCollapsibleGroups(el, noteTitle) {
 let currentMarkdown = '';
 let isSaving = false;
 
+/**
+ * Returns the markdown string to send to the viewer.
+ * Strips frontmatter when the user preference is on.
+ * currentMarkdown always holds the RAW content so checkbox line-index
+ * calculations continue to map correctly to the file on disk.
+ *
+ * @param {string} raw
+ * @returns {string}
+ */
+function displayMarkdown(raw) {
+  return stripFrontmatterEnabled.value ? stripFrontmatter(raw) : raw;
+}
+
 // Task line regex — matches both unordered and ordered list task items
 const TASK_LINE_RE = /^(\s*[-*+]|\s*\d+\.) \[[ xX]\]/;
 
@@ -577,6 +592,7 @@ onMounted(async () => {
     loadHeaderColors(),
     loadHighlightColors(),
     loadTaskIcons(),
+    loadFrontmatterPrefs(),
   ]);
 
   // Expose task icon store to processTaskIcons() which runs in a DOM callback
@@ -590,7 +606,7 @@ onMounted(async () => {
     ...baseOptions,
     extendedAutolinks,
     el: viewerElement.value,
-    initialValue: props.initialValue,
+    initialValue: displayMarkdown(currentMarkdown),
   });
 
   // Initial post-processing after the viewer has rendered its DOM
@@ -610,7 +626,7 @@ onMounted(async () => {
       // Re-render so inline color styles on <h1>…<h6> update immediately.
       // setMarkdown recreates the .toastui-editor-contents DOM, so we must
       // re-apply the attribute and all post-processors in the callback.
-      viewerInstance.setMarkdown(currentMarkdown || props.initialValue || '');
+      viewerInstance.setMarkdown(displayMarkdown(currentMarkdown || props.initialValue || ''));
       setTimeout(() => {
         applyCustomHeadersAttr(viewerElement.value);
         processCallouts(viewerElement.value);
@@ -636,4 +652,6 @@ onMounted(async () => {
   border-radius: 2px;
   padding: 0 2px;
 }
+
+
 </style>

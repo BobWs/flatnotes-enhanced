@@ -13,7 +13,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.11.0] - 2026-07-28
+## [1.12.0] - 2026-08-02
+
+### Added
+- **Hide Frontmatter in View & Preview** – Opt-in toggle to remove YAML/TOML metadata blocks from rendered notes
+  - Supports both `---` (YAML) and `+++` (TOML) fence formats
+  - Toggle in Settings → Preferences (default: OFF)
+  - Strips frontmatter in both note view and preview popup
+  - Preserves tags (`#pin`, `#archived`) placed above frontmatter
+  - File on disk is never modified – purely a display filter
+  - Preference stored in user settings database
+
+### Technical
+- New `client/frontmatter.js` – frontmatter detection and stripping utility
+- New `client/frontmatterStore.js` – reactive singleton for preference state
+- `stripFrontmatter` added to `UserPrefs` and `UserPrefsUpdate` models
+- Applied to `ToastViewer.vue`, `NotePreview.vue`, and `ToastEditor.vue`
+- JSON fallback path updated for database-less setups
+
+### Known Limitation
+- Collapsible frontmatter (Obsidian-style `▶ Frontmatter`) is not included in this release due to Toast UI Editor limitations. The hide toggle covers the primary use case for users syncing from external apps.
+
+---
+
+## [1.11.0] - 2026-07-22
 
 ### Added
 - **Showcase Mode** – Public read-only presentation layer for sharing curated notes (`FLATNOTES_SEARCH_DISABLED=true`)

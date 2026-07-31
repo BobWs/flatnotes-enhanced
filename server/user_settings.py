@@ -109,6 +109,8 @@ class UserPrefs(CustomBaseModel):
     # Date formatting — 'system' = browser/OS default, any BCP 47 tag is valid.
     date_locale: str = Field("system")
     date_style: str = Field("medium")
+    # Frontmatter display — strip hides the block in view/preview mode.
+    strip_frontmatter: bool = Field(False)
 
 
 class UserPrefsUpdate(CustomBaseModel):
@@ -129,6 +131,7 @@ class UserPrefsUpdate(CustomBaseModel):
     offline_cache_enabled: Optional[bool] = Field(None)
     date_locale: Optional[str] = Field(None)
     date_style: Optional[str] = Field(None)
+    strip_frontmatter: Optional[bool] = Field(None)
 
 
 # ── Built-in defaults ─────────────────────────────────────────────────────────
@@ -368,6 +371,7 @@ def get_prefs() -> UserPrefs:
                     offline_cache_enabled=bool((settings.extra or {}).get("offline_cache_enabled", False)),
                     date_locale=(settings.extra or {}).get("date_locale", "system"),
                     date_style=(settings.extra or {}).get("date_style", "medium"),
+                    strip_frontmatter=bool((settings.extra or {}).get("strip_frontmatter", False)),
                 )
         except Exception as e:
             logger.error(f"Database error in get_prefs: {e}")
@@ -463,6 +467,11 @@ def save_prefs(prefs: UserPrefsUpdate) -> None:
                 extra["date_style"] = prefs.date_style
                 settings.extra = extra
 
+            if prefs.strip_frontmatter is not None:
+                extra = dict(settings.extra or {})
+                extra["strip_frontmatter"] = bool(prefs.strip_frontmatter)
+                settings.extra = extra
+
             db.commit()
             logger.info("Saved preferences to database")
             return
@@ -486,6 +495,7 @@ def save_prefs(prefs: UserPrefsUpdate) -> None:
         tag_colors=existing.tag_colors,
         date_locale=prefs.date_locale if prefs.date_locale is not None else existing.date_locale,
         date_style=prefs.date_style if prefs.date_style is not None else existing.date_style,
+        strip_frontmatter=prefs.strip_frontmatter if prefs.strip_frontmatter is not None else existing.strip_frontmatter,
     )
     with open(_prefs_path(), "w", encoding="utf-8") as f:
         json.dump(merged.dict(), f, indent=2)

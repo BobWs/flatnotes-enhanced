@@ -93,6 +93,8 @@ import { getNote } from "../api.js";
 import { tagColor as tagColorSolid, tagColorLight as tagColorLightFn } from "../tagColor.js";
 import ToastViewer from "./toastui/ToastViewer.vue";
 import { formatDateIso } from "../dateFormatter.js";
+import { stripFrontmatter } from "../frontmatter.js";
+import { stripFrontmatterEnabled, loadFrontmatterPrefs } from "../frontmatterStore.js";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 const props = defineProps({
@@ -130,10 +132,13 @@ const displayTitle = computed(() => {
   return props.noteTitle;
 });
 
-// Truncate to ~3000 chars for the popup — ToastViewer handles the rest
+// Truncate to ~3000 chars for the popup — ToastViewer handles the rest.
+// Frontmatter is stripped before truncation so it never consumes the
+// character budget and doesn't render in the preview popup.
 const truncatedContent = computed(() => {
-  const content = noteContent.value;
-  if (!content) return "";
+  const raw = noteContent.value;
+  if (!raw) return "";
+  const content = stripFrontmatterEnabled.value ? stripFrontmatter(raw) : raw;
   if (content.length <= 3000) return content;
   return content.substring(0, 3000) + "\n\n…";
 });
@@ -184,6 +189,8 @@ async function loadPreview() {
 
   loading.value = true;
   noteContent.value = "";
+  // Ensure frontmatter prefs are loaded before the computed renders
+  await loadFrontmatterPrefs();
 
   try {
     const note = await getNote(props.noteTitle);
