@@ -29,9 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.12.0
+## 🆕 What's New in v1.12.1
 
-- **Hide Frontmatter** – Opt-in toggle to remove YAML/TOML metadata blocks (`---...---`) from view and preview. Perfect for notes imported from Obsidian, Markleaf, and other tools.
+- **Hot Fix:** Remove public TOTP QR code from login screen
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -129,7 +129,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 | Feature | Description |
 |---------|-------------|
-| TOTP Support | Two-factor authentication with QR code setup (on Login page). |
+| TOTP Support | Two-factor authentication with QR code setup (available in Settings → Preferences after login). |
 | Multiple Auth Types | None, Read-Only, Password, or TOTP. |
 | Non-ASCII Support | Usernames and passwords support umlauts (ä, ö, ü, ß) and accented characters. |
 | Showcase Mode | **For public instances:** Use `FLATNOTES_AUTH_TYPE=read_only` together with `FLATNOTES_SEARCH_DISABLED=true` to create a genuinely read-only showcase instance. |
@@ -163,7 +163,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Advanced | Table styling, quote styling. |
 | Tags | Global tag colors + per-tag overrides. |
 | Task Icons | Custom colors for task markers. |
-| Preferences | Display name, avatar, default sort, note view, note preview toggle, button label toggle, custom home note, offline caching (PWA), show saved searches in sidebar, date formatting (locale + style), hide frontmatter in view & preview. |
+| Preferences | Display name, avatar, default sort, note view, note preview toggle, button label toggle, custom home note, offline caching (PWA), show saved searches in sidebar, date formatting (locale + style), hide frontmatter in view & preview, TOTP QR code setup (if enabled). |
 | Searches | Create, edit, delete, and reorder saved searches. Run searches directly from the Settings page. |
 | Maintenance | Trash manager, content summary, backups, version check, system info. |
 
@@ -332,6 +332,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.12.1` – Hot Fix: Remove public TOTP QR code from login screen (security patch)
 - `v1.12.0` – Hide Frontmatter in View & Preview – clean up notes imported from Obsidian, Markleaf, and other tools
 - `v1.11.0` – Showcase Mode (`FLATNOTES_SEARCH_DISABLED`) – public read-only presentation layer for sharing curated notes
 - `v1.10.0` – Saved Searches, Title Z–A Sort, NavBar spacing reduction, Tag Pollution Fix

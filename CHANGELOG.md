@@ -13,7 +13,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.12.0] - 2026-08-02
+## [1.12.1] - 2026-08-02
+
+### Security
+- **Critical:** Removed public TOTP QR code from login screen – `/api/totp-setup` endpoint now requires authentication
+- TOTP QR code is now accessible only via **Settings → Preferences** after logging in
+- This patch is a prerequisite for the upcoming **Shared Notes** feature to prevent external visitors from accessing TOTP setup
+
+### Changed
+- Login screen no longer displays "Show QR code for authenticator setup" button
+- `/api/totp-setup` endpoint now returns 401 (Unauthorized) to unauthenticated callers
+- TOTP setup modal moved to Settings → Preferences (visible only when `FLATNOTES_AUTH_TYPE=totp`)
+
+### Technical
+- `server/main.py`: Added `dependencies=auth_deps` to `GET /api/totp-setup`
+- `client/views/LogIn.vue`: Removed TOTP QR code button and modal import
+- `client/views/SettingsPrefs.vue`: Added TOTP QR code button in the avatar action column
+
+---
+
+## [1.12.0] - 2026-07-31
 
 ### Added
 - **Hide Frontmatter in View & Preview** – Opt-in toggle to remove YAML/TOML metadata blocks from rendered notes

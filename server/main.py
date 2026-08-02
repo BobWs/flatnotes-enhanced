@@ -295,7 +295,7 @@ if global_config.auth_type not in [AuthType.NONE, AuthType.READ_ONLY]:
             raise HTTPException(status_code=401, detail=api_messages.login_failed)
 
 
-@router.get("/api/totp-setup")
+@router.get("/api/totp-setup", dependencies=auth_deps)
 def totp_setup():
     if global_config.auth_type != AuthType.TOTP:
         raise HTTPException(status_code=404, detail="TOTP not enabled")
