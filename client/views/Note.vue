@@ -1,4 +1,11 @@
 <template>
+  <!-- Share Modal -->
+  <ShareModal
+    :show="isShareModalVisible"
+    :noteTitle="note.title || ''"
+    @close="isShareModalVisible = false"
+  />
+
   <!-- Confirm Deletion Modal -->
   <ConfirmModal
     v-model="isDeleteModalVisible"
@@ -190,6 +197,15 @@
               </button>
             </template>
 
+            <!-- Share button — brand color + "Shared" label when note has active links -->
+            <CustomButton
+              v-show="canModify && !isNewNote && !globalStore.config.searchDisabled"
+              :label="isShared ? 'Shared' : 'Share'"
+              :iconPath="mdiShareVariant"
+              @click="isShareModalVisible = true"
+              :title="isShared ? 'Note is shared — click to manage' : 'Share this note'"
+              :class="isShared ? 'share-active' : ''"
+            />
             <!-- Pin/Unpin -->
             <CustomButton
               v-show="canModify && !isNewNote && !globalStore.config.searchDisabled"
@@ -270,6 +286,17 @@
             </svg>
             Updated: {{ note.updatedAsString }}
           </span>
+          <!-- Shared timestamp — only visible when note has at least one active share link -->
+          <span
+            v-if="firstSharedAt"
+            class="fn-timestamp flex items-center gap-1.5 share-active"
+            title="Note is currently shared"
+          >
+            <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current shrink-0">
+              <path d="M18,16.08C17.24,16.08 16.56,16.38 16.04,16.85L8.91,12.7C8.96,12.47 9,12.24 9,12C9,11.76 8.96,11.53 8.91,11.3L15.96,7.19C16.5,7.69 17.21,8 18,8A3,3 0 0,0 21,5A3,3 0 0,0 18,2A3,3 0 0,0 15,5C15,5.24 15.04,5.47 15.09,5.7L8.04,9.81C7.5,9.31 6.79,9 6,9A3,3 0 0,0 3,12A3,3 0 0,0 6,15C6.79,15 7.5,14.69 8.04,14.19L15.16,18.34C15.11,18.55 15.08,18.77 15.08,19C15.08,20.61 16.39,21.91 18,21.91C19.61,21.91 20.92,20.61 20.92,19A2.92,2.92 0 0,0 18,16.08Z"/>
+            </svg>
+            Shared: {{ firstSharedAt }}
+          </span>
         </div>
       </div>
     </template>
@@ -291,10 +318,15 @@
 .pin-active {
   color: rgb(var(--theme-brand));
 }
+
+/* Share button: brand color when note has active share links */
+.share-active {
+  color: rgb(var(--theme-brand));
+}
 </style>
 
 <script setup>
-import { mdiArchive, mdiNoteOffOutline, mdiPin, mdiPinOutline } from "@mdi/js";
+import { mdiArchive, mdiNoteOffOutline, mdiPin, mdiPinOutline, mdiShareVariant } from "@mdi/js";
 import { mdilContentSave, mdilDelete } from "@mdi/light-js";
 import Mousetrap from "mousetrap";
 import { useToast } from "primevue/usetoast";
@@ -309,6 +341,7 @@ import {
   createNote,
   deleteNote,
   getNote,
+  listShares,
   unarchiveNote,
   updateNote,
   pinNote,
@@ -318,6 +351,7 @@ import {
 } from "../api.js";
 import { Note } from "../classes.js";
 import ConfirmModal from "../components/ConfirmModal.vue";
+import ShareModal from "../components/ShareModal.vue";
 import CustomButton from "../components/CustomButton.vue";
 import TagAutocomplete from "../components/TagAutocomplete.vue";
 import LoadingIndicator from "../components/LoadingIndicator.vue";
@@ -328,6 +362,7 @@ import { authTypes } from "../constants.js";
 import { useGlobalStore } from "../globalStore.js";
 import { getToastOptions } from "../helpers.js";
 import { isCurrentTokenStored } from "../tokenStorage.js";
+import { formatDateIso } from "../dateFormatter.js";
 
 const props = defineProps({
   title: String,
@@ -340,6 +375,7 @@ const canModify = computed(
 let contentChangedTimeout = null;
 const editMode = ref(false);
 const globalStore = useGlobalStore();
+const isShareModalVisible = ref(false);
 const isSaveChangesModalVisible = ref(false);
 const isDeleteModalVisible = ref(false);
 const isArchiveModalVisible = ref(false);
@@ -481,6 +517,48 @@ const isPinned = computed(() => {
   return note.value.content && note.value.content.includes("#pin");
 });
 
+// ── Share state ───────────────────────────────────────────────────────────────
+// Loaded once on note open and refreshed whenever the share modal closes.
+// Never touches the editor or any file on disk — purely display metadata.
+const noteShares = ref([]);
+
+async function loadNoteShares() {
+  if (isNewNote.value || !note.value.title) {
+    noteShares.value = [];
+    return;
+  }
+  try {
+    noteShares.value = await listShares(note.value.title);
+  } catch {
+    noteShares.value = [];
+  }
+}
+
+// Active = not expired
+const activeShares = computed(() =>
+  noteShares.value.filter((s) => {
+    if (!s.expires_at) return true;
+    try { return new Date(s.expires_at) >= new Date(); } catch { return true; }
+  })
+);
+
+// True when note has at least one active share link
+const isShared = computed(() => activeShares.value.length > 0);
+
+// Earliest created_at among active shares → displayed as "Shared:" timestamp
+const firstSharedAt = computed(() => {
+  if (!isShared.value) return null;
+  const dates = activeShares.value
+    .map((s) => s.created_at ? new Date(s.created_at).getTime() : Infinity)
+    .filter((t) => isFinite(t));
+  if (!dates.length) return null;
+  const earliest = new Date(Math.min(...dates));
+  // Use formatDateIso so the result respects the user's dateLocale and dateStyle
+  // preferences (same path as createdAsString / updatedAsString), and correctly
+  // renders in the browser's local timezone rather than a hardcoded UTC offset.
+  return formatDateIso(earliest.toISOString());
+});
+
 async function togglePin() {
   try {
     let updatedNote;
@@ -556,6 +634,7 @@ async function init() {
     note.value = data;
     loadingIndicator.value.setLoaded();
     loadFolderNotes();
+    loadNoteShares();
 
     // 👇 NEW: Check for edit query and activate edit mode
     if (route.query.edit === "true" && canModify.value) {
@@ -942,6 +1021,11 @@ function isContentChanged() {
     toastEditor.value.getMarkdown() != note.value.content
   );
 }
+
+// Refresh share status whenever the modal closes (user may have created/revoked links)
+watch(isShareModalVisible, (visible) => {
+  if (!visible) loadNoteShares();
+});
 
 watch(() => props.title, init);
 onMounted(init);

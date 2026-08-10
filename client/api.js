@@ -535,3 +535,107 @@ export async function saveSavedSearches(settings) {
     return Promise.reject(response);
   }
 }
+
+// ── Shared Notes API ──────────────────────────────────────────────────────────
+
+export async function createShare(noteTitle, permission, expiresInDays = null, password = null) {
+  try {
+    const response = await api.post("api/share", {
+      note_title: noteTitle,
+      permission,
+      expires_in_days: expiresInDays,
+      password: password || null,
+    });
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function listShares(noteTitle) {
+  try {
+    const response = await api.get(`api/share/note/${noteTitle.split("/").map(encodeURIComponent).join("/")}`);
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function validateShare(token, password = null) {
+  try {
+    const body = password ? { password } : {};
+    const response = await api.post(
+      `api/share/${encodeURIComponent(token)}/validate`,
+      body,
+    );
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function revokeShare(token) {
+  try {
+    await api.delete(`api/share/${encodeURIComponent(token)}`);
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function getSharedNote(token, password = null) {
+  try {
+    const body = password ? { password } : {};
+    const response = await api.post(
+      `api/shared/${encodeURIComponent(token)}/note`,
+      body,
+    );
+    return new Note(response.data);
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function updateSharedNote(token, newContent, password = null) {
+  try {
+    const body = { newContent };
+    if (password) {
+      body.password = password;
+    }
+    const response = await api.patch(
+      `api/shared/${encodeURIComponent(token)}/note`,
+      body,
+      { headers: { "X-Share-Token": token } },
+    );
+    return new Note(response.data);
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function listAllShares() {
+  try {
+    const response = await api.get("api/shares");
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function revokeShareByHash(tokenHash) {
+  try {
+    await api.delete(`api/shares/${encodeURIComponent(tokenHash)}`);
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function revokeAllShares(noteTitle) {
+  try {
+    const response = await api.delete(
+      `api/share/note/${noteTitle.split("/").map(encodeURIComponent).join("/")}/all`,
+    );
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}

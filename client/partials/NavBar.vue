@@ -118,7 +118,7 @@
 </template>
 
 <script setup>
-import { mdiHome, mdiTagMultiple, mdiBookmark, mdiFolderMultiple, mdiCog, mdiPaperclip, mdiDeleteClock, mdiArchive, mdiFileDocumentOutline, mdiThemeLightDark } from "@mdi/js";
+import { mdiHome, mdiTagMultiple, mdiBookmark, mdiFolderMultiple, mdiCog, mdiPaperclip, mdiDeleteClock, mdiArchive, mdiFileDocumentOutline, mdiThemeLightDark, mdiShareVariant } from "@mdi/js";
 import {
   mdilLogout,
   mdilMagnify,
@@ -261,6 +261,13 @@ const menuItems = computed(() => {
       title: "View and manage attachments",
       visible: !showcaseMode,
     },
+    {
+      label: "Shared Links",
+      icon: mdiShareVariant,
+      command: () => router.push({ name: "shares" }),
+      title: "Manage all share links",
+      visible: !showcaseMode,
+    },    
     {
       label: "Archive",
       icon: mdiArchive,

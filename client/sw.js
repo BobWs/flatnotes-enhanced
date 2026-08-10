@@ -118,12 +118,25 @@ self.addEventListener('message', async (event) => {
   }
 });
 
+// ── Share routes: always NetworkOnly (tokens may be revoked at any time) ─────
+// /api/share/* and /api/shared/* must never be served from cache — a revoked
+// share token would otherwise continue to grant access while offline.
+registerRoute(
+  ({ url }) =>
+    url.pathname.startsWith('/api/share/') ||
+    url.pathname.startsWith('/api/shared/'),
+  new NetworkOnly()
+);
+
 // ── API route: NetworkFirst (only when enabled) ───────────────────────────────
 // Matches all /api/* GET requests.  When offline cache is disabled we fall
 // through to a plain NetworkOnly handler (transparent, no caching).
 registerRoute(
   ({ url, request }) =>
-    url.pathname.startsWith('/api/') && request.method === 'GET',
+    url.pathname.startsWith('/api/') &&
+    !url.pathname.startsWith('/api/share/') &&
+    !url.pathname.startsWith('/api/shared/') &&
+    request.method === 'GET',
   async (context) => {
     if (!apiCacheEnabled) {
       // Pass-through — no caching

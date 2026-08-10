@@ -1,6 +1,6 @@
 {
   "name": "flatnotes-enhanced",
-  "version": "1.12.1",
+  "version": "1.13.0",
   "type": "module",
   "description": "A professional-grade, feature-rich fork of Flatnotes with folders, nested tags, popup previews and more.",
   "main": "client/index.html",

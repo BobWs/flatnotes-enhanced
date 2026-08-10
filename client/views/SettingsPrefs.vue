@@ -24,47 +24,28 @@
           </div>
 
           <!-- Avatar action buttons -->
-          <div class="flex-1 pt-1">
-            <!-- First row: Upload + 2FA QR Code (side by side) -->
-            <div class="flex flex-wrap items-center gap-2">
-              <!-- Upload button with icon -->
-              <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium
-                            border border-theme-border bg-theme-background-elevated 
-                            hover:bg-theme-border hover:border-theme-brand transition-all 
-                            cursor-pointer text-theme-text touch-manipulation flex-1 min-w-[100px]">
-                <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current shrink-0">
-                  <path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/>
-                </svg>
-                Upload image
-                <input type="file" accept="image/*" class="hidden" @change="uploadAvatar"/>
-              </label>
+          <div class="flex flex-col gap-2 pt-1">
+            <!-- Upload button with icon -->
+            <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium
+                          border border-theme-border bg-theme-background-elevated 
+                          hover:bg-theme-border hover:border-theme-brand transition-all 
+                          cursor-pointer text-theme-text touch-manipulation">
+              <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current shrink-0">
+                <path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/>
+              </svg>
+              Upload image
+              <input type="file" accept="image/*" class="hidden" @change="uploadAvatar"/>
+            </label>
 
-              <!-- TOTP QR code button — only shown when TOTP auth is active -->
-              <button
-                v-if="isTotpEnabled"
-                @click="showTotpModal = true"
-                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium
-                       border border-theme-border bg-theme-background-elevated
-                       hover:bg-theme-border hover:border-theme-brand transition-all
-                       text-theme-text touch-manipulation flex-1 min-w-[100px]"
-                title="Show authenticator QR code"
-              >
-                <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current shrink-0">
-                  <path d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H11V13H9V11M15,11H17V13H19V11H21V13H19V15H21V19H19V21H17V19H13V21H11V17H13V15H15V11M19,15H17V19H19V15M15,17H13V19H15V17M5,3H9V7H5V3M3,3H5V5H3V3M5,5H9V7H5V5M13,3H17V7H13V3M11,3H13V5H11V3M13,5H17V7H13V5M3,13H7V17H3V13M5,15H7V17H5V15Z"/>
-                </svg>
-                2FA QR code
-              </button>
-            </div>
-
-            <!-- Second row: Remove avatar (below, full width) -->
+            <!-- Remove button with icon (only shown when avatar exists) -->
             <button
               v-if="prefs.avatarFilename"
               @click="removeAvatar"
-              class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium
                      border border-theme-border bg-theme-background-elevated
                      hover:bg-red-50 hover:border-red-300 hover:text-red-600 
                      dark:hover:bg-red-950/30 dark:hover:border-red-800 dark:hover:text-red-400
-                     transition-all text-theme-text-muted touch-manipulation w-full sm:w-auto"
+                     transition-all text-theme-text-muted touch-manipulation"
             >
               <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current shrink-0">
                 <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
@@ -73,9 +54,25 @@
             </button>
 
             <!-- Empty state hint when no avatar -->
-            <p v-else class="text-xs text-theme-text-very-muted leading-relaxed mt-2">
+            <p v-else class="text-xs text-theme-text-very-muted leading-relaxed max-w-[180px]">
               Upload a photo to personalize your profile
             </p>
+
+            <!-- TOTP QR code button — only shown when TOTP auth is active -->
+            <button
+              v-if="isTotpEnabled"
+              @click="showTotpModal = true"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium
+                     border border-theme-border bg-theme-background-elevated
+                     hover:bg-theme-border hover:border-theme-brand transition-all
+                     text-theme-text touch-manipulation"
+              title="Show authenticator QR code"
+            >
+              <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current shrink-0">
+                <path d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H11V13H9V11M15,11H17V13H19V11H21V13H19V15H21V19H19V21H17V19H13V21H11V17H13V15H15V11M19,15H17V19H19V15M15,17H13V19H15V17M5,3H9V7H5V3M3,3H5V5H3V3M5,5H9V7H5V5M13,3H17V7H13V3M11,3H13V5H11V3M13,5H17V7H13V5M3,13H7V17H3V13M5,15H7V17H5V15Z"/>
+              </svg>
+              2FA QR code
+            </button>
           </div>
         </div>
 

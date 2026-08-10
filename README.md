@@ -29,9 +29,11 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.12.1
+## 🆕 What's New in v1.13.0
 
-- **Hot Fix:** Remove public TOTP QR code from login screen
+- **Shared Notes** – Share any note via a secure, token-based link. Choose Read only or Can edit permissions, set an expiry (7/30/90 days or never), and optionally add a password for extra protection.
+- **Share Admin Page** – View and manage all active share links across all notes in one place.
+- **Visual Indicators** – The Share button turns orange when a note has active links; a "Shared:" timestamp appears in the note footer.
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -114,6 +116,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Mobile Optimized | Responsive design for all screen sizes. |
 | Theme Toggle | Light/Dark/System theme with automatic OS detection. |
 | Preferences | Display name, avatar, default sort, note preview toggle, button label toggle, custom home note. |
+| Shared Links Menu | Access the Shared Links admin page from the navbar. |
 
 ### 💾 Data & Storage
 
@@ -151,6 +154,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Templates | Manage note templates. |
 | Attachments | Browse, search, filter, and sort file attachments. Category badges show file types at a glance. |
 | Settings | Full customization interface. |
+| Shared Links | View and manage all active share links across all notes. Revoke individual links or bulk revoke per note. |
 
 ---
 
@@ -332,6 +336,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.13.0` – Shared Notes – token-based note sharing with read/write permissions, passwords, expiry, admin page, and activity tracking
 - `v1.12.1` – Hot Fix: Remove public TOTP QR code from login screen (security patch)
 - `v1.12.0` – Hide Frontmatter in View & Preview – clean up notes imported from Obsidian, Markleaf, and other tools
 - `v1.11.0` – Showcase Mode (`FLATNOTES_SEARCH_DISABLED`) – public read-only presentation layer for sharing curated notes
@@ -522,6 +527,54 @@ Flatnotes-Enhanced can now hide YAML and TOML frontmatter blocks (`---...---` or
 - Any other features (tag pills, callouts, task icons, etc.)
 
 **Supports both YAML (`---`) and TOML (`+++`) fence formats.**
+
+
+## Shared Notes
+
+Share any note via a secure, token-based link. Recipients do not need a Flatnotes-Enhanced account.
+
+### How to share
+
+1. Open any note and click the **Share** button in the toolbar
+2. Choose **Read only** or **Can edit** permission
+3. Set an optional expiry (7 / 30 / 90 days, or never)
+4. Optionally add a **password** for extra protection
+5. Copy the generated link and send it
+
+### What recipients see
+
+| Permission | What they can do |
+|------------|------------------|
+| **Read only** | View the note content (no edits) |
+| **Can edit** | View and edit the note content |
+
+### Manage your shares
+
+- **Share modal** – See all active links for a note with view counts and last-accessed times
+- **Shared Links admin page** (`/shares`) – View and manage every active share link across all notes
+- **Revoke** – Remove access immediately at any time
+- **Bulk revoke** – Revoke all links for a note in one click
+
+### Security features
+
+- **Password protection** – Optional bcrypt-hashed password per link
+- **Token storage** – Only SHA-256 hashes are stored; raw tokens are never persisted
+- **Expiry dates** – Enforced server-side; expired links are automatically rejected
+- **No caching** – Share routes are excluded from the service worker cache
+
+### Visual indicators
+
+| Indicator | What it means |
+|-----------|---------------|
+| Orange **Shared** button | Note has active share links |
+| `Shared: {date}` in note footer | When the first share link was created |
+
+### ⚠️ Security notes
+
+- Share links bypass normal login – anyone with the URL can access the note
+- Read-only links can be forwarded – use a password to restrict access
+- Write links allow editing – only share with trusted people
+- Tokens are shown once at creation – store or send them immediately
 
 ---
 

@@ -8,7 +8,7 @@ import Archive from "./views/Archive.vue";
 // Routes that are hidden in public showcase mode (FLATNOTES_SEARCH_DISABLED=true).
 // Direct URL navigation to these is redirected to home.
 const SHOWCASE_BLOCKED_ROUTES = new Set([
-  "search", "trash", "archive", "attachments", "templates", "settings", "bookmarks", "new",
+  "search", "trash", "archive", "attachments", "templates", "settings", "bookmarks", "new", "shares",
 ]);
 
 const router = createRouter({
@@ -24,6 +24,12 @@ const router = createRouter({
       name: "login",
       component: () => import("./views/LogIn.vue"),
       props: (route) => ({ redirect: route.query[constants.params.redirect] }),
+    },
+    {
+      path: "/shared/:token",
+      name: "shared",
+      component: () => import("./views/SharedNote.vue"),
+      props: true,
     },
     {
       path: "/note/:title(.*)",
@@ -67,6 +73,11 @@ const router = createRouter({
       component: () => import("./views/Attachments.vue"),
     },
     {
+      path: "/shares",
+      name: "shares",
+      component: () => import("./views/Shares.vue"),
+    },
+    {
       path: "/search",
       name: "search",
       component: () => import("./views/SearchResults.vue"),
@@ -84,6 +95,9 @@ const router = createRouter({
 // Check the user is authenticated on first navigation (unless going to login)
 let authChecked = false;
 router.beforeEach(async (to) => {
+  // Shared note routes are public — the share token is the credential
+  if (to.name === "shared") return;
+
   if (authChecked || to.name === "login") {
     // Showcase mode: block internal pages even after auth is established.
     // Import lazily to avoid circular dependency with the store.

@@ -13,6 +13,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.13.0] - 2026-08-10
+
+### Added
+- **Shared Notes** – Full token-based note sharing feature
+  - Share any note via secure link with read-only or edit permissions
+  - Optional expiry (7/30/90 days or never)
+  - Optional password protection (bcrypt-hashed)
+  - Multiple share links per note
+  - Activity tracking: view count and last-accessed time per link
+  - Share modal shows all active links for the current note
+  - Bulk revoke all links for a note
+- **Shared Links Admin Page** (`/shares`)
+  - Dedicated page accessible from NavBar
+  - Lists all active share links across all notes, grouped by note
+  - View token preview, permission, password indicator, view count, last accessed, expiry
+  - Revoke individual links or revoke all per note
+  - Empty state and refresh button
+- **Visual indicators in Note view**
+  - Share button turns orange with "Shared" label when note has active links
+  - "Shared: {date}" timestamp appears in note footer
+  - Timestamp uses app's date format and locale settings
+- **Security**
+  - Share routes excluded from PWA cache (NetworkOnly strategy) – revoked links never work from cache
+  - Tokens stored as SHA-256 hashes only – raw tokens never persisted
+  - Password protection with bcrypt hashing
+
+### Changed
+- `NavBar.vue`: Added "Shared Links" menu item (between Attachements and Archive, hidden in Showcase Mode)
+- `router.js`: Added `/shared/:token` and `/shares` routes; `"shares"` added to `SHOWCASE_BLOCKED_ROUTES`
+
+### Technical
+- New `SharedNote` ORM model in `database.py`
+- New API endpoints: `POST /api/share`, `GET /api/share/note/{title}`, `GET /api/share/{token}`, `DELETE /api/share/{token}`, `GET /api/shared/{token}/note`, `PATCH /api/shared/{token}/note`, `GET /api/shares`, `DELETE /api/shares/{hash}`, `DELETE /api/share/note/{title}/all`
+- New client components: `SharedNote.vue`, `ShareModal.vue`, `Shares.vue`
+- `api.js`: Full set of share-related API functions
+
+---
+
 ## [1.12.1] - 2026-08-02
 
 ### Security

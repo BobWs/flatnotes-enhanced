@@ -18,6 +18,8 @@ Robustness guarantees
 import json
 import os
 import re
+import hashlib
+import secrets
 import shutil
 from datetime import datetime, timezone
 from typing import Optional
@@ -32,6 +34,50 @@ from sqlalchemy.sql import func
 
 from helpers import get_env
 from logger import logger
+
+try:
+    from passlib.context import CryptContext as _CryptContext
+    from passlib.exc import MissingBackendError
+    
+    # Try bcrypt first, fallback to pbkdf2_sha256 if it fails
+    _pwd_context = None
+    _HAS_BCRYPT = False
+    
+    try:
+        # Test with a simple hash
+        test_ctx = _CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__truncate_error=False)
+        test_ctx.hash("test")
+        _pwd_context = test_ctx
+        _HAS_BCRYPT = True
+    except Exception as e:
+        print(f"bcrypt unavailable ({e}), using pbkdf2_sha256")
+        _pwd_context = _CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+    
+    def _hash_password(pw: str) -> str:
+        # bcrypt has a 72-byte limit
+        if _HAS_BCRYPT:
+            pw_bytes = pw.encode('utf-8')
+            if len(pw_bytes) > 72:
+                pw = pw_bytes[:72].decode('utf-8', errors='ignore')
+        return _pwd_context.hash(pw)
+    
+    def _verify_password(pw: str, hashed: str) -> bool:
+        try:
+            # bcrypt has a 72-byte limit
+            if hashed.startswith(('$2a$', '$2b$', '$2y$')):
+                pw_bytes = pw.encode('utf-8')
+                if len(pw_bytes) > 72:
+                    pw = pw_bytes[:72].decode('utf-8', errors='ignore')
+            return _pwd_context.verify(pw, hashed)
+        except Exception:
+            # Ultimate fallback
+            return hashlib.sha256(pw.encode()).hexdigest() == hashed
+except Exception:
+    import hashlib as _hashlib
+    def _hash_password(pw: str) -> str:
+        return _hashlib.sha256(pw.encode()).hexdigest()
+    def _verify_password(pw: str, hashed: str) -> bool:
+        return _hashlib.sha256(pw.encode()).hexdigest() == hashed
 
 Base = declarative_base()
 
@@ -94,6 +140,22 @@ class UserSettings(Base):
     user = relationship("User", back_populates="settings")
 
 
+class SharedNote(Base):
+    """Per-note share tokens for Shared Notes feature."""
+    __tablename__ = "shared_notes"
+
+    id              = Column(String, primary_key=True)   # SHA-256 hash of raw token
+    token_preview   = Column(String, nullable=False)     # first 6 chars of raw token
+    note_title      = Column(String, nullable=False)
+    permission      = Column(String, nullable=False)     # "read" | "write"
+    created_at      = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at      = Column(DateTime(timezone=True), nullable=True)
+    is_active       = Column(Boolean, default=True)
+    last_accessed_at = Column(DateTime(timezone=True), nullable=True)
+    access_count    = Column(Integer, default=0)
+    password_hash   = Column(String, nullable=True)   # bcrypt hash; None = no password
+
+
 class CalloutConfig(Base):
     """User-defined callout configurations."""
     __tablename__ = "callout_configs"
@@ -124,6 +186,9 @@ class DatabaseManager:
     # Columns expected in `user_settings` → DDL type string.
     # Used by _migrate_schema to backfill columns missing from older DB files.
     _EXPECTED_COLUMNS = {
+        "shared_notes": {
+            "password_hash": "VARCHAR",
+        },
         "user_settings": {
             "id":                   "INTEGER",
             "user_id":              "INTEGER",
@@ -546,6 +611,262 @@ class DatabaseManager:
         shutil.copy2(backup_path, self.db_path)
         logger.info(f"Restored backup {filename}; pre-restore safety saved as {safety_filename}")
         return {"success": True, "pre_restore_backup": safety_filename}
+
+    # ── Shared Notes ──────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _hash_token(raw_token: str) -> str:
+        """Return SHA-256 hex digest of a raw share token."""
+        return hashlib.sha256(raw_token.encode()).hexdigest()
+
+    def create_share(
+        self,
+        note_title: str,
+        permission: str,
+        expires_at=None,
+        password: str | None = None,
+    ) -> dict:
+        """Create a new share token for a note.
+
+        Returns a dict containing the raw token (shown once only), preview,
+        note_title, permission, expires_at, created_at, and has_password.
+        Raises RuntimeError when the database is unavailable.
+        """
+        if not self.enabled:
+            raise RuntimeError("Database is not enabled")
+
+        raw_token     = secrets.token_urlsafe(16)
+        token_hash    = self._hash_token(raw_token)
+        token_preview = raw_token[:6]
+        now           = datetime.now(timezone.utc)
+        pw_hash       = _hash_password(password) if password else None
+
+        db = self.get_session()
+        try:
+            share = SharedNote(
+                id               = token_hash,
+                token_preview    = token_preview,
+                note_title       = note_title,
+                permission       = permission,
+                created_at       = now,
+                expires_at       = expires_at,
+                is_active        = True,
+                last_accessed_at = None,
+                access_count     = 0,
+                password_hash    = pw_hash,
+            )
+            db.add(share)
+            db.commit()
+            logger.info(f"Share token created for '{note_title}' ({permission})")
+            return {
+                "token":         raw_token,       # returned once, never stored
+                "token_preview": token_preview,
+                "note_title":    note_title,
+                "permission":    permission,
+                "expires_at":    expires_at.isoformat() if expires_at else None,
+                "created_at":    now.isoformat(),
+                "has_password":  pw_hash is not None,
+            }
+        except Exception as exc:
+            db.rollback()
+            raise RuntimeError(f"Failed to create share: {exc}") from exc
+        finally:
+            db.close()
+
+    def validate_share(self, raw_token: str, password: str | None = None) -> dict | None:
+        """Validate a raw share token and return its metadata, or None if invalid.
+
+        Password protection:
+        - If the share has a password and none is supplied, returns
+          {"requires_password": True} without any note data.
+        - If the share has a password and the supplied one is wrong, returns None.
+        - If the share has no password, the password argument is ignored.
+
+        Also updates last_accessed_at and access_count on every successful hit.
+        Returns None when the token is unknown, inactive, or expired.
+        """
+        if not self.enabled:
+            return None
+
+        token_hash = self._hash_token(raw_token)
+        db         = self.get_session()
+        try:
+            share = db.query(SharedNote).filter(
+                SharedNote.id        == token_hash,
+                SharedNote.is_active == True,
+            ).first()
+
+            if not share:
+                return None
+
+            # Expiry check
+            if share.expires_at is not None:
+                now = datetime.now(timezone.utc)
+                exp = share.expires_at
+                if exp.tzinfo is None:
+                    from datetime import timezone as _tz
+                    exp = exp.replace(tzinfo=_tz.utc)
+                if now > exp:
+                    return None
+
+            # Password check
+            if share.password_hash:
+                if password is None:
+                    return {"requires_password": True}
+                if not _verify_password(password, share.password_hash):
+                    return None  # wrong password
+
+            # Record access silently
+            share.last_accessed_at = datetime.now(timezone.utc)
+            share.access_count     = (share.access_count or 0) + 1
+            db.commit()
+
+            return {
+                "token_preview":   share.token_preview,
+                "note_title":      share.note_title,
+                "permission":      share.permission,
+                "expires_at":      share.expires_at.isoformat() if share.expires_at else None,
+                "created_at":      share.created_at.isoformat() if share.created_at else None,
+                "access_count":    share.access_count,
+                "has_password":    share.password_hash is not None,
+                "requires_password": False,
+            }
+        except Exception as exc:
+            logger.error(f"Share validation error: {exc}")
+            return None
+        finally:
+            db.close()
+
+    def list_shares(self, note_title: str) -> list:
+        """Return all active share tokens for a given note, newest first."""
+        if not self.enabled:
+            return []
+
+        db = self.get_session()
+        try:
+            shares = db.query(SharedNote).filter(
+                SharedNote.note_title == note_title,
+                SharedNote.is_active  == True,
+            ).order_by(SharedNote.created_at.desc()).all()
+
+            return [
+                {
+                    "id":                s.id,
+                    "token_preview":     s.token_preview,
+                    "note_title":        s.note_title,
+                    "permission":        s.permission,
+                    "expires_at":        s.expires_at.isoformat() if s.expires_at else None,
+                    "created_at":        s.created_at.isoformat() if s.created_at else None,
+                    "last_accessed_at":  s.last_accessed_at.isoformat() if s.last_accessed_at else None,
+                    "access_count":      s.access_count or 0,
+                    "has_password":      s.password_hash is not None,
+                }
+                for s in shares
+            ]
+        except Exception as exc:
+            logger.error(f"list_shares error: {exc}")
+            return []
+        finally:
+            db.close()
+
+    def revoke_share(self, raw_token: str) -> bool:
+        """Hard-delete a share token. Returns True if deleted, False if not found."""
+        if not self.enabled:
+            return False
+
+        token_hash = self._hash_token(raw_token)
+        db         = self.get_session()
+        try:
+            rows = db.query(SharedNote).filter(SharedNote.id == token_hash).delete()
+            db.commit()
+            if rows:
+                logger.info(f"Share token revoked: {token_hash[:12]}…")
+            return rows > 0
+        except Exception as exc:
+            logger.error(f"revoke_share error: {exc}")
+            db.rollback()
+            return False
+        finally:
+            db.close()
+
+    def list_all_shares(self) -> list:
+        """Return all active share tokens across all notes, newest first."""
+        if not self.enabled:
+            return []
+
+        db = self.get_session()
+        try:
+            shares = db.query(SharedNote).filter(
+                SharedNote.is_active == True,
+            ).order_by(SharedNote.created_at.desc()).all()
+
+            return [
+                {
+                    "id":                s.id,
+                    "token_preview":     s.token_preview,
+                    "note_title":        s.note_title,
+                    "permission":        s.permission,
+                    "expires_at":        s.expires_at.isoformat() if s.expires_at else None,
+                    "created_at":        s.created_at.isoformat() if s.created_at else None,
+                    "last_accessed_at":  s.last_accessed_at.isoformat() if s.last_accessed_at else None,
+                    "access_count":      s.access_count or 0,
+                    "has_password":      s.password_hash is not None,
+                }
+                for s in shares
+            ]
+        except Exception as exc:
+            logger.error(f"list_all_shares error: {exc}")
+            return []
+        finally:
+            db.close()
+
+    def revoke_share_by_hash(self, token_hash: str) -> bool:
+        """Hard-delete a share token by its hash (the `id` column).
+
+        Used by the admin /shares page where raw tokens are unavailable.
+        Returns True if a row was deleted, False if not found.
+        """
+        if not self.enabled:
+            return False
+
+        db = self.get_session()
+        try:
+            rows = db.query(SharedNote).filter(SharedNote.id == token_hash).delete()
+            db.commit()
+            if rows:
+                logger.info(f"Share revoked by hash: {token_hash[:12]}…")
+            return rows > 0
+        except Exception as exc:
+            logger.error(f"revoke_share_by_hash error: {exc}")
+            db.rollback()
+            return False
+        finally:
+            db.close()
+
+    def revoke_all_shares(self, note_title: str) -> int:
+        """Hard-delete all active share tokens for a note.
+
+        Returns the count of deleted rows.
+        """
+        if not self.enabled:
+            return 0
+
+        db = self.get_session()
+        try:
+            rows = db.query(SharedNote).filter(
+                SharedNote.note_title == note_title,
+                SharedNote.is_active  == True,
+            ).delete()
+            db.commit()
+            if rows:
+                logger.info(f"Revoked all {rows} shares for '{note_title}'")
+            return rows
+        except Exception as exc:
+            logger.error(f"revoke_all_shares error: {exc}")
+            db.rollback()
+            return 0
+        finally:
+            db.close()
 
     # ── Public API ────────────────────────────────────────────────────────────
 

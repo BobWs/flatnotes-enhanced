@@ -1,10 +1,11 @@
 import os
-from datetime import datetime, timezone
-from typing import List, Literal
+from datetime import datetime, timezone, timedelta
+from typing import List, Literal, Optional
 
 from fastapi import APIRouter, Body, Depends, FastAPI, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 import json
 from pathlib import Path
@@ -276,8 +277,10 @@ replace_base_href("client/dist/index.html", global_config.path_prefix)
 @router.get("/trash", include_in_schema=False)
 @router.get("/settings", include_in_schema=False)
 @router.get("/attachments", include_in_schema=False)
+@router.get("/shares", include_in_schema=False)
+@router.get("/shared/{token}", include_in_schema=False)
 @router.get("/note/{title:path}", include_in_schema=False)
-def root(title: str = ""):
+def root(title: str = "", token: str = ""):
     with open("client/dist/index.html", "r", encoding="utf-8") as f:
         html = f.read()
     return HTMLResponse(content=html)
@@ -861,10 +864,138 @@ def maintenance_empty_trash(body: dict = Body(default={})):
 
 
 
+# region Shared Notes
+
+class ShareCreateRequest(BaseModel):
+    note_title: str
+    permission: str           # "read" | "write"
+    expires_in_days: Optional[int] = None   # None = no expiry
+    password: Optional[str] = None          # None = no password protection
+
+
+@router.post("/api/share", dependencies=auth_deps)
+def create_share(req: ShareCreateRequest):
+    """Create a new share token for a note. Authenticated users only."""
+    if req.permission not in ("read", "write"):
+        raise HTTPException(400, "permission must be 'read' or 'write'")
+    expires_at = None
+    if req.expires_in_days is not None and req.expires_in_days > 0:
+        expires_at = datetime.now(timezone.utc) + timedelta(days=req.expires_in_days)
+    password = req.password.strip() if req.password and req.password.strip() else None
+    try:
+        return db_manager.create_share(
+            note_title=req.note_title,
+            permission=req.permission,
+            expires_at=expires_at,
+            password=password,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(500, str(exc))
+
+
+@router.get("/api/share/note/{title:path}", dependencies=auth_deps)
+def list_shares(title: str):
+    """List all active share tokens for a note. Authenticated users only."""
+    return db_manager.list_shares(title)
+
+
+@router.post("/api/share/{token}/validate")
+def validate_share(token: str, body: dict = Body(default={})):
+    """Validate a share token. No auth required — token IS the credential.
+
+    Optional body: {"password": "..."} for password-protected shares.
+    Returns {"requires_password": true} when a password is needed but not supplied.
+    """
+    password = body.get("password") or None
+    result = db_manager.validate_share(token, password=password)
+    if result is None:
+        raise HTTPException(404, "Share link not found or expired")
+    return result
+
+
+@router.delete("/api/share/{token}", dependencies=auth_deps)
+def revoke_share(token: str):
+    """Hard-delete a share token. Authenticated users only."""
+    deleted = db_manager.revoke_share(token)
+    if not deleted:
+        raise HTTPException(404, "Share token not found")
+    return {"success": True}
+
+
+class SharedNoteRequest(BaseModel):
+    password: Optional[str] = None
+
+
+class SharedNoteUpdateRequest(BaseModel):
+    newContent: str
+    password: Optional[str] = None
+
+
+@router.post("/api/shared/{token}/note")
+def get_shared_note(token: str, body: SharedNoteRequest = SharedNoteRequest()):
+    """Return note content for a valid share token. No auth required.
+
+    Optional body: {"password": "..."} for password-protected shares.
+    """
+    password = body.password or None
+    share = db_manager.validate_share(token, password=password)
+    if share is None:
+        raise HTTPException(404, "Share link not found or expired")
+    if share.get("requires_password"):
+        raise HTTPException(401, "Password required")
+    try:
+        return note_storage.get(share["note_title"])
+    except FileNotFoundError:
+        raise HTTPException(404, "Note not found") 
+
+
+@router.patch("/api/shared/{token}/note")
+def patch_shared_note(token: str, data: SharedNoteUpdateRequest):
+    """Save note content via a write share token. No user auth required."""
+    password = data.password or None
+    share = db_manager.validate_share(token, password=password)
+    if share is None:
+        raise HTTPException(404, "Share link not found or expired")
+    if share.get("requires_password"):
+        raise HTTPException(401, "Password required")
+    if share["permission"] != "write":
+        raise HTTPException(403, "This share link is read-only")
+    try:
+        return note_storage.update(share["note_title"], NoteUpdate(newContent=data.newContent))
+    except FileNotFoundError:
+        raise HTTPException(404, "Note not found")
+    except FileExistsError:
+        raise HTTPException(409, api_messages.note_exists)
+
+@router.get("/api/shares", dependencies=auth_deps)
+def list_all_shares():
+    """List all active share tokens across all notes. Authenticated users only."""
+    return db_manager.list_all_shares()
+
+
+@router.delete("/api/shares/{token_hash}", dependencies=auth_deps)
+def revoke_share_by_hash(token_hash: str):
+    """Hard-delete a share token by its SHA-256 hash. Authenticated users only.
+
+    Used by the admin Shares page where raw tokens are no longer available.
+    """
+    deleted = db_manager.revoke_share_by_hash(token_hash)
+    if not deleted:
+        raise HTTPException(404, "Share token not found")
+    return {"success": True}
+
+
+@router.delete("/api/share/note/{title:path}/all", dependencies=auth_deps)
+def revoke_all_shares(title: str):
+    """Hard-delete all active share tokens for a note. Authenticated users only."""
+    count = db_manager.revoke_all_shares(title)
+    return {"revoked": count}
+
+# endregion
+
 @router.get("/health")
 def healthcheck() -> str:
     return "OK"
-# endregion
 
 app.include_router(router, prefix=global_config.path_prefix)
 app.mount(
