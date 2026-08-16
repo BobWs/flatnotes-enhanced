@@ -3,15 +3,16 @@
 
 # Include the following
 !.htmlnanorc
-!LICENSE
-!Pipfile
-!Pipfile.lock
+!.python-version
 !client/**
 !entrypoint.sh
 !healthcheck.sh
+!LICENSE
 !package-lock.json
 !package.json
 !postcss.config.js
+!pyproject.toml
 !server/**
 !tailwind.config.js
+!uv.lock
 !vite.config.js

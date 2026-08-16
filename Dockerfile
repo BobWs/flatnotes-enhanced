@@ -1,7 +1,7 @@
 ARG BUILD_DIR=/build
 
 # Build Container (platform is inherited from buildx)
-FROM node:20-alpine AS build
+FROM node:24-alpine AS build
 
 ARG BUILD_DIR
 
@@ -22,7 +22,8 @@ COPY client ./client
 RUN npm run build
 
 # Runtime Container
-FROM python:3.11-slim-bullseye
+FROM python:3.13-slim-trixie
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 ARG BUILD_DIR
 
@@ -43,17 +44,16 @@ RUN apt update && apt install -y \
     gosu \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir pipenv
-
 WORKDIR ${APP_PATH}
 
-COPY LICENSE Pipfile ./
-RUN pipenv lock
-RUN pipenv install --deploy --ignore-pipfile --system && \
-    pipenv --clear
+COPY LICENSE pyproject.toml .python-version uv.lock ./
+
+ENV UV_NO_MANAGED_PYTHON=1
+ENV UV_PROJECT_ENVIRONMENT=/usr/local
+RUN uv sync --locked --compile-bytecode --no-dev
 
 COPY server ./server
-COPY --from=build ${BUILD_DIR}/client/dist ./client/dist
+COPY --from=build --chmod=777 ${BUILD_DIR}/client/dist ./client/dist
 
 # Copy package.json to runtime container for version info
 COPY --from=build ${BUILD_DIR}/package.json ${APP_PATH}/package.json

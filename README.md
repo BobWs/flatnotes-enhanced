@@ -29,11 +29,11 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.13.0
+## 🆕 What's New in v1.13.1
 
-- **Shared Notes** – Share any note via a secure, token-based link. Choose Read only or Can edit permissions, set an expiry (7/30/90 days or never), and optionally add a password for extra protection.
-- **Share Admin Page** – View and manage all active share links across all notes in one place.
-- **Visual Indicators** – The Share button turns orange when a note has active links; a "Shared:" timestamp appears in the note footer.
+- **Dependency updates** – Updated Node.js and Python dependencies to latest stable versions
+- **Build tooling** – Migrated from `pipenv` to `uv` for faster and more reliable Python dependency management
+- **Security** – Updated dependencies to address known vulnerabilities
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -198,8 +198,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ### Prerequisites
 
-- Python 3.11+
-- Node.js 20+
+- Python 3.13+
+- Node.js 20+ (recommended: 24+)
+- `uv` for Python dependency management ([Installation guide](https://docs.astral.sh/uv/getting-started/installation/))
 - (Optional) Docker for containerized deployment
 
 ---
@@ -246,44 +247,63 @@ docker run -d \
 
 ## 📦 Manual Installation
 
-### Step 1: Install Dependencies
-
-**Backend (Python):**
+### Step 1: Clone the Repository
 
 ```bash
-# Install pipenv if you don't have it
-pip install pipenv
-
-# Install dependencies
-pipenv install
+git clone https://github.com/BobWs/flatnotes-enhanced.git
+cd flatnotes-enhanced
 ```
 
-**Frontend (Node.js):**
+### Step 2: Install Python Dependencies
 
 ```bash
-# Install dependencies
+# Install uv if you don't have it
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Sync dependencies (creates virtual environment and installs packages)
+uv sync
+```
+
+### Step 3: Install Frontend Dependencies
+
+```bash
+# Install frontend dependencies
 npm ci
 ```
 
-### Step 2: Build the Frontend
+### Step 4: Build the Frontend
 
 ```bash
 npm run build
 ```
 
-### Step 3: Run the Server
+### Step 5: Run the Server
 
 ```bash
-# Using pipenv
-pipenv run uvicorn server.main:app --host 0.0.0.0 --port 8080
+# Activate the virtual environment
+source .venv/bin/activate
 
-# Or using Python directly
-python -m uvicorn server.main:app --host 0.0.0.0 --port 8080
+# Run the server
+uvicorn server.main:app --host 0.0.0.0 --port 8080
+
+# Or with auto-reload for development:
+uvicorn server.main:app --reload --host 0.0.0.0 --port 8080
 ```
 
-### Step 4: Access Flatnotes-Enhanced
+### Step 6: Access Flatnotes-Enhanced
 
 Open your browser and navigate to `http://localhost:8080`
+
+---
+
+## Summary
+
+| Change | Why |
+|--------|-----|
+| Replace `pipenv` with `uv` | `uv` is the new toolchain |
+| Add Python 3.13 requirement | The app now runs on 3.13 |
+| Add `uv sync` step | Creates venv and installs deps |
+| Remove `pipenv run` | `uv` uses a different approach |
 
 ---
 
@@ -336,6 +356,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.13.1` – Dependency updates & build tooling modernisation (`uv`, Node.js, Python 3.13)
 - `v1.13.0` – Shared Notes – token-based note sharing with read/write permissions, passwords, expiry, admin page, and activity tracking
 - `v1.12.1` – Hot Fix: Remove public TOTP QR code from login screen (security patch)
 - `v1.12.0` – Hide Frontmatter in View & Preview – clean up notes imported from Obsidian, Markleaf, and other tools

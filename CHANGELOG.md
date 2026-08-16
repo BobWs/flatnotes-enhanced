@@ -13,6 +13,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.13.1] - 2026-08-16
+
+### Changed
+- **Frontend dependencies** – Updated to latest stable versions:
+  - `vue` → `3.5.40`
+  - `vue-router` → `5.2.0`
+  - `pinia` → `4.0.2`
+  - `vite` → `8.2.0`
+  - `axios` → `1.19.0`
+  - `@toast-ui/editor` → `3.2.2`
+  - And many more dev dependencies
+- **Backend dependencies** – Updated to latest stable versions:
+  - `fastapi` → `0.141.1`
+  - `uvicorn` → `0.52.1`
+  - `sqlalchemy` → `2.0.49`
+  - `bcrypt` → `4.2.0`
+  - And more
+- **Build tooling** – Migrated from `pipenv` to `uv` for Python dependency management
+- **Dockerfile** – Updated base images to `node:24-alpine` and `python:3.13-slim-trixie`
+- **Python runtime** – Updated from 3.11 to 3.13
+
+### Security
+- Updated dependencies to address known vulnerabilities
+- Pinned `bcrypt` version to resolve compatibility issues
+
+### Technical
+- Added `.python-version` and `uv.lock` for reproducible builds
+- Updated `.dockerignore` to include new build files (`pyproject.toml`, `uv.lock`, `.python-version`)
+- Docker build now uses `uv sync --locked` for deterministic installations
+
+### Upgrading
+- **No action required** – this release is backward compatible with existing configurations and data
+
+---
+
 ## [1.13.0] - 2026-08-10
 
 ### Added
