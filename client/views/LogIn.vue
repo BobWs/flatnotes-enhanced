@@ -1,7 +1,6 @@
 <template>
   <div class="flex h-full flex-col items-center justify-center">
     <Logo class="mb-5" />
-<<<<<<< HEAD
     <form @submit.prevent="logIn" class="flex max-w-80 flex-col items-center">
       <TextInput
         v-model="username"
@@ -29,7 +28,6 @@
         autocomplete="one-time-code"
         required
       />
-=======
     <div v-if="globalStore.config.authType == authTypes.oidc" class="flex max-w-80 flex-col items-center">
       <a v-if="globalStore.config.authProvider == 'github'" href="/api/auth/oidc/login" class="flex items-center gap-2 rounded-md bg-[#24292e] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#3a3f44] transition-colors">
         <GitHubIcon />
@@ -47,17 +45,13 @@
       <button v-if="globalStore.config.authType == authTypes.totp" type="button" @click="showTotpModal = true" class="mb-2 text-xs text-theme-brand hover:underline self-start">
         Show QR code for authenticator setup
       </button>
->>>>>>> ff36363 (feat(sso): oidc + oauth2 Github)
       <div class="mb-4 flex">
         <input type="checkbox" id="remember-me" v-model="rememberMe" class="mr-1" />
         <label for="remember-me">Remember Me</label>
       </div>
       <CustomButton :iconPath="mdilLogin" label="Log In" />
     </form>
-<<<<<<< HEAD
-=======
     <TotpSetupModal :show="showTotpModal" @close="showTotpModal = false" />
->>>>>>> ff36363 (feat(sso): oidc + oauth2 Github)
   </div>
 </template>
 <script setup>
@@ -83,11 +77,8 @@ const username = ref("");
 const password = ref("");
 const totp = ref("");
 const rememberMe = ref(false);
-<<<<<<< HEAD
 
-=======
 const showTotpModal = ref(false);
->>>>>>> ff36363 (feat(sso): oidc + oauth2 Github)
 function logIn() {
   getToken(username.value, password.value, totp.value)
     .then((access_token) => {
