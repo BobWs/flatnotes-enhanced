@@ -137,8 +137,5 @@ class GlobalConfigResponseModel(CustomBaseModel):
     quick_access_term: str
     quick_access_sort: str
     quick_access_limit: int
-<<<<<<< HEAD
     search_disabled: bool
-=======
     auth_provider: str = ""
->>>>>>> ff36363 (feat(sso): oidc + oauth2 Github)
