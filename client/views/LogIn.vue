@@ -1,33 +1,6 @@
 <template>
   <div class="flex h-full flex-col items-center justify-center">
     <Logo class="mb-5" />
-    <form @submit.prevent="logIn" class="flex max-w-80 flex-col items-center">
-      <TextInput
-        v-model="username"
-        id="username"
-        placeholder="Username"
-        class="mb-1"
-        autocomplete="username"
-        required
-      />
-      <TextInput
-        v-model="password"
-        id="password"
-        placeholder="Password"
-        type="password"
-        class="mb-1"
-        autocomplete="current-password"
-        required
-      />
-      <TextInput
-        v-if="globalStore.config.authType == authTypes.totp"
-        v-model="totp"
-        id="one-time-code"
-        placeholder="2FA Code"
-        class="mb-1"
-        autocomplete="one-time-code"
-        required
-      />
     <div v-if="globalStore.config.authType == authTypes.oidc" class="flex max-w-80 flex-col items-center">
       <a v-if="globalStore.config.authProvider == 'github'" href="/api/auth/oidc/login" class="flex items-center gap-2 rounded-md bg-[#24292e] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#3a3f44] transition-colors">
         <GitHubIcon />
