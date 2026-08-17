@@ -17,14 +17,17 @@ class GlobalConfig:
         self.path_prefix: str = self._load_path_prefix()
         self.trash_auto_delete_days: int = self._load_trash_days()
         self.search_disabled: bool = self._load_search_disabled()
+        self.auth_provider: str = self._load_auth_provider()
 
     def load_auth(self):
         if self.auth_type in (AuthType.NONE, AuthType.READ_ONLY):
             return None
         elif self.auth_type in (AuthType.PASSWORD, AuthType.TOTP):
             from auth.local import LocalAuth
-
             return LocalAuth()
+        elif self.auth_type == AuthType.OIDC:
+            from auth.oidc import make_oidc_auth
+            return make_oidc_auth()
 
     def load_note_storage(self):
         from notes.file_system import FileSystemNotes
@@ -114,12 +117,17 @@ class GlobalConfig:
             sys.exit(1)
         return value
 
+    def _load_auth_provider(self):
+        if self.auth_type != AuthType.OIDC:
+            return ""
+        return get_env("AUTH_PROVIDER", mandatory=False, default="github").lower()
 
 class AuthType(str, Enum):
     NONE = "none"
     READ_ONLY = "read_only"
     PASSWORD = "password"
     TOTP = "totp"
+    OIDC = "oidc"
 
 
 class GlobalConfigResponseModel(CustomBaseModel):
@@ -129,4 +137,8 @@ class GlobalConfigResponseModel(CustomBaseModel):
     quick_access_term: str
     quick_access_sort: str
     quick_access_limit: int
+<<<<<<< HEAD
     search_disabled: bool
+=======
+    auth_provider: str = ""
+>>>>>>> ff36363 (feat(sso): oidc + oauth2 Github)

@@ -1,0 +1,29 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+black = "*"
+flake8 = "*"
+rope = "*"
+isort = "*"
+
+[packages]
+whoosh = "==2.7.4"
+fastapi = "==0.118.3"
+uvicorn = {extras = ["standard"], version = "==0.37.0"}
+aiofiles = "==25.1.0"
+python-jose = {extras = ["cryptography"], version = "==3.5.0"}
+pyotp = "==2.9.0"
+qrcode = "==8.2"
+python-multipart = "==0.0.20"
+SQLAlchemy = ">=2.0.0"
+aiosqlite = ">=0.19.0"
+httpx = ">=0.23"
+
+[requires]
+python_version = "3.11"
+
+[pipenv]
+allow_prereleases = true
