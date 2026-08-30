@@ -1,3 +1,5 @@
+import secrets
+
 from datetime import datetime, timedelta
 
 import httpx
@@ -31,6 +33,9 @@ class OIDCAuth:
             {u.strip().lower() for u in allowed.split(",") if u.strip()}
             if allowed else None
         )
+        
+    def _generate_state(self) -> str:
+        return secrets.token_urlsafe(24)
 
     def _check_allowed(self, username: str):
         if self.allowed_users and username.lower() not in self.allowed_users:
@@ -71,7 +76,7 @@ class OIDCAuth:
         to_encode["exp"] = datetime.utcnow() + timedelta(days=self.session_expiry_days)
         return jwt.encode(to_encode, self.secret_key, algorithm=self.JWT_ALGORITHM)
 
-    def get_authorization_url(self) -> str:
+    def get_authorization_url(self, state: str) -> str:
         raise NotImplementedError
 
     async def handle_callback(self, code: str) -> Token:
@@ -85,12 +90,13 @@ class GitHubAuth(OIDCAuth):
     TOKEN_URL = "https://github.com/login/oauth/access_token"
     USER_URL = "https://api.github.com/user"
 
-    def get_authorization_url(self) -> str:
+    def get_authorization_url(self, state: str) -> str:
         return (
             f"{self.AUTHORIZE_URL}"
             f"?client_id={self.client_id}"
             f"&redirect_uri={self.redirect_uri}"
             f"&scope=read:user"
+            f"&state={state}"
         )
 
     async def handle_callback(self, code: str) -> Token:
@@ -151,7 +157,7 @@ class GenericOIDCAuth(OIDCAuth):
                 self._metadata = r.json()
         return self._metadata
 
-    def get_authorization_url(self) -> str:
+    def get_authorization_url(self, state: str) -> str:
         authorize_url = get_env("OIDC_AUTHORIZE_URL", mandatory=True)
         scope = get_env("OIDC_SCOPE", mandatory=False, default="openid email profile")
         return (
@@ -160,6 +166,7 @@ class GenericOIDCAuth(OIDCAuth):
             f"&redirect_uri={self.redirect_uri}"
             f"&response_type=code"
             f"&scope={scope}"
+            f"&state={state}"
         )
 
     async def handle_callback(self, code: str) -> Token:

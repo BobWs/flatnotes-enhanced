@@ -320,23 +320,24 @@ if global_config.auth_type == AuthType.OIDC:
 
     @router.get("/api/auth/oidc/login", include_in_schema=False)
     def oidc_login():
-        url = oidc_auth.get_authorization_url()
-        return RedirectResponse(url)
-
-    @router.get("/api/auth/oidc/callback", include_in_schema=False)
-    async def oidc_callback(request: Request, code: str):
-        token = await oidc_auth.handle_callback(code)
-        response = RedirectResponse(url=global_config.path_prefix + "/")
+        state = oidc_auth._generate_state()
+        url = oidc_auth.get_authorization_url(state)
+        response = RedirectResponse(url)
         response.set_cookie(
-            key="token",
-            value=token.access_token,
+            key="oidc_state",
+            value=state,
             httponly=True,
             samesite="lax",
+            max_age=300,
         )
         return response
 
-    @router.get("/api/auth/oauth/callback", include_in_schema=False)
-    async def oauth_callback(request: Request, code: str):
+    @router.get("/api/auth/oidc/callback", include_in_schema=False)
+    async def oidc_callback(request: Request, code: str, state: str):
+        cookie_state = request.cookies.get("oidc_state")
+        if not cookie_state or state != cookie_state:
+            raise HTTPException(status_code=400, detail="Invalid or missing OIDC state")
+
         token = await oidc_auth.handle_callback(code)
         response = RedirectResponse(url=global_config.path_prefix + "/")
         response.set_cookie(
@@ -345,7 +346,25 @@ if global_config.auth_type == AuthType.OIDC:
             httponly=True,
             samesite="lax",
         )
-        return response    
+        response.delete_cookie("oidc_state")
+        return response
+
+    @router.get("/api/auth/oauth/callback", include_in_schema=False)
+    async def oauth_callback(request: Request, code: str, state: str):
+        cookie_state = request.cookies.get("oidc_state")
+        if not cookie_state or state != cookie_state:
+            raise HTTPException(status_code=400, detail="Invalid or missing OIDC state")
+
+        token = await oidc_auth.handle_callback(code)
+        response = RedirectResponse(url=global_config.path_prefix + "/")
+        response.set_cookie(
+            key="token",
+            value=token.access_token,
+            httponly=True,
+            samesite="lax",
+        )
+        response.delete_cookie("oidc_state")
+        return response
 # endregion
 
 
