@@ -1,7 +1,17 @@
 <template>
   <div class="flex h-full flex-col items-center justify-center">
     <Logo class="mb-5" />
-    <form @submit.prevent="logIn" class="flex max-w-80 flex-col items-center">
+    <div v-if="globalStore.config.authType == authTypes.oidc" class="flex max-w-80 flex-col items-center">
+      <a v-if="globalStore.config.authProvider == 'github'" href="/api/auth/oidc/login" class="flex items-center gap-2 rounded-md bg-[#24292e] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#3a3f44] transition-colors">
+        <GitHubIcon />
+        Continue with GitHub
+      </a>
+      <a v-else href="/api/auth/oidc/login" class="flex items-center gap-2 rounded-md bg-theme-brand px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
+        <OIDCIcon />
+        Continue with OIDC
+      </a>
+    </div>
+    <form v-else @submit.prevent="logIn" class="flex max-w-80 flex-col items-center">
       <TextInput
         v-model="username"
         id="username"
@@ -70,7 +80,6 @@ const password = ref("");
 const totp = ref("");
 const rememberMe = ref(false);
 
-const showTotpModal = ref(false);
 function logIn() {
   getToken(username.value, password.value, totp.value)
     .then((access_token) => {
