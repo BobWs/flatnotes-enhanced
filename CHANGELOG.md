@@ -13,6 +13,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.14.0] - 2026-09-01
+
+### Added
+- **Single Sign-On (SSO) with OIDC/OAuth2** – Log in using Google, GitHub, PocketID, Authelia, Authentik, Keycloak, and any OIDC-compatible provider
+- Login page now shows SSO button when `FLATNOTES_AUTH_TYPE=oidc`
+- New environment variables: `AUTH_PROVIDER`, `OIDC_DISCOVERY_URL`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_REDIRECT_URI`, `OAUTH_CLIENT_ID`, `OAUTH_CLIENT_SECRET`, `OAUTH_REDIRECT_URI`
+
+### Fixed
+- OIDC login no longer throws `NotImplementedError` (500 error)
+- `/api/token` endpoint is now disabled when `auth_type=oidc` (prevents accidental use)
+- Login page correctly shows SSO button instead of password form when SSO is enabled
+
+### Changed
+- Authentication type `oidc` now supported alongside `none`, `read_only`, `password`, and `totp`
+
+### Technical
+- Backend: `main.py` now excludes `oidc` from the `/api/token` route
+- Backend: `oidc.py` raises `HTTPException(400)` instead of `NotImplementedError`
+- Frontend: `LogIn.vue` now conditionally renders SSO button based on `authType`
+
+### Contributor
+- Special thanks to **kimllee** for the OIDC/OAuth2 implementation and collaborative work
+
+---
+
 ## [1.13.1] - 2026-08-16
 
 ### Changed

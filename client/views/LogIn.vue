@@ -1,7 +1,36 @@
 <template>
   <div class="flex h-full flex-col items-center justify-center">
     <Logo class="mb-5" />
-    <form @submit.prevent="logIn" class="flex max-w-80 flex-col items-center">
+
+    <!-- SSO / OAuth login — shown only when auth_type is oidc -->
+    <div
+      v-if="globalStore.config.authType === authTypes.oidc"
+      class="flex flex-col items-center gap-3"
+    >
+      <a
+        v-if="globalStore.config.authProvider === 'github'"
+        :href="ssoLoginUrl"
+        class="flex items-center gap-2 rounded bg-gray-800 px-5 py-2.5 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+      >
+        <GitHubIcon />
+        <span>Sign in with GitHub</span>
+      </a>
+      <a
+        v-else
+        :href="ssoLoginUrl"
+        class="flex items-center gap-2 rounded bg-indigo-600 px-5 py-2.5 text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+      >
+        <OIDCIcon />
+        <span>Sign in with SSO</span>
+      </a>
+    </div>
+
+    <!-- Local login — shown for password / totp auth -->
+    <form
+      v-else
+      @submit.prevent="logIn"
+      class="flex max-w-80 flex-col items-center"
+    >
       <TextInput
         v-model="username"
         id="username"
@@ -45,11 +74,13 @@
 <script setup>
 import { mdilLogin } from "@mdi/light-js";
 import { useToast } from "primevue/usetoast";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { apiErrorHandler, getToken } from "../api.js";
 import CustomButton from "../components/CustomButton.vue";
+import GitHubIcon from "../components/GitHubIcon.vue";
+import OIDCIcon from "../components/OIDCIcon.vue";
 import Logo from "../components/Logo.vue";
 import TextInput from "../components/TextInput.vue";
 import { authTypes } from "../constants.js";
@@ -67,6 +98,13 @@ const username = ref("");
 const password = ref("");
 const totp = ref("");
 const rememberMe = ref(false);
+
+// Absolute URL for the SSO redirect so the browser follows it as a full
+// navigation (the backend sets the auth cookie and redirects to "/").
+const ssoLoginUrl = computed(() => {
+  const prefix = globalStore.config.pathPrefix ?? "";
+  return `${prefix}/api/auth/oidc/login`;
+});
 
 function logIn() {
   getToken(username.value, password.value, totp.value)

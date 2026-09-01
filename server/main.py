@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timezone, timedelta
 from typing import List, Literal, Optional
 
-from fastapi import APIRouter, Body, Depends, FastAPI, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, UploadFile, Request, Body, UploadFile 
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -288,7 +288,7 @@ def root(title: str = "", token: str = ""):
 
 
 # region Auth
-if global_config.auth_type not in [AuthType.NONE, AuthType.READ_ONLY]:
+if global_config.auth_type not in [AuthType.NONE, AuthType.READ_ONLY, AuthType.OIDC]:
 
     @router.post("/api/token", response_model=Token)
     def token(data: Login):
@@ -310,6 +310,64 @@ def totp_setup():
 def auth_check() -> str:
     return "OK"
 # endregion
+
+# region OIDC
+if global_config.auth_type == AuthType.OIDC:
+    from fastapi.responses import RedirectResponse
+    from auth.oidc import OIDCAuth
+
+    oidc_auth: OIDCAuth = auth
+
+    @router.get("/api/auth/oidc/login", include_in_schema=False)
+    def oidc_login():
+        state = oidc_auth._generate_state()
+        url = oidc_auth.get_authorization_url(state)
+        response = RedirectResponse(url)
+        response.set_cookie(
+            key="oidc_state",
+            value=state,
+            httponly=True,
+            samesite="lax",
+            max_age=300,
+        )
+        return response
+
+    @router.get("/api/auth/oidc/callback", include_in_schema=False)
+    async def oidc_callback(request: Request, code: str, state: str):
+        cookie_state = request.cookies.get("oidc_state")
+        if not cookie_state or state != cookie_state:
+            raise HTTPException(status_code=400, detail="Invalid or missing OIDC state")
+
+        token = await oidc_auth.handle_callback(code)
+        response = RedirectResponse(url=global_config.path_prefix + "/")
+        response.set_cookie(
+            key="token",
+            value=token.access_token,
+            httponly=True,
+            samesite="lax",
+        )
+        response.delete_cookie("oidc_state")
+        return response
+
+    @router.get("/api/auth/oauth/callback", include_in_schema=False)
+    async def oauth_callback(request: Request, code: str, state: str):
+        cookie_state = request.cookies.get("oidc_state")
+        if not cookie_state or state != cookie_state:
+            raise HTTPException(status_code=400, detail="Invalid or missing OIDC state")
+
+        token = await oidc_auth.handle_callback(code)
+        response = RedirectResponse(url=global_config.path_prefix + "/")
+        response.set_cookie(
+            key="token",
+            value=token.access_token,
+            httponly=True,
+            samesite="lax",
+        )
+        response.delete_cookie("oidc_state")
+        return response
+# endregion
+
+
 
 
 # region Notes
@@ -491,6 +549,7 @@ def get_config():
         quick_access_sort=global_config.quick_access_sort,
         quick_access_limit=global_config.quick_access_limit,
         search_disabled=global_config.search_disabled,
+        auth_provider=global_config.auth_provider,
     )
 # endregion
 

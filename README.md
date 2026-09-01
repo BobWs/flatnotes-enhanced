@@ -29,11 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.13.1
+## 🆕 What's New in v1.14.0
 
-- **Dependency updates** – Updated Node.js and Python dependencies to latest stable versions
-- **Build tooling** – Migrated from `pipenv` to `uv` for faster and more reliable Python dependency management
-- **Security** – Updated dependencies to address known vulnerabilities
+- **Single Sign-On (SSO)** – Log in using OIDC/OAuth2 providers: Google, GitHub, PocketID, Authelia, Authentik, Keycloak, and more
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -134,6 +132,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 |---------|-------------|
 | TOTP Support | Two-factor authentication with QR code setup (available in Settings → Preferences after login). |
 | Multiple Auth Types | None, Read-Only, Password, or TOTP. |
+| OIDC / OAuth2 (SSO) | Single Sign-On with Google, GitHub, PocketID, Authelia, Authentik, Keycloak, and more |
 | Non-ASCII Support | Usernames and passwords support umlauts (ä, ö, ü, ß) and accented characters. |
 | Showcase Mode | **For public instances:** Use `FLATNOTES_AUTH_TYPE=read_only` together with `FLATNOTES_SEARCH_DISABLED=true` to create a genuinely read-only showcase instance. |
 
@@ -311,7 +310,7 @@ Open your browser and navigate to `http://localhost:8080`
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `FLATNOTES_AUTH_TYPE` | Authentication type (`none`, `read_only`, `password`, `totp`) | `password` |
+| `FLATNOTES_AUTH_TYPE` | Authentication type (`none`, `read_only`, `password`, `totp`, `oidc`) | `password` |
 | `FLATNOTES_USERNAME` | Username for password authentication | (required) |
 | `FLATNOTES_PASSWORD` | Password for password authentication | (required) |
 | `FLATNOTES_SECRET_KEY` | Secret key for JWT tokens | (required) |
@@ -324,6 +323,14 @@ Open your browser and navigate to `http://localhost:8080`
 | `DATABASE_ECHO` | Enable database SQL logging | `false` |
 | `LOGLEVEL` | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) | `INFO` |
 | `FLATNOTES_SEARCH_DISABLED` | Disable search and hide UI elements (Showcase Mode) | `false` |
+| `AUTH_PROVIDER` | OIDC provider type (`oidc` or `github`) | `oidc` |
+| `OIDC_DISCOVERY_URL` | OIDC provider discovery URL | (required for OIDC) |
+| `OIDC_CLIENT_ID` | OIDC client ID | (required for OIDC) |
+| `OIDC_CLIENT_SECRET` | OIDC client secret | (required for OIDC) |
+| `OIDC_REDIRECT_URI` | OIDC callback URL | (required for OIDC) |
+| `OAUTH_CLIENT_ID` | GitHub OAuth client ID | (required for GitHub) |
+| `OAUTH_CLIENT_SECRET` | GitHub OAuth client secret | (required for GitHub) |
+| `OAUTH_REDIRECT_URI` | GitHub OAuth callback URL | (required for GitHub) |
 
 ---
 
@@ -356,6 +363,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.14.0` – **Single Sign-On (SSO)** – OIDC/OAuth2 authentication support (Google, GitHub, PocketID, Authelia, Authentik, Keycloak)
 - `v1.13.1` – Dependency updates & build tooling modernisation (`uv`, Node.js, Python 3.13)
 - `v1.13.0` – Shared Notes – token-based note sharing with read/write permissions, passwords, expiry, admin page, and activity tracking
 - `v1.12.1` – Hot Fix: Remove public TOTP QR code from login screen (security patch)
@@ -596,6 +604,44 @@ Share any note via a secure, token-based link. Recipients do not need a Flatnote
 - Read-only links can be forwarded – use a password to restrict access
 - Write links allow editing – only share with trusted people
 - Tokens are shown once at creation – store or send them immediately
+
+
+## 🔐 SSO Configuration (OIDC / OAuth2)
+
+Flatnotes-Enhanced supports Single Sign-On (SSO) via OIDC and OAuth2 providers.
+
+### Quick Start
+
+**For OIDC (Google, PocketID, Authelia, Authentik, Keycloak, etc.):**
+
+```env
+FLATNOTES_AUTH_TYPE=oidc
+AUTH_PROVIDER=oidc
+OIDC_DISCOVERY_URL=https://your-provider/.well-known/openid-configuration
+OIDC_CLIENT_ID=your-client-id
+OIDC_CLIENT_SECRET=your-client-secret
+OIDC_REDIRECT_URI=http://localhost:8080/api/auth/oidc/callback
+```
+
+**For GitHub OAuth:**
+
+```env
+FLATNOTES_AUTH_TYPE=oidc
+AUTH_PROVIDER=github
+OAUTH_CLIENT_ID=your-github-client-id
+OAUTH_CLIENT_SECRET=your-github-secret
+OAUTH_REDIRECT_URI=http://localhost:8080/api/auth/oauth/callback
+```
+
+### Login Page Behaviour
+
+When `FLATNOTES_AUTH_TYPE=oidc` is set, the login page:
+
+- Hides the username/password form
+- Shows a **"Continue with OIDC"** or **"Continue with GitHub"** button
+- Redirects to your identity provider for authentication
+
+All other auth types (`password`, `totp`, `none`, `read_only`) remain unchanged.
 
 ---
 
