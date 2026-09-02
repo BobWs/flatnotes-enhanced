@@ -13,6 +13,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.14.1] - 2026-09-02
+
+### Added
+- **Docker secrets support** – Sensitive data (passwords, secret keys, TOTP keys) can now be loaded from Docker secrets instead of environment variables
+  - `entrypoint.sh` now reads secrets from `/run/secrets/`
+  - Supported secrets: `flatnotes_secret_key`, `flatnotes_password`, `flatnotes_totp_key`, `oidc_client_secret`, `oauth_client_secret`
+  - Existing environment variable fallback is preserved – users can choose either method
+  - Best practice for production deployments
+
+### Changed
+- `entrypoint.sh`: Added `load_secret()` function and secret loading logic
+- Docker Compose examples now include `secrets:` configuration
+
+### Technical
+- No dependencies changed – `uv.lock` and `package-lock.json` unchanged
+- Full backward compatibility with environment variables
+- Secrets are loaded as environment variables inside the container (files are never exposed)
+
+### Contributor
+- Special thanks to **@kimllee** for the Docker secrets implementation
+
+---
+
 ## [1.14.0] - 2026-09-01
 
 ### Added
@@ -34,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontend: `LogIn.vue` now conditionally renders SSO button based on `authType`
 
 ### Contributor
-- Special thanks to **kimllee** for the OIDC/OAuth2 implementation and collaborative work
+- Special thanks to **@kimllee** for the OIDC/OAuth2 implementation and collaborative work
 
 ---
 

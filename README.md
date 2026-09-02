@@ -29,9 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.14.0
+## 🆕 What's New in v1.14.1
 
-- **Single Sign-On (SSO)** – Log in using OIDC/OAuth2 providers: Google, GitHub, PocketID, Authelia, Authentik, Keycloak, and more
+- Added **Docker secrets** support (security enhancement)
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -334,6 +334,47 @@ Open your browser and navigate to `http://localhost:8080`
 
 ---
 
+## 🔐 Docker Secrets (Advanced)
+
+For production deployments, you can use Docker secrets to store sensitive data instead of environment variables.
+
+### How to use
+
+1. Create secret files:
+   ```bash
+   echo "your-password" > secrets/flatnotes_password.txt
+   echo "your-secret-key" > secrets/flatnotes_secret_key.txt
+   ```
+
+2. Update your `docker-compose.yml`:
+   ```yaml
+   services:
+     flatnotes-enhanced:
+       image: dockerbobw/flatnotes-enhanced:latest
+       secrets:
+         - flatnotes_secret_key
+         - flatnotes_password
+   secrets:
+     flatnotes_secret_key:
+       file: ./secrets/flatnotes_secret_key.txt
+     flatnotes_password:
+       file: ./secrets/flatnotes_password.txt
+   ```
+
+### Supported secrets
+
+| Secret | Environment variable |
+|--------|---------------------|
+| `flatnotes_secret_key` | `FLATNOTES_SECRET_KEY` |
+| `flatnotes_password` | `FLATNOTES_PASSWORD` |
+| `flatnotes_totp_key` | `FLATNOTES_TOTP_KEY` |
+| `oidc_client_secret` | `OIDC_CLIENT_SECRET` |
+| `oauth_client_secret` | `OAUTH_CLIENT_SECRET` |
+
+**Note:** Environment variables still work as a fallback – you don't need to use secrets if you prefer the simpler approach.
+
+---
+
 ## 💾 Preferences Backup & Restore
 
 Your preferences (colors, callouts, tag settings, appearance, etc.) are automatically backed up daily. Backups are stored in `/data/.flatnotes/backups/`.
@@ -363,7 +404,8 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
-- `v1.14.0` – **Single Sign-On (SSO)** – OIDC/OAuth2 authentication support (Google, GitHub, PocketID, Authelia, Authentik, Keycloak)
+- `v1.14.1` – Docker secrets support (security enhancement)
+- `v1.14.0` – Single Sign-On (SSO) – OIDC/OAuth2 authentication support (Google, GitHub, PocketID, Authelia, Authentik, Keycloak)
 - `v1.13.1` – Dependency updates & build tooling modernisation (`uv`, Node.js, Python 3.13)
 - `v1.13.0` – Shared Notes – token-based note sharing with read/write permissions, passwords, expiry, admin page, and activity tracking
 - `v1.12.1` – Hot Fix: Remove public TOTP QR code from login screen (security patch)
@@ -671,3 +713,5 @@ This project is a fork of [Flatnotes](https://github.com/Dullage/flatnotes) and 
 ---
 
 **Built with ❤️ for better note-taking.**
+
+⭐ **Enjoying Flatnotes-Enhanced?** Consider giving it a star on GitHub to help others discover it.

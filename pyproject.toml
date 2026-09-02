@@ -1,6 +1,6 @@
 [project]
 name = "flatnotes-enhanced"
-version = "1.14.0"
+version = "1.14.1"
 description = "A professional-grade, feature-rich fork of Flatnotes with folders, nested tags, popup previews and more."
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
