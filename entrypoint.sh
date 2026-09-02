@@ -20,6 +20,7 @@ load_secret flatnotes_secret_key   FLATNOTES_SECRET_KEY
 load_secret oidc_client_secret     OIDC_CLIENT_SECRET
 load_secret oauth_client_secret    OAUTH_CLIENT_SECRET
 load_secret flatnotes_password     FLATNOTES_PASSWORD
+load_secret flatnotes_totp_key     FLATNOTES_TOTP_KEY
 
 # Extract version from package.json
 VERSION=$(grep -m1 '"version"' /app/package.json | cut -d'"' -f4)
