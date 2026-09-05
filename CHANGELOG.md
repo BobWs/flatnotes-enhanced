@@ -13,6 +13,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.14.2] - 2026-09-05
+
+### Fixed
+- **Clipboard copy on HTTP** – Share links can now be copied when accessing the app over plain HTTP (non-HTTPS)
+  - Added `document.execCommand('copy')` fallback when `navigator.clipboard` is unavailable
+  - Both "Copy link" and "Copy new link" buttons now use the shared helper
+  - Success/error toasts preserved for all scenarios
+- **SSO independent configuration** – OIDC and OAuth no longer require both sets of environment variables
+  - `AUTH_PROVIDER=oidc` works with only `OIDC_*` variables
+  - `AUTH_PROVIDER=github` works with only `OAUTH_*` variables
+  - No more `sys.exit(1)` when only one provider is configured
+
+### Changed
+- `server/auth/oidc/oidc.py`: Restructured base class to read shared vars only; each subclass reads its own credentials independently
+- `client/components/ShareModal.vue`: Added `writeToClipboard()` helper with fallback; wrapped copy functions in try/catch
+
+### Technical
+- No new dependencies
+- Full backward compatibility with existing SSO configurations
+- Clipboard fallback uses deprecated but universally supported `document.execCommand('copy')`
+
+---
+
 ## [1.14.1] - 2026-09-02
 
 ### Added

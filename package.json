@@ -1,6 +1,6 @@
 {
   "name": "flatnotes-enhanced",
-  "version": "1.14.1",
+  "version": "1.14.2",
   "type": "module",
   "description": "A professional-grade, feature-rich fork of Flatnotes with folders, nested tags, popup previews and more.",
   "main": "client/index.html",
@@ -16,7 +16,7 @@
     "@jamescoyle/vue-icon": "0.1.2",
     "@mdi/js": "7.4.47",
     "@mdi/light-js": "0.2.63",
-    "@toast-ui/editor": "3.2.2",
+    "@toast-ui/editor": "^3.1.0",
     "@toast-ui/editor-plugin-code-syntax-highlight": "3.1.0",
     "axios": "1.19.0",
     "marked": "^17.0.6",

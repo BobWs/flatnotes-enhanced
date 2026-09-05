@@ -227,7 +227,7 @@ wheels = [
 
 [[package]]
 name = "flatnotes-enhanced"
-version = "1.14.1"
+version = "1.14.2"
 source = { virtual = "." }
 dependencies = [
     { name = "aiofiles" },

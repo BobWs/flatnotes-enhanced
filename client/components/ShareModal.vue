@@ -389,12 +389,38 @@ async function createHandler() {
 }
 
 // ── Copy ──────────────────────────────────────────────────────────────────────
+
+// Works on both HTTPS (Clipboard API) and HTTP (execCommand fallback).
+function writeToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+  // Fallback for non-secure origins (HTTP)
+  return new Promise((resolve, reject) => {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity  = "0";
+    textarea.style.left     = "-9999px";
+    textarea.style.top      = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    ok ? resolve() : reject(new Error("execCommand copy failed"));
+  });
+}
+
 async function copyLink(tokenPreview) {
   const rawToken = sessionTokens.value[tokenPreview];
   if (rawToken) {
-    await navigator.clipboard.writeText(shareUrl(rawToken));
-    copiedToken.value = tokenPreview;
-    setTimeout(() => { copiedToken.value = ""; }, 2000);
+    try {
+      await writeToClipboard(shareUrl(rawToken));
+      copiedToken.value = tokenPreview;
+      setTimeout(() => { copiedToken.value = ""; }, 2000);
+    } catch {
+      toast.add(getToastOptions("Failed to copy link.", "Error", "error"));
+    }
   } else {
     toast.add(getToastOptions(
       "The full link is only shown once at creation. Create a new link if you need to share it again.",
@@ -404,9 +430,13 @@ async function copyLink(tokenPreview) {
 }
 
 async function copyNewLink() {
-  await navigator.clipboard.writeText(newlyCreatedLink.value);
-  copiedNew.value = true;
-  setTimeout(() => { copiedNew.value = false; }, 2000);
+  try {
+    await writeToClipboard(newlyCreatedLink.value);
+    copiedNew.value = true;
+    setTimeout(() => { copiedNew.value = false; }, 2000);
+  } catch {
+    toast.add(getToastOptions("Failed to copy link.", "Error", "error"));
+  }
 }
 
 // ── Revoke single ─────────────────────────────────────────────────────────────

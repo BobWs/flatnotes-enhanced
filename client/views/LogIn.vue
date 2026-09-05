@@ -10,7 +10,9 @@
       <a
         v-if="globalStore.config.authProvider === 'github'"
         :href="ssoLoginUrl"
-        class="flex items-center gap-2 rounded bg-gray-800 px-5 py-2.5 text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        class="flex items-center gap-2 rounded px-5 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
+        :style="{ backgroundColor: 'rgb(var(--theme-brand))' }"
+        style="--tw-ring-color: rgb(var(--theme-brand));"
       >
         <GitHubIcon />
         <span>Sign in with GitHub</span>
@@ -18,7 +20,9 @@
       <a
         v-else
         :href="ssoLoginUrl"
-        class="flex items-center gap-2 rounded bg-indigo-600 px-5 py-2.5 text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        class="flex items-center gap-2 rounded px-5 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
+        :style="{ backgroundColor: 'rgb(var(--theme-brand))' }"
+        style="--tw-ring-color: rgb(var(--theme-brand));"
       >
         <OIDCIcon />
         <span>Sign in with SSO</span>

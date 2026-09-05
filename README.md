@@ -29,9 +29,10 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.14.1
+## 🆕 What's New in v1.14.2
 
-- Added **Docker secrets** support (security enhancement)
+- **Bug fix:** Clipboard copy now works on HTTP (non-HTTPS) – share links can be copied without HTTPS
+- **Bug fix:** SSO – OIDC and OAuth configurations are now independent (no more errors when only one is configured)
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -404,6 +405,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.14.2` – Bug fixes: Clipboard fallback for HTTP + SSO independent OIDC/OAuth configuration
 - `v1.14.1` – Docker secrets support (security enhancement)
 - `v1.14.0` – Single Sign-On (SSO) – OIDC/OAuth2 authentication support (Google, GitHub, PocketID, Authelia, Authentik, Keycloak)
 - `v1.13.1` – Dependency updates & build tooling modernisation (`uv`, Node.js, Python 3.13)

@@ -15,15 +15,23 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token", auto_error=False)
 
 class OIDCAuth:
     """
-    Base OAuth2/OIDC auth. Shared JWT logic and authenticate().
-    Subclasses implement get_authorization_url() and handle_callback().
+    Base class for OAuth2/OIDC authentication.
+
+    Holds only the vars that are truly provider-agnostic:
+      - FLATNOTES_SECRET_KEY          (JWT signing key)
+      - FLATNOTES_SESSION_EXPIRY_DAYS (session TTL)
+      - OAUTH_ALLOWED_USERS           (optional allowlist, shared across providers)
+
+    Subclasses are responsible for reading their own credential env vars
+    (client_id, client_secret, redirect_uri, …) without calling super().__init__()
+    for those — they call _init_shared() instead so the base class never touches
+    provider-specific vars.
     """
+
     JWT_ALGORITHM = "HS256"
 
-    def __init__(self) -> None:
-        self.client_id = get_env("OAUTH_CLIENT_ID", mandatory=True)
-        self.client_secret = get_env("OAUTH_CLIENT_SECRET", mandatory=True)
-        self.redirect_uri = get_env("OAUTH_REDIRECT_URI", mandatory=True)
+    def _init_shared(self) -> None:
+        """Read the vars that every provider needs. Call this from subclass __init__."""
         self.secret_key = get_env("FLATNOTES_SECRET_KEY", mandatory=True)
         self.session_expiry_days = get_env(
             "FLATNOTES_SESSION_EXPIRY_DAYS", default=30, cast_int=True
@@ -33,7 +41,7 @@ class OIDCAuth:
             {u.strip().lower() for u in allowed.split(",") if u.strip()}
             if allowed else None
         )
-        
+
     def _generate_state(self) -> str:
         return secrets.token_urlsafe(24)
 
@@ -88,11 +96,26 @@ class OIDCAuth:
 
 
 class GitHubAuth(OIDCAuth):
-    """GitHub OAuth2 — no discovery URL needed."""
+    """
+    GitHub OAuth2 — no discovery URL needed.
+
+    Required env vars:
+      OAUTH_CLIENT_ID
+      OAUTH_CLIENT_SECRET
+      OAUTH_REDIRECT_URI
+    Optional:
+      OAUTH_ALLOWED_USERS   comma-separated GitHub logins
+    """
 
     AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
     TOKEN_URL = "https://github.com/login/oauth/access_token"
     USER_URL = "https://api.github.com/user"
+
+    def __init__(self) -> None:
+        self._init_shared()
+        self.client_id = get_env("OAUTH_CLIENT_ID", mandatory=True)
+        self.client_secret = get_env("OAUTH_CLIENT_SECRET", mandatory=True)
+        self.redirect_uri = get_env("OAUTH_REDIRECT_URI", mandatory=True)
 
     def get_authorization_url(self, state: str) -> str:
         return (
@@ -136,17 +159,21 @@ class GitHubAuth(OIDCAuth):
 
 class GenericOIDCAuth(OIDCAuth):
     """
-    Generic OIDC via discovery URL.
-    Set OIDC_DISCOVERY_URL to your provider's
-    /.well-known/openid-configuration endpoint.
+    Generic OIDC via discovery URL (Authentik, Keycloak, PocketID, etc.).
 
-    Client credentials priority:
-      OIDC_CLIENT_ID     > OAUTH_CLIENT_ID
-      OIDC_CLIENT_SECRET > OAUTH_CLIENT_SECRET
+    Required env vars:
+      OIDC_CLIENT_ID
+      OIDC_CLIENT_SECRET
+      OIDC_REDIRECT_URI
+      OIDC_DISCOVERY_URL    provider's /.well-known/openid-configuration endpoint
+      OIDC_AUTHORIZE_URL    authorization endpoint (used to build the redirect URL)
+    Optional:
+      OIDC_SCOPE            space-separated scopes (default: "openid email profile")
+      OAUTH_ALLOWED_USERS   comma-separated usernames / emails
     """
 
     def __init__(self) -> None:
-        super().__init__()
+        self._init_shared()
         self.client_id = get_env("OIDC_CLIENT_ID", mandatory=True)
         self.client_secret = get_env("OIDC_CLIENT_SECRET", mandatory=True)
         self.redirect_uri = get_env("OIDC_REDIRECT_URI", mandatory=True)
@@ -208,7 +235,12 @@ class GenericOIDCAuth(OIDCAuth):
 
 
 def make_oidc_auth() -> OIDCAuth:
-    """Factory — returns the right backend based on AUTH_PROVIDER."""
+    """
+    Factory — returns the right backend based on AUTH_PROVIDER.
+
+    AUTH_PROVIDER=github  →  GitHubAuth   (needs OAUTH_CLIENT_ID/SECRET/REDIRECT_URI)
+    AUTH_PROVIDER=oidc    →  GenericOIDCAuth (needs OIDC_CLIENT_ID/SECRET/REDIRECT_URI/DISCOVERY_URL)
+    """
     provider = get_env("AUTH_PROVIDER", mandatory=False, default="github").lower()
     if provider == "github":
         return GitHubAuth()
