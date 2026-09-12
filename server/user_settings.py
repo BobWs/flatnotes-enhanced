@@ -111,6 +111,10 @@ class UserPrefs(CustomBaseModel):
     date_style: str = Field("medium")
     # Frontmatter display — strip hides the block in view/preview mode.
     strip_frontmatter: bool = Field(False)
+    # Search — when True, bare tokens are automatically wrapped with wildcards
+    # so that typing "foo bar" finds notes containing those substrings.
+    # Disabled by default; leading wildcards are more expensive in Whoosh.
+    substring_search_default: bool = Field(False)
 
 
 class UserPrefsUpdate(CustomBaseModel):
@@ -132,6 +136,7 @@ class UserPrefsUpdate(CustomBaseModel):
     date_locale: Optional[str] = Field(None)
     date_style: Optional[str] = Field(None)
     strip_frontmatter: Optional[bool] = Field(None)
+    substring_search_default: Optional[bool] = Field(None)
 
 
 # ── Built-in defaults ─────────────────────────────────────────────────────────
@@ -372,6 +377,7 @@ def get_prefs() -> UserPrefs:
                     date_locale=(settings.extra or {}).get("date_locale", "system"),
                     date_style=(settings.extra or {}).get("date_style", "medium"),
                     strip_frontmatter=bool((settings.extra or {}).get("strip_frontmatter", False)),
+                    substring_search_default=bool((settings.extra or {}).get("substring_search_default", False)),
                 )
         except Exception as e:
             logger.error(f"Database error in get_prefs: {e}")
@@ -472,6 +478,11 @@ def save_prefs(prefs: UserPrefsUpdate) -> None:
                 extra["strip_frontmatter"] = bool(prefs.strip_frontmatter)
                 settings.extra = extra
 
+            if prefs.substring_search_default is not None:
+                extra = dict(settings.extra or {})
+                extra["substring_search_default"] = bool(prefs.substring_search_default)
+                settings.extra = extra
+
             db.commit()
             logger.info("Saved preferences to database")
             return
@@ -496,6 +507,7 @@ def save_prefs(prefs: UserPrefsUpdate) -> None:
         date_locale=prefs.date_locale if prefs.date_locale is not None else existing.date_locale,
         date_style=prefs.date_style if prefs.date_style is not None else existing.date_style,
         strip_frontmatter=prefs.strip_frontmatter if prefs.strip_frontmatter is not None else existing.strip_frontmatter,
+        substring_search_default=prefs.substring_search_default if prefs.substring_search_default is not None else existing.substring_search_default,
     )
     with open(_prefs_path(), "w", encoding="utf-8") as f:
         json.dump(merged.dict(), f, indent=2)

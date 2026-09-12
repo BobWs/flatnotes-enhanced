@@ -94,7 +94,7 @@ export async function authCheck() {
   }
 }
 
-export async function getNotes(term, sort, order, limit, includeArchived = false, includeTrash = false) {
+export async function getNotes(term, sort, order, limit, includeArchived = false, includeTrash = false, substringMode = false) {
   try {
     const response = await api.get("api/search", {
       params: {
@@ -104,6 +104,7 @@ export async function getNotes(term, sort, order, limit, includeArchived = false
         limit: limit,
         include_archived: includeArchived,
         include_trash: includeTrash,
+        substring_mode: substringMode || undefined,
       },
     });
     return response.data.map((note) => new SearchResult(note));

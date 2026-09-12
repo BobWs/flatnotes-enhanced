@@ -397,10 +397,11 @@ class FileSystemNotes(BaseNotes):
         limit: int = None,
         include_archived: bool = False,
         include_trash: bool = False,
+        substring_mode: bool = False,
     ) -> Tuple[SearchResult, ...]:
         """Search the index for the given term."""
         self._sync_index_with_retry()
-        term = self._pre_process_search_term(term)
+        term = self._pre_process_search_term(term, substring_mode=substring_mode)
         with self.index.searcher() as searcher:
             if term == "*":
                 query = Every()
@@ -684,13 +685,50 @@ class FileSystemNotes(BaseNotes):
         logger.error(f"Failed to sync index after {max_retries} retries")
 
     @classmethod
-    def _pre_process_search_term(cls, term):
+    def _apply_substring_transform(cls, term: str) -> str:
+        """Wrap bare tokens with * so that 'foo bar' becomes '*foo* *bar*'.
+
+        Tokens that already contain wildcards, are boolean operators, start with
+        a field prefix (e.g. 'tags:'), or are quoted phrases are left untouched.
+        The literal '*' (match-all) is also left untouched.
+        """
+        if term == "*":
+            return term
+
+        # Simple tokeniser: split on whitespace but keep quoted phrases together.
+        # We rebuild the query token by token so operators and prefixes survive.
+        token_re = re.compile(r'"[^"]*"|\S+')
+        OPERATORS = {"AND", "OR", "NOT"}
+
+        def _transform_token(tok: str) -> str:
+            # Quoted phrase — leave as-is
+            if tok.startswith('"'):
+                return tok
+            # Boolean operator — leave as-is
+            if tok.upper() in OPERATORS:
+                return tok
+            # Field prefix (e.g. tags:work, tags:work*) — leave as-is
+            if ":" in tok:
+                return tok
+            # Already wildcarded — leave as-is
+            if "*" in tok or "?" in tok:
+                return tok
+            # Bare term — wrap with wildcards
+            return f"*{tok}*"
+
+        tokens = token_re.findall(term)
+        return " ".join(_transform_token(t) for t in tokens)
+
+    @classmethod
+    def _pre_process_search_term(cls, term: str, substring_mode: bool = False) -> str:
         term = term.strip()
         term = re.sub(
             cls.TAGS_WITH_HASH_RE,
             lambda tag: "tags:" + tag.group(0)[1:],
             term,
         )
+        if substring_mode:
+            term = cls._apply_substring_transform(term)
         return term
 
     @staticmethod

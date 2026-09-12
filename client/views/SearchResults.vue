@@ -244,6 +244,8 @@ async function init() {
       undefined,
       undefined,
       showArchived.value,
+      false,                                  // includeTrash — never from search results view
+      globalStore.substringSearchDefault,
     );
     results.value = sortResults(data);
     // After sorting, let the computed displayResults determine the visible count

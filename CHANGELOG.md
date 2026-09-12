@@ -13,7 +13,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.14.2] - 2026-09-05
+## [1.15.0] - 2026-09-12
+
+### Added
+- **Substring Search by Default** – New opt-in toggle in Settings → Preferences
+  - When enabled, search terms automatically become substring searches (e.g., `alph` → `*alph*`)
+  - No more typing `*` manually for partial matches
+  - Works with tags, folders, saved searches, boolean operators, and quoted phrases
+  - Toggle off for exact-match behaviour (default)
+
+### Changed
+- `SearchResults.vue`: Added `effectiveSortBy` computed property to handle substring mode
+- `SettingsPrefs.vue`: Added "Substring search by default" toggle
+- `file_system.py`: Added `substring_mode` parameter to `_pre_process_search_term()` and `search()`
+- `main.py`: `/api/search` endpoint now passes `substring_mode` from user preferences
+
+### Technical
+- New user preference: `substring_search_default` (boolean, default: false)
+- Schema migration: added `substring_search_default` column to `user_settings` table
+- Backend transforms query tokens by wrapping with `*` when enabled
+- Preserves: quoted phrases, `tags:` prefix, boolean operators (`AND`, `OR`, `NOT`), existing wildcards (`*`, `?`)
+- No changes to saved searches – they store the exact query string
+
+### Contributor
+- Thanks to @Limerick-gh for the feature suggestion
+
+---
+
+## [1.14.2] - 2026-09-06
 
 ### Fixed
 - **Clipboard copy on HTTP** – Share links can now be copied when accessing the app over plain HTTP (non-HTTPS)

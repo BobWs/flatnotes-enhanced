@@ -508,6 +508,7 @@ def search(
     limit: int = None,
     include_archived: bool = False,
     include_trash: bool = False,
+    substring_mode: bool = False,
 ):
     if global_config.search_disabled:
         return []
@@ -517,6 +518,7 @@ def search(
         term, sort=sort, order=order, limit=limit,
         include_archived=include_archived,
         include_trash=include_trash,
+        substring_mode=substring_mode,
     )
 
 

@@ -289,7 +289,50 @@
       </div>
     </div>
 
-    <!-- ── Row 5: Date Format (full width) ── -->
+    <!-- ── Row 5: Hide frontmatter & Substring search (paired) ── -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <!-- Hide frontmatter -->
+      <div class="flex items-center justify-between p-5 rounded-lg border border-theme-border bg-theme-background">
+        <div class="min-w-0 pr-4">
+          <p class="text-sm font-medium text-theme-text">Hide frontmatter</p>
+          <p class="text-xs text-theme-text-muted mt-0.5 leading-relaxed">
+            Removes YAML / TOML metadata blocks
+            (<code class="font-mono text-xs bg-theme-background-elevated px-1 rounded">---…---</code>)
+            from the rendered view and preview. The file on disk is never modified.
+          </p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+          <input type="checkbox" v-model="prefs.stripFrontmatter" class="sr-only peer" />
+          <div class="w-11 h-6 bg-theme-border rounded-full peer
+                      peer-checked:bg-theme-brand transition-colors
+                      after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                      after:bg-white after:rounded-full after:h-5 after:w-5
+                      after:transition-transform peer-checked:after:translate-x-5"></div>
+        </label>
+      </div>
+
+      <!-- Substring search by default -->
+      <div class="flex items-center justify-between p-5 rounded-lg border border-theme-border bg-theme-background">
+        <div class="min-w-0 pr-4">
+          <p class="text-sm font-medium text-theme-text">Substring search by default</p>
+          <p class="text-xs text-theme-text-muted mt-0.5 leading-relaxed">
+            Typing <code class="font-mono text-xs bg-theme-background-elevated px-1 rounded">foo bar</code>
+            automatically searches for <code class="font-mono text-xs bg-theme-background-elevated px-1 rounded">*foo* *bar*</code>.
+            Boolean operators, quoted phrases, and <code class="font-mono text-xs bg-theme-background-elevated px-1 rounded">tags:</code> filters are unaffected.
+          </p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+          <input type="checkbox" v-model="prefs.substringSearchDefault" class="sr-only peer" />
+          <div class="w-11 h-6 bg-theme-border rounded-full peer
+                      peer-checked:bg-theme-brand transition-colors
+                      after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                      after:bg-white after:rounded-full after:h-5 after:w-5
+                      after:transition-transform peer-checked:after:translate-x-5"></div>
+        </label>
+      </div>
+    </div>
+
+    <!-- ── Row 6: Date Format (full width) ── -->
     <div class="mb-5">
       <div class="rounded-lg border border-theme-border bg-theme-background overflow-hidden">
         <div class="px-5 py-4 border-b border-theme-border">
@@ -364,29 +407,6 @@
       </div>
     </div>
 
-    <!-- ── Row 6: Hide frontmatter ── -->
-    <div class="mb-5">
-      <div class="flex items-start justify-between gap-4 p-5 rounded-lg border border-theme-border bg-theme-background">
-        <div class="min-w-0">
-          <p class="text-sm font-medium text-theme-text">Hide frontmatter in view &amp; preview</p>
-          <p class="text-xs text-theme-text-muted mt-0.5 leading-relaxed">
-            When enabled, YAML / TOML metadata blocks
-            (<code class="font-mono text-xs bg-theme-background-elevated px-1 rounded">---…---</code>)
-            at the top of a file are removed from the rendered view and preview popup.
-            The file on disk is never modified — the raw content remains fully editable.
-          </p>
-        </div>
-        <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-          <input type="checkbox" v-model="prefs.stripFrontmatter" class="sr-only peer" />
-          <div class="w-11 h-6 bg-theme-border rounded-full peer
-                      peer-checked:bg-theme-brand transition-colors
-                      after:content-[''] after:absolute after:top-0.5 after:left-0.5
-                      after:bg-white after:rounded-full after:h-5 after:w-5
-                      after:transition-transform peer-checked:after:translate-x-5"></div>
-        </label>
-      </div>
-    </div>
-
     <!-- ── Save ── -->
     <div class="flex items-center gap-3">
       <button
@@ -436,6 +456,7 @@ const prefs = ref({
   dateLocale: "system",
   dateStyle: "medium",
   stripFrontmatter: false,
+  substringSearchDefault: false,
 });
 const prefsSaving = ref(false);
 const prefsSaveMsg = ref("");
@@ -564,10 +585,12 @@ async function savePrefs() {
       offline_cache_enabled: p.offlineCacheEnabled,
       date_locale:           p.dateLocale,
       date_style:            p.dateStyle,
-      strip_frontmatter:     p.stripFrontmatter,
+      strip_frontmatter:          p.stripFrontmatter,
+      substring_search_default:   p.substringSearchDefault,
     });
     globalStore.dateLocale = p.dateLocale;
     globalStore.dateStyle  = p.dateStyle;
+    globalStore.substringSearchDefault = p.substringSearchDefault;
     clearDateFormatterCache();
     // Push frontmatter pref to the store so open viewers re-render immediately.
     setFrontmatterPrefs({ strip: p.stripFrontmatter });
@@ -599,7 +622,8 @@ onMounted(async () => {
       savedSearchesEnabled: globalStore.savedSearchesEnabled, // already loaded by App.vue
       dateLocale:           p.date_locale || "system",
       dateStyle:            p.date_style  || "medium",
-      stripFrontmatter:     p.strip_frontmatter === true,
+      stripFrontmatter:          p.strip_frontmatter === true,
+      substringSearchDefault:    p.substring_search_default === true,
     };
   } catch {
     // defaults already set

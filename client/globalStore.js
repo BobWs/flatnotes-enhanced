@@ -33,6 +33,9 @@ export const useGlobalStore = defineStore("global", () => {
   // savedSearches: the ordered array of {id, name, query, sort_by, ...} objects.
   const savedSearchesEnabled = ref(false);
   const savedSearches = ref([]);
+  // Substring search default — when true, the search API is called with
+  // substring_mode=true so bare tokens are automatically wrapped with wildcards.
+  const substringSearchDefault = ref(false);
 
   function bumpPinned() {
     pinnedVersion.value++;
@@ -53,5 +56,6 @@ export const useGlobalStore = defineStore("global", () => {
     dateStyle,
     savedSearchesEnabled,
     savedSearches,
+    substringSearchDefault,
   };
 });
