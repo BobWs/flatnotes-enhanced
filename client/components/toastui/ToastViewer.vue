@@ -76,6 +76,7 @@ watch([() => props.title, () => props.created, () => props.updated, () => props.
       processTaskIcons(viewerElement.value);
       processCollapsibleGroups(viewerElement.value, props.title || '');
       processCheckboxes(viewerElement.value);
+      processCopyButtons(viewerElement.value);
     }, 50);
   }
 });
@@ -454,6 +455,73 @@ function processCollapsibleGroups(el, noteTitle) {
 }
 
 
+// ── Copy code block buttons ───────────────────────────────────────────────────
+// Injects a small copy-to-clipboard button into every <pre> block.
+// Idempotent: guarded by data-copy-attached so repeated calls (re-renders,
+// headerColors watch) never produce duplicate buttons.
+//
+// Clipboard strategy mirrors ShareModal.vue:
+//   1. navigator.clipboard.writeText (HTTPS / modern browsers)
+//   2. execCommand('copy') fallback (HTTP / older environments)
+
+const COPY_ICON = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+  <path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
+</svg>`;
+
+const CHECK_ICON = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+  <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/>
+</svg>`;
+
+function _writeToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+  return new Promise((resolve, reject) => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0;left:-9999px;top:-9999px;';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    ok ? resolve() : reject(new Error('execCommand copy failed'));
+  });
+}
+
+function processCopyButtons(el) {
+  if (!el) return;
+  const pres = el.querySelectorAll('.toastui-editor-contents pre');
+  pres.forEach((pre) => {
+    if (pre.dataset.copyAttached) return;  // idempotency guard
+    pre.dataset.copyAttached = '1';
+
+    const btn = document.createElement('button');
+    btn.className = 'code-copy-btn';
+    btn.setAttribute('title', 'Copy code');
+    btn.setAttribute('aria-label', 'Copy code');
+    btn.innerHTML = COPY_ICON;
+
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const code = pre.querySelector('code');
+      const text = code ? code.textContent : pre.textContent;
+      try {
+        await _writeToClipboard(text);
+        btn.innerHTML = CHECK_ICON;
+        btn.classList.add('code-copy-btn--copied');
+        setTimeout(() => {
+          btn.innerHTML = COPY_ICON;
+          btn.classList.remove('code-copy-btn--copied');
+        }, 1500);
+      } catch {
+        // Silent failure — clipboard unavailable in this context
+      }
+    });
+
+    pre.appendChild(btn);
+  });
+}
+
 // ── Process interactive checkboxes ───────────────────────────────────────────
 // Removes the `disabled` attribute ToastUI adds to task-list checkboxes and
 // attaches click handlers that toggle the markdown source and persist via API.
@@ -617,6 +685,7 @@ onMounted(async () => {
     processTaskIcons(viewerElement.value);
     processCollapsibleGroups(viewerElement.value, props.title || '');
     processCheckboxes(viewerElement.value);
+    processCopyButtons(viewerElement.value);
   }, 50);
 
   // Re-apply data-custom-headers + re-render whenever the user saves header
@@ -634,6 +703,7 @@ onMounted(async () => {
         processTaskIcons(viewerElement.value);
         processCollapsibleGroups(viewerElement.value, props.title || '');
         processCheckboxes(viewerElement.value);
+        processCopyButtons(viewerElement.value);
       }, 50);
     }
   }, { deep: true });

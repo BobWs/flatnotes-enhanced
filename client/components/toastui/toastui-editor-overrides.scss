@@ -904,3 +904,47 @@ body.dark .toastui-editor-contents li.task-group {
     color: rgb(var(--theme-text));
   }
 }
+
+// ── Code block copy button ────────────────────────────────────────────────────
+
+.toastui-editor-contents pre {
+  position: relative;
+}
+
+.toastui-editor-contents .code-copy-btn {
+  position: absolute;
+  bottom: 0.4rem;
+  right: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.4rem;
+  border: none;
+  border-radius: 4px;
+  background-color: rgb(var(--theme-background-elevated) / 0.85);
+  color: rgb(var(--theme-text-muted));
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s;
+  line-height: 1;
+
+  // Keep it above syntax-highlight token spans
+  z-index: 1;
+
+  &:hover {
+    color: rgb(var(--theme-brand));
+    background-color: rgb(var(--theme-background-elevated));
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgb(var(--theme-brand));
+    outline-offset: 1px;
+  }
+
+  &.code-copy-btn--copied {
+    color: #22c55e;  // green-500 — consistent with ShareModal copied state
+  }
+
+  svg {
+    display: block;
+  }
+}

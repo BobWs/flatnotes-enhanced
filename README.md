@@ -29,9 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.15.0
+## 🆕 What's New in v1.16.0
 
-- **Substring Search by Default** – Opt-in toggle for automatic substring matching. Type `alph` to find "alpha" without typing `*` manually.
+- **Copy Button for Code Blocks** – One click to copy any code block to your clipboard, with visual confirmation
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -72,6 +72,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | File Attachments | Support for 40+ file types – documents (`DOCX, ODT, TXT`), spreadsheets (`XLSX, CSV`), presentations (`PPTX`), archives (`ZIP, RAR, 7Z`), audio (`MP3, WAV, FLAC`), video (`MP4, MKV, MOV`), code files (`JS, PY, HTML, JSON`), and more. Proper icons and colours for each category. |
 | PDF Preview | In-browser preview for attached PDFs. |
 | Wikilink Popup Modal | Insert wikilinks using a searchable popup modal |
+| Copy Code Blocks | One-click copy button on every code block in the note viewer, with visual confirmation. |
 
 ### 🎨 Visual Customization
 
@@ -404,6 +405,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.16.0` – Copy Button for Code Blocks – one-click copying from any code block
 - `v1.15.0` – Substring Search by Default – opt-in toggle for automatic substring matching (no more typing `*`)
 - `v1.14.2` – Bug fixes: Clipboard fallback for HTTP + SSO independent OIDC/OAuth configuration
 - `v1.14.1` – Docker secrets support (security enhancement)

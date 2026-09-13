@@ -13,6 +13,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.16.0] - 2026-09-13
+
+### Added
+- **Copy button on code blocks** – Every code block in the note viewer now has a one-click copy button
+  - Positioned in the bottom-right corner of each code block
+  - Theme-muted grey by default, theme-brand on hover
+  - Shows a checkmark for 1.5 seconds after copying
+  - Works on HTTPS, HTTP, and localhost (with HTTP clipboard fallback)
+
+### Technical
+- `ToastViewer.vue`: Added `processCopyButtons()` post-processing function, called alongside other post-processors
+- `toastui-editor-overrides.scss`: Added `.code-copy-btn` styles with theme variables
+- Uses `navigator.clipboard.writeText()` with `document.execCommand('copy')` fallback for non-secure origins
+- No backend changes required – purely frontend enhancement
+
+---
+
 ## [1.15.0] - 2026-09-12
 
 ### Added
