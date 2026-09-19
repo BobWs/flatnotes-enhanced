@@ -504,7 +504,7 @@ function processCopyButtons(el) {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const code = pre.querySelector('code');
-      const text = code ? code.textContent : pre.textContent;
+      const text = (code ? code.textContent : pre.textContent).trimEnd();
       try {
         await _writeToClipboard(text);
         btn.innerHTML = CHECK_ICON;

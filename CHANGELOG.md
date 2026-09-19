@@ -13,6 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.16.1] - 2026-09-19
+
+### Fixed
+- **Copy button on code blocks no longer adds a trailing newline**
+  - The copied content is now trimmed of trailing whitespace before being placed on the clipboard
+  - Leading indentation is preserved – only trailing whitespace is stripped
+  - Prevents accidental command execution when pasting into a terminal
+  - Safe for documentation and tutorials where users copy-paste commands
+
+### Technical
+- `ToastViewer.vue`: `processCopyButtons()` now uses `.trimEnd()` on the extracted code text
+- Root cause: Prism (Toast UI's syntax highlighter) always appends a `\n` after the last token inside `<code>`
+- No SCSS or backend changes required
+
+---
+
 ## [1.16.0] - 2026-09-13
 
 ### Added

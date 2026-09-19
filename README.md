@@ -29,9 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.16.0
+## 🆕 What's New in v1.16.1
 
-- **Copy Button for Code Blocks** – One click to copy any code block to your clipboard, with visual confirmation
+- **Bug fix:** Copy button on code blocks no longer adds a trailing newline – commands paste safely without auto-executing
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -405,6 +405,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.16.1` – Bug Fix: Copy button no longer adds an extra trailing line to copied code
 - `v1.16.0` – Copy Button for Code Blocks – one-click copying from any code block
 - `v1.15.0` – Substring Search by Default – opt-in toggle for automatic substring matching (no more typing `*`)
 - `v1.14.2` – Bug fixes: Clipboard fallback for HTTP + SSO independent OIDC/OAuth configuration
