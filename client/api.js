@@ -284,6 +284,28 @@ export async function saveCallouts(callouts) {
   }
 }
 
+export async function getBranding() {
+  try {
+    const response = await api.get("api/settings/branding");
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
+export async function saveBranding(formData) {
+  try {
+    const response = await api.put("api/settings/branding", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (response) {
+    return Promise.reject(response);
+  }
+}
+
 export async function getPrefs() {
   try {
     const response = await api.get("api/settings/prefs");

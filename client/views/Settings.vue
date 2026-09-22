@@ -14,7 +14,7 @@
           v-for="tab in tabs"
           :key="tab.id"
           @click="activeTab = tab.id"
-          class="px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap touch-manipulation flex-shrink-0"
+          class="px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap touch-manipulation flex-shrink-0"
           :class="activeTab === tab.id
             ? 'border-theme-brand text-theme-brand'
             : 'border-transparent text-theme-text-muted hover:text-theme-text'"
@@ -28,8 +28,9 @@
     <SettingsAdvanced       v-if="activeTab === 'advanced'" />
     <SettingsTags           v-if="activeTab === 'tags'" />
     <SettingsTaskIcons      v-if="activeTab === 'taskicons'" />
+    <SettingsSavedSearches  v-if="activeTab === 'searches'" />    
     <SettingsPrefs          v-if="activeTab === 'prefs'" @switchTab="(tab) => activeTab = tab" />
-    <SettingsSavedSearches  v-if="activeTab === 'searches'" />
+    <SettingsBranding       v-if="activeTab === 'branding'" />
     <SettingsMaintenance    v-if="activeTab === 'maintenance'" />
 
   </div>
@@ -43,8 +44,9 @@ import SettingsAppearance    from "./SettingsAppearance.vue";
 import SettingsAdvanced      from "./SettingsAdvanced.vue";
 import SettingsTags          from "./SettingsTags.vue";
 import SettingsTaskIcons     from "./SettingsTaskIcons.vue";
-import SettingsPrefs         from "./SettingsPrefs.vue";
 import SettingsSavedSearches from "./SettingsSavedSearches.vue";
+import SettingsPrefs         from "./SettingsPrefs.vue";
+import SettingsBranding      from "./SettingsBranding.vue";
 import SettingsMaintenance   from "./SettingsMaintenance.vue";
 
 const route = useRoute();
@@ -55,8 +57,9 @@ const tabs = [
   { id: "advanced",    label: "Advanced" },
   { id: "tags",        label: "Tags" },
   { id: "taskicons",   label: "Task Icons" },
-  { id: "prefs",       label: "Preferences" },
   { id: "searches",    label: "Searches" },
+    { id: "prefs",       label: "Preferences" },
+  { id: "branding",    label: "Branding" },  
   { id: "maintenance", label: "Maintenance" },
 ];
 

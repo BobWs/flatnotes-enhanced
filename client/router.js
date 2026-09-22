@@ -123,8 +123,12 @@ router.beforeEach(async (to) => {
   }
 });
 
-router.afterEach((to) => {
-  let title = "flatnotes";
+router.afterEach(async (to) => {
+  // Lazy import to avoid a circular dependency with the store, same as
+  // the beforeEach guard above.
+  const { useGlobalStore } = await import("./globalStore.js");
+  const globalStore = useGlobalStore();
+  let title = globalStore.brandName || "flatnotes";
   if (to.name === "note") {
     if (to.params.title) {
       title = `${to.params.title} - ${title}`;

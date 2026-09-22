@@ -36,6 +36,17 @@ export const useGlobalStore = defineStore("global", () => {
   // Substring search default — when true, the search API is called with
   // substring_mode=true so bare tokens are automatically wrapped with wildcards.
   const substringSearchDefault = ref(false);
+  // Branding — mirrored from /api/config on startup (see App.vue) so the
+  // login page, NavBar/Logo, and document title all read from one place.
+  // SettingsBranding.vue updates these directly after a save, so branding
+  // applies live everywhere without a page reload.
+  const brandName = ref('');
+  const brandAccent = ref('');
+  const brandLogoFilename = ref('');
+  const brandIconFilename = ref('');
+  // Cache-buster for the logo <img> URL: unique per page load, and bumped
+  // again after every save so a replaced logo doesn't show the old cached one.
+  const brandVersion = ref(Date.now());
 
   function bumpPinned() {
     pinnedVersion.value++;
@@ -57,5 +68,10 @@ export const useGlobalStore = defineStore("global", () => {
     savedSearchesEnabled,
     savedSearches,
     substringSearchDefault,
+    brandName,
+    brandAccent,
+    brandLogoFilename,
+    brandIconFilename,
+    brandVersion,
   };
 });

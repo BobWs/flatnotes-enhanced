@@ -2,8 +2,8 @@ import os
 from datetime import datetime, timezone, timedelta
 from typing import List, Literal, Optional
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, UploadFile, Request, Body, UploadFile 
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, UploadFile, Request, Body, UploadFile, Form, File
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -230,6 +230,7 @@ from user_settings import (
     get_task_icons, save_task_icons, TaskIconSettings,
     save_maintenance_setting, get_maintenance_setting,
     get_saved_searches, save_saved_searches, SavedSearchSettings,
+    get_branding, save_branding, get_brand_logo_path, get_brand_icon_path,
 )
 from typing import List as TypingList
 
@@ -543,6 +544,7 @@ def get_folder_notes(folder: str):
 # region Config
 @router.get("/api/config", response_model=GlobalConfigResponseModel)
 def get_config():
+    branding = get_branding()
     return GlobalConfigResponseModel(
         auth_type=global_config.auth_type,
         quick_access_hide=global_config.quick_access_hide,
@@ -552,7 +554,65 @@ def get_config():
         quick_access_limit=global_config.quick_access_limit,
         search_disabled=global_config.search_disabled,
         auth_provider=global_config.auth_provider,
+        brand_name=branding.brand_name,
+        brand_accent=branding.brand_accent,
+        brand_logo_filename=branding.brand_logo_filename,
+        brand_icon_filename=branding.brand_icon_filename,
+        brand_name_from_env=branding.brand_name_from_env,
+        brand_accent_from_env=branding.brand_accent_from_env,
     )
+# endregion
+
+
+# region Branding
+# The logo/favicon are served from fixed, public URLs (no auth) so they
+# render on the login page and in fresh/logged-out browser sessions — before
+# any auth token exists. Name/accent ride along on the already-public
+# /api/config instead of a second endpoint, so the whole app (including the
+# login page) can apply branding from that single startup call.
+@router.get("/api/brand/logo", include_in_schema=False)
+def get_brand_logo():
+    path = get_brand_logo_path()
+    if not path:
+        raise HTTPException(status_code=404, detail=api_messages.brand_logo_not_found)
+    return FileResponse(path)
+
+
+@router.get("/api/brand/favicon", include_in_schema=False)
+def get_brand_favicon():
+    path = get_brand_icon_path()
+    if not path:
+        raise HTTPException(status_code=404, detail=api_messages.brand_icon_not_found)
+    return FileResponse(path)
+
+
+@router.get("/api/settings/branding", dependencies=auth_deps)
+def api_get_branding():
+    return get_branding()
+
+
+if global_config.auth_type != AuthType.READ_ONLY:
+
+    @router.put("/api/settings/branding", dependencies=auth_deps)
+    async def api_save_branding(
+        name: Optional[str] = Form(None),
+        accent: Optional[str] = Form(None),
+        remove_logo: Optional[str] = Form(None),
+        logo: Optional[UploadFile] = File(None),
+        remove_icon: Optional[str] = Form(None),
+        icon: Optional[UploadFile] = File(None),
+    ):
+        try:
+            return save_branding(
+                name=name,
+                accent=accent,
+                logo=logo,
+                remove_logo=bool(remove_logo),
+                icon=icon,
+                remove_icon=bool(remove_icon),
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 # endregion
 
 

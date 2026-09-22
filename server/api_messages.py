@@ -12,3 +12,6 @@ invalid_attachment_filename = (
 )
 
 attachment_in_use = "Cannot delete attachment: it is still referenced by one or more notes."
+
+brand_logo_not_found = "No branding logo has been configured."
+brand_icon_not_found = "No branding favicon has been configured."

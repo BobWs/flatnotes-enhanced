@@ -113,6 +113,12 @@ class UserSettings(Base):
     notes_default_sort = Column(String,  nullable=True)
     notes_default_view = Column(String,  nullable=True)
 
+    # Branding (instance-wide, not per-user, but stored alongside the
+    # single-user settings row like everything else here). The logo file
+    # itself lives on disk under .flatnotes/brand/ — see user_settings.py.
+    brand_name          = Column(String,  nullable=True)
+    brand_accent        = Column(String,  nullable=True)
+
     # Appearance
     theme       = Column(String,  default="light")
     font_size   = Column(String,  default="medium")
@@ -196,6 +202,8 @@ class DatabaseManager:
             "avatar_filename":      "VARCHAR",
             "notes_default_sort":   "VARCHAR",
             "notes_default_view":   "VARCHAR",
+            "brand_name":           "VARCHAR",
+            "brand_accent":         "VARCHAR",
             "theme":                "VARCHAR",
             "font_size":            "VARCHAR",
             "font_family":          "VARCHAR",

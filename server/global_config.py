@@ -1,5 +1,6 @@
 import sys
 from enum import Enum
+from typing import Optional
 
 from helpers import CustomBaseModel, get_env
 from logger import logger
@@ -130,7 +131,28 @@ class AuthType(str, Enum):
     OIDC = "oidc"
 
 
-class GlobalConfigResponseModel(CustomBaseModel):
+class BrandingSettings(CustomBaseModel):
+    """The effective instance branding — flat fields so the frontend can read
+    them straight off /api/config (via GlobalConfigResponseModel, which
+    inherits this) without an extra request, or from the dedicated
+    /api/settings/branding endpoint used by the settings form.
+
+    `brand_name`/`brand_accent` are the *effective* values (env var, if set,
+    takes precedence over the stored one — see user_settings.get_branding).
+    `brand_name_from_env`/`brand_accent_from_env` tell the settings UI when a
+    field is locked, without it having to guess from whether the value is
+    non-empty.
+    """
+
+    brand_name: Optional[str] = None
+    brand_accent: Optional[str] = None
+    brand_logo_filename: Optional[str] = None
+    brand_icon_filename: Optional[str] = None
+    brand_name_from_env: bool = False
+    brand_accent_from_env: bool = False
+
+
+class GlobalConfigResponseModel(BrandingSettings):
     auth_type: AuthType
     quick_access_hide: bool
     quick_access_title: str

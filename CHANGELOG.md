@@ -13,6 +13,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.17.0] - 2026-09-22
+
+### Added
+- **Custom Branding** – Rebrand your instance without touching code
+  - New **Branding** tab in Settings for name, accent color, logo, and favicon
+  - Custom **name** replaces the app name in the browser tab title
+  - Custom **accent color** drives buttons, links, highlights, and the tinted favicon
+  - Custom **logo** (SVG, PNG, JPG, WebP, GIF, ICO) replaces the default mark on the login and home pages
+  - Custom **favicon** replaces the browser tab icon
+  - All changes apply live without a page reload
+  - Branding is visible on the login page too (before authentication)
+  - **Reset to defaults** button reverts everything
+
+- **Environment variable overrides** – For configuration-as-code deployments
+  - `FLATNOTES_BRAND_NAME` – overrides the name set in the UI
+  - `FLATNOTES_BRAND_ACCENT` – overrides the accent color set in the UI
+  - When set, the corresponding field in the Settings UI is disabled with an explanatory note
+  - Logo and favicon remain UI-only (no env var equivalent)
+
+### Technical
+- New `BrandingSettings` model in `global_config.py`, embedded in `/api/config` for single-request branding
+- New `get_branding()` / `save_branding()` in `user_settings.py`
+- New `brand_name`, `brand_accent` columns in `UserSettings` (schema migration)
+- New public endpoints: `GET /api/brand/logo`, `GET /api/brand/favicon` (no auth required so they work on the login page)
+- New settings endpoints: `GET` / `PUT /api/settings/branding`
+- `App.vue` applies accent color and favicon the moment `/api/config` resolves
+- New helpers in `helpers.js`: `applyBranding()`, `hexToRgbTriplet()`, `applyBrandFavicon()`
+- New reactive state in `globalStore.js`: `brandName`, `brandAccent`, `brandLogoFilename`, `brandIconFilename`
+- `router.js` browser tab title now reflects the custom name
+- `Logo.vue` renders custom logo/name on login and home pages
+- Logo and favicon stored on disk under `.flatnotes/brand/`, served through public endpoints
+- Favicon is auto-tinted to match the accent color when no custom favicon is uploaded
+- No breaking changes – existing installations continue to work with default branding
+
+---
+
 ## [1.16.1] - 2026-09-19
 
 ### Fixed

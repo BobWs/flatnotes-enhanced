@@ -29,9 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.16.1
+## 🆕 What's New in v1.17.0
 
-- **Bug fix:** Copy button on code blocks no longer adds a trailing newline – commands paste safely without auto-executing
+- **Custom Branding** – Rebrand your instance with a custom name, accent color, logo, and favicon. Everything is managed from a new Settings → Branding tab and applies live, including on the login page.
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -167,8 +167,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Advanced | Table styling, quote styling. |
 | Tags | Global tag colors + per-tag overrides. |
 | Task Icons | Custom colors for task markers. |
-| Preferences | Display name, avatar, TOTP QR code setup (if enabled), default sort, note view, note preview toggle, button label toggle, custom home note, offline caching (PWA), show saved searches in sidebar, hide frontmatter in view & preview, substring search by default, date formatting (locale + style). |
 | Searches | Create, edit, delete, and reorder saved searches. Run searches directly from the Settings page. |
+| Preferences | Display name, avatar, TOTP QR code setup (if enabled), default sort, note view, note preview toggle, button label toggle, custom home note, offline caching (PWA), show saved searches in sidebar, hide frontmatter in view & preview, substring search by default, date formatting (locale + style). |
+| Branding | Custom name, accent color, logo, and favicon for white-labeling. |
 | Maintenance | Trash manager, content summary, backups, version check, system info. |
 
 ---
@@ -332,6 +333,8 @@ Open your browser and navigate to `http://localhost:8080`
 | `OAUTH_CLIENT_ID` | GitHub OAuth client ID | (required for GitHub) |
 | `OAUTH_CLIENT_SECRET` | GitHub OAuth client secret | (required for GitHub) |
 | `OAUTH_REDIRECT_URI` | GitHub OAuth callback URL | (required for GitHub) |
+| `FLATNOTES_BRAND_NAME` | Custom instance name (overrides the Settings UI value) | (unset) |
+| `FLATNOTES_BRAND_ACCENT` | Custom accent color, hex format (overrides the Settings UI value) | (unset) |
 
 ---
 
@@ -405,6 +408,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.17.0` – Custom Branding – rename your instance, set a custom accent color, upload a logo and favicon
 - `v1.16.1` – Bug Fix: Copy button no longer adds an extra trailing line to copied code
 - `v1.16.0` – Copy Button for Code Blocks – one-click copying from any code block
 - `v1.15.0` – Substring Search by Default – opt-in toggle for automatic substring matching (no more typing `*`)
@@ -567,6 +571,51 @@ FLATNOTES_QUICK_ACCESS_HIDE=true   # optional: keeps home page minimal
 - Attachments are not protected
 
 **Always use with `FLATNOTES_AUTH_TYPE=read_only`** for public instances. For truly sensitive content, use network-level restrictions (reverse proxy authentication, VPN, IP allowlisting).
+
+
+## Branding
+
+Rebrand your instance without touching code. Set a custom name, accent color, logo, and favicon — all from the UI, applied live across the app including the login page.
+
+### How to set it up
+
+1. Go to **Settings → Branding**
+2. Enter a custom **Name** and/or pick an **Accent color**
+3. Upload a **Logo** and/or **Favicon** (each has its own upload/replace/remove control)
+4. Click **Save Branding** — changes apply instantly, no page reload
+5. Click **Reset to defaults** at any point to revert everything back to stock Flatnotes-Enhanced
+
+### Where it shows up
+
+- Login page and home page (logo/name)
+- Browser tab (favicon + title)
+- Applies before login too — a fresh, logged-out browser session sees your branding immediately
+
+### Name + Logo together
+
+If you set **both** a custom logo and a custom name:
+- The name is displayed **beside** the logo, not replacing it
+- This is because a logo is usually a mark/icon, not a full wordmark
+- If you only set a name (no logo), it replaces the built-in wordmark
+- If you only set a logo (no name), it displays alone
+
+### Environment variable overrides
+
+For deployments that prefer configuration-as-code, name and accent color can be locked via environment variables:
+
+```env
+FLATNOTES_BRAND_NAME=Acme Notes
+FLATNOTES_BRAND_ACCENT=#865e3c
+```
+
+When set, the corresponding field in the Branding settings UI is shown as disabled with a note explaining it's controlled by the environment variable. Logo and favicon are always managed through the UI (no env var equivalent, since they're files).
+
+### Technical notes
+
+- Name and accent color are stored in the database (or the env var, if set)
+- Logo and favicon are stored on disk under `.flatnotes/brand/`
+- Served through public, unauthenticated endpoints (`/api/brand/logo`, `/api/brand/favicon`) — this makes them visible on the login page before any auth token exists
+- The favicon is automatically tinted to match your accent color when no custom favicon is uploaded
 
 
 ## Frontmatter Support

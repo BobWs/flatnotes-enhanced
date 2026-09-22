@@ -111,7 +111,7 @@ import PrimeToast from "./components/PrimeToast.vue";
 import TagSidebar from "./components/TagSidebar.vue";
 import FolderSidebar from "./components/FolderSidebar.vue";
 import { useGlobalStore } from "./globalStore.js";
-import { loadTheme, initThemeListener, cleanupThemeListener } from "./helpers.js";
+import { loadTheme, initThemeListener, cleanupThemeListener, applyBranding, applyBrandFavicon } from "./helpers.js";
 import NavBar from "./partials/NavBar.vue";
 import SearchModal from "./partials/SearchModal.vue";
 import LoadingIndicator from "./components/LoadingIndicator.vue";
@@ -179,6 +179,16 @@ Mousetrap.bindGlobal("ctrl+alt+t", () => {
 getConfig()
   .then(async (data) => {
     globalStore.config = data;
+    // Branding rides along on this same public config call, so it's applied
+    // here — before auth, before the rest of this chain — rather than
+    // waiting on a second, authenticated request. This is what makes the
+    // login page (and any logged-out screen) show correct branding.
+    globalStore.brandName = data.brandName || "";
+    globalStore.brandAccent = data.brandAccent || "";
+    globalStore.brandLogoFilename = data.brandLogoFilename || "";
+    globalStore.brandIconFilename = data.brandIconFilename || "";
+    applyBranding(globalStore.brandAccent);
+    applyBrandFavicon(globalStore.brandIconFilename, globalStore.brandAccent, globalStore.brandVersion);
     await initSettingsStore();
     // Load show_button_labels preference so it persists across page refreshes.
     // We do this after auth is confirmed (getConfig succeeds only when authenticated).

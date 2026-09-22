@@ -5,9 +5,13 @@ Uses SQLite database for storage with JSON file fallback.
 """
 import json
 import os
+import re
+import shutil
 from typing import List, Optional
 
+from fastapi import UploadFile
 from pydantic import Field
+from global_config import BrandingSettings
 from helpers import CustomBaseModel, get_env
 from logger import logger
 
@@ -203,6 +207,186 @@ def _resolve_json_path(primary: str) -> str:
         logger.info(f"Primary JSON not found, using backup: {bak}")
         return bak
     return primary
+
+
+# ── Branding ───────────────────────────────────────────────────────────────────
+#
+# Name/accent are stored in the DB (env vars, when set, always win — see
+# get_branding). The logo file itself lives on disk at .flatnotes/brand/,
+# keyed only by its "logo.<ext>" filename prefix so the public /api/brand/logo
+# endpoint can serve it (and the config/settings responses can report it)
+# without needing a DB round-trip just to know which file to look for.
+
+BRAND_ACCENT_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+BRAND_IMAGE_EXTS = {".svg", ".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico"}
+
+# Starlette normalizes an empty-string multipart field to the parameter's
+# *default* before the endpoint ever sees it — there is no way to tell
+# "field explicitly cleared" from "field omitted" using "". This sentinel is
+# what the frontend sends instead when it wants to clear name/accent; it
+# only has meaning here and never touches the DB or the API response.
+BRAND_CLEAR = "__flatnotes_brand_clear__"
+
+
+def _brand_dir() -> str:
+    path = os.path.join(_flatnotes_dir(), "brand")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def _find_brand_file(prefix: str) -> Optional[str]:
+    """Return the current file for a brand slot ("logo" or "icon"),
+    whatever its extension, or None if nothing has been uploaded for it."""
+    try:
+        for entry in sorted(os.listdir(_brand_dir())):
+            if entry.lower().startswith(f"{prefix}."):
+                return entry
+    except OSError:
+        pass
+    return None
+
+
+def _brand_file_path(prefix: str) -> Optional[str]:
+    filename = _find_brand_file(prefix)
+    if not filename:
+        return None
+    return os.path.join(_brand_dir(), filename)
+
+
+def get_brand_logo_path() -> Optional[str]:
+    """Absolute path to the current logo file, or None if unset. Used by the
+    public GET /api/brand/logo endpoint to serve it."""
+    return _brand_file_path("logo")
+
+
+def get_brand_icon_path() -> Optional[str]:
+    """Absolute path to the current favicon file, or None if unset. Used by
+    the public GET /api/brand/favicon endpoint to serve it."""
+    return _brand_file_path("icon")
+
+
+def _clear_brand_files(prefix: str) -> None:
+    """Remove every <prefix>.* file. A slot keeps only its newest upload, so
+    an earlier different-extension upload doesn't linger; idempotent."""
+    d = _brand_dir()
+    try:
+        entries = os.listdir(d)
+    except OSError:
+        return
+    for entry in entries:
+        if entry.lower().startswith(f"{prefix}."):
+            try:
+                os.remove(os.path.join(d, entry))
+            except OSError:
+                pass  # already gone
+
+
+def _save_brand_file(prefix: str, upload: UploadFile, label: str) -> None:
+    ext = os.path.splitext(upload.filename or "")[1].lower()
+    if ext not in BRAND_IMAGE_EXTS:
+        raise ValueError(f"{label} must be an image file")
+    _clear_brand_files(prefix)
+    dest = os.path.join(_brand_dir(), f"{prefix}{ext}")
+    with open(dest, "wb") as f:
+        shutil.copyfileobj(upload.file, f)
+
+
+def get_branding() -> BrandingSettings:
+    """Return the effective branding. An environment variable, when set,
+    always wins over whatever is stored in the DB for that field — the
+    *_from_env flags tell the settings UI which fields are locked."""
+    name_env = get_env("FLATNOTES_BRAND_NAME")
+    accent_env = get_env("FLATNOTES_BRAND_ACCENT")
+    name = name_env
+    accent = accent_env
+
+    if db_manager.enabled:
+        db = db_manager.get_session()
+        try:
+            user_id = _get_user_id()
+            settings = db.query(UserSettings).filter(UserSettings.user_id == user_id).first()
+            if settings:
+                if name is None:
+                    name = settings.brand_name
+                if accent is None:
+                    accent = settings.brand_accent
+        except Exception as e:
+            logger.error(f"Database error in get_branding: {e}")
+        finally:
+            db.close()
+
+    return BrandingSettings(
+        brand_name=name,
+        brand_accent=accent,
+        brand_logo_filename=_find_brand_file("logo"),
+        brand_icon_filename=_find_brand_file("icon"),
+        brand_name_from_env=bool(name_env),
+        brand_accent_from_env=bool(accent_env),
+    )
+
+
+def save_branding(
+    name: Optional[str] = None,
+    accent: Optional[str] = None,
+    logo: Optional[UploadFile] = None,
+    remove_logo: bool = False,
+    icon: Optional[UploadFile] = None,
+    remove_icon: bool = False,
+) -> BrandingSettings:
+    """Update name/accent/logo/favicon. `name`/`accent` of "" clears the
+    stored value. A field whose environment variable is set is left
+    untouched here — the settings UI disables those fields, and
+    get_branding() ignores the stored value for a locked field anyway, so
+    writing to it would just be dead data. Raises ValueError on an invalid
+    accent or image file."""
+    name_locked = bool(get_env("FLATNOTES_BRAND_NAME"))
+    accent_locked = bool(get_env("FLATNOTES_BRAND_ACCENT"))
+
+    if name == BRAND_CLEAR:
+        name = ""
+    if accent == BRAND_CLEAR:
+        accent = ""
+
+    if accent is not None and accent != "" and not BRAND_ACCENT_RE.match(accent):
+        raise ValueError("accent must be a #rrggbb hex color")
+
+    if db_manager.enabled:
+        db = db_manager.get_session()
+        try:
+            user_id = _get_user_id()
+            settings = db.query(UserSettings).filter(UserSettings.user_id == user_id).first()
+            if not settings:
+                settings = UserSettings(user_id=user_id)
+                db.add(settings)
+            if name is not None and not name_locked:
+                settings.brand_name = name or None
+            if accent is not None and not accent_locked:
+                settings.brand_accent = accent or None
+            db.commit()
+            logger.info("Saved branding to database")
+        except Exception as e:
+            logger.error(f"Database error in save_branding: {e}")
+            db.rollback()
+        finally:
+            db.close()
+    else:
+        logger.warning("save_branding: database not available, name/accent not persisted")
+
+    if logo is not None:
+        _save_brand_file("logo", logo, "logo")
+        logger.info("Saved branding logo")
+    elif remove_logo:
+        _clear_brand_files("logo")
+        logger.info("Removed branding logo")
+
+    if icon is not None:
+        _save_brand_file("icon", icon, "favicon")
+        logger.info("Saved branding favicon")
+    elif remove_icon:
+        _clear_brand_files("icon")
+        logger.info("Removed branding favicon")
+
+    return get_branding()
 
 
 # ── Database helpers ──────────────────────────────────────────────────────────
