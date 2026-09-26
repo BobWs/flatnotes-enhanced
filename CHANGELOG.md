@@ -13,6 +13,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.18.0] - 2026-09-26
+
+### Added
+- **Theme Selector** – Full theme picker with 16 predefined color themes
+  - Replaces the simple Light/Dark/System cycle button with a dedicated picker panel
+  - Themes grouped by family: Default, Dracula, Catppuccin, Gruvbox, Nord, Solarized, Tokyo Night, One
+  - Live color swatch and name for each theme in the picker
+  - Applies instantly across the entire app — no page reload
+  - Selection persists across sessions via `localStorage` (key: `fn_theme`)
+  - Light / Dark / System remain available at the top as the **Default** group
+  - Keyboard navigation supported in the picker
+  - Complements the Custom Branding feature — a custom accent color still overrides every theme's brand color
+
+### Changed
+- **NavBar** – The old Light/Dark/System toggle button now opens the theme picker panel instead of cycling through themes
+- **Theme system** – Each theme is applied as a class on `body` (e.g. `body.theme-dracula`), overriding the same eight CSS variables the existing Light/Dark themes already use
+
+### Migration
+- Existing users' old `darkTheme` true/false preference is automatically migrated to `dark`/`light` on first load, then removed — no action required
+- The `.dark` class is still toggled automatically for every dark-mode theme, so any existing `.dark`-scoped styles keep working unchanged
+
+### Technical
+- New `client/themes.js` – Central registry of the 16 predefined themes and the three default modes, plus swatch colors for the picker
+- New `client/components/ThemePicker.vue` – Theme picker panel, grouped by family with live swatches, active indicator, and keyboard navigation
+- `client/helpers.js` – Replaced the true/false dark-theme toggle with `applyTheme()`, `setTheme()`, `getCurrentTheme()`, `getAvailableThemes()`; extended `loadTheme()` with migration logic
+- `client/style.css` – Added a `body.theme-*` CSS variable block for each of the 16 themes, alongside the existing `body` / `body.dark` defaults
+- `client/partials/NavBar.vue` – Theme button now opens the picker instead of cycling
+- No backend, database, or other component changes required — the existing CSS variable system handled everything automatically
+
+---
+
 ## [1.17.0] - 2026-09-22
 
 ### Added

@@ -29,9 +29,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.17.0
+## 🆕 What's New in v1.18.0
 
-- **Custom Branding** – Rebrand your instance with a custom name, accent color, logo, and favicon. Everything is managed from a new Settings → Branding tab and applies live, including on the login page.
+- **Theme Selector** – Choose from 16 predefined color themes (Dracula, Catppuccin, Gruvbox, Nord, Solarized, Tokyo Night, One). Open the Theme picker from the navbar menu and apply a theme instantly — your choice is remembered across sessions.
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -86,6 +86,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | Nested Tasks | Collapsible nested tasks support with chevron marker. |
 | Tag Colors | Per-tag color overrides with global enable/disable. |
 | Custom Task Icons | Customize colors for Obsidian-style task markers (see Settings page). |
+| Theme Selector | 16 predefined color themes (Dracula, Catppuccin, Gruvbox, Nord, Solarized, Tokyo Night, One), selectable from the navbar. |
 
 ### 👁️ Preview System
 
@@ -408,6 +409,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.18.0` – Theme Selector – 16 predefined color themes (Dracula, Catppuccin, Gruvbox, Nord, Solarized, Tokyo Night, One)
 - `v1.17.0` – Custom Branding – rename your instance, set a custom accent color, upload a logo and favicon
 - `v1.16.1` – Bug Fix: Copy button no longer adds an extra trailing line to copied code
 - `v1.16.0` – Copy Button for Code Blocks – one-click copying from any code block
@@ -616,6 +618,40 @@ When set, the corresponding field in the Branding settings UI is shown as disabl
 - Logo and favicon are stored on disk under `.flatnotes/brand/`
 - Served through public, unauthenticated endpoints (`/api/brand/logo`, `/api/brand/favicon`) — this makes them visible on the login page before any auth token exists
 - The favicon is automatically tinted to match your accent color when no custom favicon is uploaded
+
+
+## Themes
+
+Flatnotes-Enhanced ships with a curated collection of 16 predefined color themes, selectable from the navbar without touching code or settings.
+
+### How to use
+
+1. Open the navbar menu and click **Theme**
+2. A picker panel opens showing all themes grouped by family, with a live color swatch and name for each
+3. Click any theme to apply it instantly across the whole app
+4. Light / Dark / System remain available at the top as the **Default** group — nothing about them changes
+5. Your selection is remembered the next time you open the app
+
+### Available themes
+
+| Family | Themes |
+|---|---|
+| Default | Light, Dark, System |
+| Dracula | Dracula, Dracula Alucard |
+| Catppuccin | Latte, Frappé, Macchiato, Mocha |
+| Gruvbox | Light, Dark |
+| Nord | Nord |
+| Solarized | Light, Dark |
+| Tokyo Night | Tokyo Night, Storm, Light |
+| One | One Dark, One Light |
+
+### How it behaves
+
+- **Applies instantly** — no page reload needed
+- **Persists across sessions** — stored locally in your browser
+- **Works with Branding** — if you've set a custom accent color, it continues to override every theme's brand color, including all 16 new ones
+- **Migration is automatic** — existing users' old Light/Dark preference is converted to the new system on first load
+- **System theme still works** — selecting a named theme simply ignores the OS preference until you switch back to System
 
 
 ## Frontmatter Support

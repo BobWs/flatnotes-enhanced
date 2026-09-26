@@ -57,6 +57,191 @@
         --theme-border: 94 107 128;
     }
 
+    /* ── Predefined color themes (Theme Selector, v1.18.0) ──────────────────
+       Each theme is a class on `body`, applied alongside `.dark` (added
+       automatically for dark-mode themes so existing `.dark`-scoped styles
+       keep working — see applyTheme() in helpers.js). Selecting a named
+       theme here always wins over the `body` / `body.dark` defaults above
+       because a later same-specificity rule overrides an earlier one, and
+       these come after; a Branding accent (set as an inline style on body)
+       outranks all of them regardless of order. Colors: RGB triplets, same
+       format as the defaults above. Keep in sync with client/themes.js. */
+    body.theme-dracula {
+        --theme-brand: 189 147 249;
+        --theme-background: 40 42 54;
+        --theme-background-elevated: 68 71 90;
+        --theme-text: 248 248 242;
+        --theme-text-muted: 161 168 196;
+        --theme-text-very-muted: 98 114 164;
+        --theme-shadow: none;
+        --theme-border: 68 71 90;
+    }
+
+    body.theme-dracula-alucard {
+        --theme-brand: 100 74 201;
+        --theme-background: 255 251 235;
+        --theme-background-elevated: 239 233 217;
+        --theme-text: 31 31 31;
+        --theme-text-muted: 108 102 75;
+        --theme-text-very-muted: 169 166 142;
+        --theme-shadow: 239 233 217;
+        --theme-border: 207 207 222;
+    }
+
+    body.theme-catppuccin-latte {
+        --theme-brand: 30 102 245;
+        --theme-background: 239 241 245;
+        --theme-background-elevated: 230 233 239;
+        --theme-text: 76 79 105;
+        --theme-text-muted: 108 111 133;
+        --theme-text-very-muted: 156 160 176;
+        --theme-shadow: 230 233 239;
+        --theme-border: 188 192 204;
+    }
+
+    body.theme-catppuccin-frappe {
+        --theme-brand: 140 170 238;
+        --theme-background: 48 52 70;
+        --theme-background-elevated: 65 69 89;
+        --theme-text: 198 208 245;
+        --theme-text-muted: 165 173 206;
+        --theme-text-very-muted: 115 121 148;
+        --theme-shadow: none;
+        --theme-border: 81 87 109;
+    }
+
+    body.theme-catppuccin-macchiato {
+        --theme-brand: 138 173 244;
+        --theme-background: 36 39 58;
+        --theme-background-elevated: 54 58 79;
+        --theme-text: 202 211 245;
+        --theme-text-muted: 165 173 203;
+        --theme-text-very-muted: 110 115 141;
+        --theme-shadow: none;
+        --theme-border: 73 77 100;
+    }
+
+    body.theme-catppuccin-mocha {
+        --theme-brand: 137 180 250;
+        --theme-background: 30 30 46;
+        --theme-background-elevated: 49 50 68;
+        --theme-text: 205 214 244;
+        --theme-text-muted: 166 173 200;
+        --theme-text-very-muted: 108 112 134;
+        --theme-shadow: none;
+        --theme-border: 69 71 90;
+    }
+
+    body.theme-gruvbox-light {
+        --theme-brand: 175 58 3;
+        --theme-background: 251 241 199;
+        --theme-background-elevated: 235 219 178;
+        --theme-text: 60 56 54;
+        --theme-text-muted: 124 111 100;
+        --theme-text-very-muted: 189 174 147;
+        --theme-shadow: 235 219 178;
+        --theme-border: 213 196 161;
+    }
+
+    body.theme-gruvbox-dark {
+        --theme-brand: 254 128 25;
+        --theme-background: 40 40 40;
+        --theme-background-elevated: 60 56 54;
+        --theme-text: 235 219 178;
+        --theme-text-muted: 168 153 132;
+        --theme-text-very-muted: 102 92 84;
+        --theme-shadow: none;
+        --theme-border: 80 73 69;
+    }
+
+    body.theme-nord {
+        --theme-brand: 136 192 208;
+        --theme-background: 46 52 64;
+        --theme-background-elevated: 59 66 82;
+        --theme-text: 229 233 240;
+        --theme-text-muted: 143 188 187;
+        --theme-text-very-muted: 76 86 106;
+        --theme-shadow: none;
+        --theme-border: 67 76 94;
+    }
+
+    body.theme-solarized-light {
+        --theme-brand: 38 139 210;
+        --theme-background: 253 246 227;
+        --theme-background-elevated: 238 232 213;
+        --theme-text: 88 110 117;
+        --theme-text-muted: 131 148 150;
+        --theme-text-very-muted: 147 161 161;
+        --theme-shadow: 238 232 213;
+        --theme-border: 238 232 213;
+    }
+
+    body.theme-solarized-dark {
+        --theme-brand: 38 139 210;
+        --theme-background: 0 43 54;
+        --theme-background-elevated: 7 54 66;
+        --theme-text: 147 161 161;
+        --theme-text-muted: 131 148 150;
+        --theme-text-very-muted: 88 110 117;
+        --theme-shadow: none;
+        --theme-border: 10 69 82;
+    }
+
+    body.theme-tokyo-night {
+        --theme-brand: 122 162 247;
+        --theme-background: 26 27 38;
+        --theme-background-elevated: 36 40 59;
+        --theme-text: 169 177 214;
+        --theme-text-muted: 120 124 153;
+        --theme-text-very-muted: 65 72 104;
+        --theme-shadow: none;
+        --theme-border: 36 40 59;
+    }
+
+    body.theme-tokyo-night-storm {
+        --theme-brand: 122 162 247;
+        --theme-background: 36 40 59;
+        --theme-background-elevated: 47 51 77;
+        --theme-text: 192 202 245;
+        --theme-text-muted: 120 124 153;
+        --theme-text-very-muted: 86 95 137;
+        --theme-shadow: none;
+        --theme-border: 41 46 66;
+    }
+
+    body.theme-tokyo-night-light {
+        --theme-brand: 41 89 170;
+        --theme-background: 230 231 237;
+        --theme-background-elevated: 213 214 219;
+        --theme-text: 52 59 88;
+        --theme-text-muted: 97 114 176;
+        --theme-text-very-muted: 150 153 163;
+        --theme-shadow: 213 214 219;
+        --theme-border: 196 200 218;
+    }
+
+    body.theme-one-dark {
+        --theme-brand: 97 175 239;
+        --theme-background: 40 44 52;
+        --theme-background-elevated: 44 49 60;
+        --theme-text: 171 178 191;
+        --theme-text-muted: 130 137 151;
+        --theme-text-very-muted: 92 99 112;
+        --theme-shadow: none;
+        --theme-border: 62 68 81;
+    }
+
+    body.theme-one-light {
+        --theme-brand: 64 120 242;
+        --theme-background: 250 250 250;
+        --theme-background-elevated: 234 234 235;
+        --theme-text: 56 58 66;
+        --theme-text-muted: 105 108 119;
+        --theme-text-very-muted: 160 161 167;
+        --theme-shadow: 234 234 235;
+        --theme-border: 220 223 228;
+    }
+
     /* ── Quicksand font (weight 400 & 500) — embedded woff2, no external dependency */
 /* vietnamese */
 @font-face {

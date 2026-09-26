@@ -1,3 +1,5 @@
+import { ALL_THEME_IDS, COLOR_THEME_BODY_CLASSES, COLOR_THEMES, DEFAULT_THEMES, getTheme } from "./themes.js";
+
 /**
  * Convert a "#rrggbb" hex color into the "r g b" space-separated triplet
  * that --theme-brand (see style.css) is declared in, for use with Tailwind's
@@ -91,104 +93,122 @@ export function getToastOptions(description, title, severity) {
   };
 }
 
-export function setDarkThemeOn(save = true) {
-  document.body.classList.add("dark");
-  if (save) localStorage.setItem("darkTheme", "true");
+// ── Theme Selector (v1.18.0) ────────────────────────────────────────────────
+//
+// Extends the previous Light/Dark/System toggle (which stored a plain
+// "darkTheme" true/false/unset flag) with a picker over the predefined
+// color themes registered in themes.js. A theme is applied as a class on
+// `body` (e.g. `body.theme-dracula`, see style.css); the three built-in
+// modes don't get a class of their own and rely on the existing
+// `body` / `body.dark` base rules instead. `body.dark` is toggled for
+// every theme, named ones included, so existing `.dark`-scoped component
+// styles keep working unchanged.
+//
+// A Branding accent (see applyBranding above) is set as an inline style on
+// `body`, which always beats a class selector's `--theme-brand` regardless
+// of theme — so it doesn't need special-casing here.
+
+const THEME_STORAGE_KEY = "fn_theme";
+// Deprecated key from the old Light/Dark/System toggle — still read once,
+// for migration, and never written again.
+const LEGACY_DARK_KEY = "darkTheme";
+
+function getSystemPrefersDark() {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-export function setDarkThemeOff(save = true) {
-  document.body.classList.remove("dark");
-  if (save) localStorage.setItem("darkTheme", "false");
-}
-
-export function toggleTheme() {
-  if (document.body.classList.contains("dark")) {
-    setDarkThemeOff();
-  } else {
-    setDarkThemeOn();
+/** Resolve any theme id ("system" included) to its effective "light" | "dark" mode. */
+export function resolveThemeMode(id) {
+  const theme = getTheme(id);
+  if (!theme || theme.mode === null) {
+    return getSystemPrefersDark() ? "dark" : "light";
   }
-}
-
-// Get system preference
-function getSystemTheme() {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
-// Apply theme based on stored preference or system
-export function loadTheme() {
-  const storedTheme = localStorage.getItem("darkTheme");
-  
-  if (storedTheme === "true") {
-    setDarkThemeOn(false);
-  } else if (storedTheme === "false") {
-    setDarkThemeOff(false);
-  } else {
-    // No stored preference, use system preference
-    if (getSystemTheme() === "dark") {
-      setDarkThemeOn(false);
-    } else {
-      setDarkThemeOff(false);
-    }
-  }
-}
-
-// Listen for system theme changes
-let mediaQueryListener = null;
-
-export function initThemeListener() {
-  // Remove existing listener if any
-  if (mediaQueryListener) {
-    const oldQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    oldQuery.removeEventListener("change", mediaQueryListener);
-  }
-  
-  // Create new listener
-  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-  
-  mediaQueryListener = (e) => {
-    // Only auto-switch if user hasn't manually set a preference
-    if (localStorage.getItem("darkTheme") === null) {
-      if (e.matches) {
-        setDarkThemeOn(false);
-      } else {
-        setDarkThemeOff(false);
-      }
-    }
-  };
-  
-  mediaQuery.addEventListener("change", mediaQueryListener);
-}
-
-// Optional: cleanup function if needed
-export function cleanupThemeListener() {
-  if (mediaQueryListener) {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    mediaQuery.removeEventListener("change", mediaQueryListener);
-    mediaQueryListener = null;
-  }
+  return theme.mode;
 }
 
 /**
- * Clear any manually-saved theme preference and follow OS system setting.
- * After calling this the initThemeListener will auto-switch on OS changes.
+ * Apply a theme by id to the document, without touching localStorage — see
+ * setTheme() to also persist the choice. Falls back to "system" for an
+ * unrecognized id (e.g. a theme removed in a future version).
  */
-export function followSystemTheme() {
-  localStorage.removeItem("darkTheme");
-  if (getSystemTheme() === "dark") {
-    setDarkThemeOn(false);   // apply without saving to localStorage
-  } else {
-    setDarkThemeOff(false);  // apply without saving to localStorage
+export function applyTheme(id) {
+  const resolved = ALL_THEME_IDS.includes(id) ? id : "system";
+  Array.from(document.body.classList)
+    .filter((cls) => cls.startsWith("theme-"))
+    .forEach((cls) => document.body.classList.remove(cls));
+  // Looked up rather than interpolated as `theme-${resolved}` — see the
+  // comment on COLOR_THEME_BODY_CLASSES in themes.js for why that matters.
+  const bodyClass = COLOR_THEME_BODY_CLASSES[resolved];
+  if (bodyClass) {
+    document.body.classList.add(bodyClass);
   }
+  document.body.classList.toggle("dark", resolveThemeMode(resolved) === "dark");
 }
 
-/** Returns true when the user has an explicit manual preference stored. */
-export function hasManualThemePreference() {
-  return localStorage.getItem("darkTheme") !== null;
+/** Apply a theme and persist it as the user's preference. */
+export function setTheme(id) {
+  applyTheme(id);
+  localStorage.setItem(THEME_STORAGE_KEY, id);
 }
 
-/** Returns "dark" | "light" | "system" */
-export function getCurrentThemeMode() {
-  const stored = localStorage.getItem("darkTheme");
-  if (stored === null) return "system";
-  return stored === "true" ? "dark" : "light";
+/** Returns the currently selected theme id, defaulting to "system". */
+export function getCurrentTheme() {
+  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  return ALL_THEME_IDS.includes(stored) ? stored : "system";
+}
+
+/** All themes available in the picker, grouped for display. */
+export function getAvailableThemes() {
+  return { default: DEFAULT_THEMES, colors: COLOR_THEMES };
+}
+
+// Apply the stored theme, migrating the deprecated "darkTheme" flag on
+// first load after the update: fn_theme wins if present; otherwise a
+// legacy darkTheme=true/false migrates to dark/light and is cleaned up;
+// otherwise the default is "system".
+export function loadTheme() {
+  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  if (ALL_THEME_IDS.includes(stored)) {
+    applyTheme(stored);
+    return;
+  }
+
+  const legacy = localStorage.getItem(LEGACY_DARK_KEY);
+  if (legacy === "true" || legacy === "false") {
+    const migrated = legacy === "true" ? "dark" : "light";
+    localStorage.setItem(THEME_STORAGE_KEY, migrated);
+    localStorage.removeItem(LEGACY_DARK_KEY);
+    applyTheme(migrated);
+    return;
+  }
+
+  applyTheme("system");
+}
+
+// Listen for OS theme changes, so "system" keeps following them live.
+let mediaQueryListener = null;
+
+export function initThemeListener() {
+  if (mediaQueryListener) {
+    window.matchMedia("(prefers-color-scheme: dark)").removeEventListener("change", mediaQueryListener);
+  }
+
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+  mediaQueryListener = () => {
+    // Only re-apply if the user's selected theme is "system" — a named
+    // theme (or plain light/dark) always ignores the OS preference.
+    if (getCurrentTheme() === "system") {
+      applyTheme("system");
+    }
+  };
+
+  mediaQuery.addEventListener("change", mediaQueryListener);
+}
+
+export function cleanupThemeListener() {
+  if (mediaQueryListener) {
+    window.matchMedia("(prefers-color-scheme: dark)").removeEventListener("change", mediaQueryListener);
+    mediaQueryListener = null;
+  }
 }

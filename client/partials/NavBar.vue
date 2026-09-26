@@ -114,11 +114,13 @@
         </div>
       </div>
     </div>
+
+    <ThemePicker v-model="themePickerVisible" />
   </nav>
 </template>
 
 <script setup>
-import { mdiHome, mdiTagMultiple, mdiBookmark, mdiFolderMultiple, mdiCog, mdiPaperclip, mdiDeleteClock, mdiArchive, mdiFileDocumentOutline, mdiThemeLightDark, mdiShareVariant } from "@mdi/js";
+import { mdiHome, mdiTagMultiple, mdiBookmark, mdiFolderMultiple, mdiCog, mdiPaperclip, mdiDeleteClock, mdiArchive, mdiFileDocumentOutline, mdiPalette, mdiShareVariant } from "@mdi/js";
 import {
   mdilLogout,
   mdilMagnify,
@@ -126,14 +128,14 @@ import {
   mdilNoteMultiple,
   mdilPlusCircle,
 } from "@mdi/light-js";
-import { computed, ref, onMounted, onUnmounted, watch } from "vue";
+import { computed, ref, onMounted, watch } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 
 import CustomButton from "../components/CustomButton.vue";
 import PrimeMenu from "../components/PrimeMenu.vue";
+import ThemePicker from "../components/ThemePicker.vue";
 import { authTypes, params, searchSortOptions } from "../constants.js";
 import { useGlobalStore } from "../globalStore.js";
-import { setDarkThemeOn, setDarkThemeOff, followSystemTheme, getCurrentThemeMode } from "../helpers.js";
 import { clearStoredToken } from "../tokenStorage.js";
 import { getTags, getTemplates } from "../api.js";
 
@@ -151,21 +153,8 @@ const emit = defineEmits(["toggleSearchModal", "toggleSidebar", "toggleFolderSid
 
 const hasPinnedNotes = ref(false);
 
-// ── Theme cycle ───────────────────────────────────────────────────────────────
-const themeMode = ref(getCurrentThemeMode());
-let _navThemeObserver = null;
-
-const themeButtonTitle = computed(() => {
-  if (themeMode.value === 'light') return 'Light theme — click for Dark';
-  if (themeMode.value === 'dark')  return 'Dark theme — click to follow OS';
-  return 'Following OS theme — click for Light';
-});
-
-function cycleTheme() {
-  if (themeMode.value === 'light')       { setDarkThemeOn();    themeMode.value = 'dark';   }
-  else if (themeMode.value === 'dark')   { followSystemTheme(); themeMode.value = 'system'; }
-  else                                   { setDarkThemeOff();   themeMode.value = 'light';  }
-}
+// ── Theme picker ─────────────────────────────────────────────────────────────
+const themePickerVisible = ref(false);
 
 const templateModalVisible = ref(false);
 const templates = ref([]);
@@ -184,31 +173,7 @@ watch(() => globalStore.pinnedVersion, checkPinned, { immediate: true });
 
 onMounted(() => {
   checkPinned();
-  _navThemeObserver = new MutationObserver(() => {
-    themeMode.value = getCurrentThemeMode();
-  });
-  _navThemeObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
 });
-
-onUnmounted(() => {
-  if (_navThemeObserver) _navThemeObserver.disconnect();
-});
-
-// Helper to get dynamic theme label
-function getThemeLabel() {
-  const mode = themeMode.value;
-  if (mode === "light") return "Light Theme";
-  if (mode === "dark") return "Dark Theme";
-  return "Auto Theme";
-}
-
-// Helper to get dynamic theme hover title
-function getThemeTitle() {
-  const mode = themeMode.value;
-  if (mode === "light") return "Switch to Dark Theme";
-  if (mode === "dark") return "Switch to Auto Theme (follows system)";
-  return "Switch to Light Theme";
-}
 
 // Make menu items reactive with computed
 const menuItems = computed(() => {
@@ -293,10 +258,10 @@ const menuItems = computed(() => {
       separator: true,
     },
     {
-      label: getThemeLabel(),
-      icon: mdiThemeLightDark,
-      command: cycleTheme,
-      title: getThemeTitle(),
+      label: "Theme",
+      icon: mdiPalette,
+      command: () => { themePickerVisible.value = true; },
+      title: "Choose a color theme",
     },
     {
       separator: true,
