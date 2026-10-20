@@ -15,15 +15,36 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ## 📖 Table of Contents
 
+**Getting started**
 - [Key Features](#-key-features)
 - [Pages & Views](#-pages--views)
-- [Settings Configuration](#️-settings-configuration)
 - [Screenshots](#-screenshots)
 - [Getting Started](#-getting-started)
-- [Building the Docker Image](#-building-the-docker-image)
+- [Docker](#-docker)
+- [Docker Compose](#-docker-compose)
+- [Docker Secrets](#-docker-secrets-advanced)
 - [Manual Installation](#-manual-installation)
 - [Environment Variables](#-environment-variables)
+
+**Features**
+- [Preferences Backup & Restore](#-preferences-backup--restore)
+- [Custom Home Note](#custom-home-note)
+- [PWA Offline Access](#pwa-offline-access)
+- [Date Formatting](#date-formatting)
+- [Saved Searches](#saved-searches)
+- [Themes](#themes)
+- [Branding](#branding)
+- [Frontmatter Support](#frontmatter-support)
+- [Shared Notes](#shared-notes)
+- [Showcase Mode](#showcase-mode-public-read-only)
+
+**Security & auth**
+- [SSO Configuration](#-sso-configuration-oidc--oauth2)
+
+**Other**
 - [Known Issues & Roadmap](#-known-issues--roadmap)
+- [Tags](#tags)
+- [Multi-Instance Setup](#multi-instance-setup)
 - [License](#-license)
 - [Acknowledgments](#-acknowledgments)
 
@@ -245,6 +266,50 @@ docker run -d \
   -e "FLATNOTES_PASSWORD=changeMe!" \
   dockerbobw/flatnotes-enhanced:latest
 ```
+
+## 🐳 Docker Compose
+
+For a persistent setup, use Docker Compose instead of a long `docker run` command. Create a `compose.yml` file next to a `data/` folder:
+
+```yaml
+services:
+  flatnotes-enhanced:
+    container_name: flatnotes-enhanced
+    image: dockerbobw/flatnotes-enhanced:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    environment:
+      TZ: "Europe/Berlin"
+      FLATNOTES_AUTH_TYPE: "password"
+      FLATNOTES_USERNAME: "user"
+      FLATNOTES_PASSWORD: "changeMe!"
+      FLATNOTES_SECRET_KEY: "changeMeToo-a-long-random-string"
+```
+
+Then start it:
+
+```bash
+docker compose up -d
+```
+
+Open `http://localhost:8080`.
+
+> `FLATNOTES_SECRET_KEY` should be a long random string — generate one with `openssl rand -hex 32`. It signs login tokens, so changing it later invalidates existing sessions.
+
+**More deployment examples** — Docker secrets, SSO/OIDC, reverse proxy on a shared Docker network, and Synology/NAS bind mounts — are in the wiki: [Docker Compose Examples](https://github.com/BobWs/flatnotes-enhanced/wiki/Docker-Compose-Examples).
+
+### Updating
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+To pin a version instead of following `latest`, change the image tag (e.g. `:v1.18.1`). See the [Tags](#tags) list for version history.
+
 ---
 
 ## 📦 Manual Installation
@@ -341,29 +406,42 @@ Open your browser and navigate to `http://localhost:8080`
 
 ## 🔐 Docker Secrets (Advanced)
 
-For production deployments, you can use Docker secrets to store sensitive data instead of environment variables.
+For production deployments, you can use Docker secrets to store sensitive data instead of environment variables. This keeps passwords and keys out of your compose file and out of `docker inspect` output.
 
-### How to use
+> **Looking for a complete compose file?** See [Docker Compose Examples → Example 2](https://github.com/BobWs/flatnotes-enhanced/wiki/Docker-Compose-Examples) in the wiki. It shows a full working secrets-based setup including the `/data` volume.
 
-1. Create secret files:
+### How it works
+
+1. Create plain-text files containing each secret:
    ```bash
+   mkdir -p secrets
    echo "your-password" > secrets/flatnotes_password.txt
-   echo "your-secret-key" > secrets/flatnotes_secret_key.txt
+   openssl rand -hex 32 > secrets/flatnotes_secret_key.txt
+   chmod 600 secrets/*.txt
    ```
 
-2. Update your `docker-compose.yml`:
+2. Reference the secrets in your `compose.yml`. Each secret is mounted into the container at `/run/secrets/<name>`, and the corresponding environment variable points at that path rather than holding the value directly:
    ```yaml
    services:
      flatnotes-enhanced:
        image: dockerbobw/flatnotes-enhanced:latest
        secrets:
-         - flatnotes_secret_key
          - flatnotes_password
+         - flatnotes_secret_key
+       environment:
+         FLATNOTES_PASSWORD: /run/secrets/flatnotes_password
+         FLATNOTES_SECRET_KEY: /run/secrets/flatnotes_secret_key
+
    secrets:
-     flatnotes_secret_key:
-       file: ./secrets/flatnotes_secret_key.txt
      flatnotes_password:
        file: ./secrets/flatnotes_password.txt
+     flatnotes_secret_key:
+       file: ./secrets/flatnotes_secret_key.txt
+   ```
+
+3. Start the container as usual:
+   ```bash
+   docker compose up -d
    ```
 
 ### Supported secrets
@@ -376,7 +454,11 @@ For production deployments, you can use Docker secrets to store sensitive data i
 | `oidc_client_secret` | `OIDC_CLIENT_SECRET` |
 | `oauth_client_secret` | `OAUTH_CLIENT_SECRET` |
 
-**Note:** Environment variables still work as a fallback – you don't need to use secrets if you prefer the simpler approach.
+### Environment variable fallback
+
+Environment variables still work as a fallback — you don't need to use secrets if you prefer the simpler approach. You can also mix the two: use secrets for passwords and keys, and plain environment variables for non-sensitive settings like `TZ` or `FLATNOTES_AUTH_TYPE`.
+
+> **Note:** Secret files are read at container startup. If you rotate a secret, restart the container (`docker compose up -d --force-recreate`) for the new value to take effect.
 
 ---
 
