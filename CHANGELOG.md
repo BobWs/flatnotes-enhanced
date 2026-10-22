@@ -13,6 +13,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.18.2] - 2026-10-22
+
+### Security
+- **Security release – upgrading is strongly recommended for every installation.** Four issues reported privately by a security researcher are fixed. Technical details are in the published security advisory.
+- **Cross-site scripting in the note viewer** – Callout titles, attachment cards and task icons are now built with DOM APIs instead of HTML strings, and attachment links accept only `http:` and `https:` targets
+- **Path traversal in note paths** – Note titles and folder paths containing absolute paths or empty, `.` or `..` segments are rejected, and the resolved path is verified to stay inside the notes directory before any read, write, move or delete
+- **Read-only mode did not block all write routes** – With `FLATNOTES_AUTH_TYPE=read_only`, settings, backup, restore, trash, archive-delete and sharing routes now return `403` for state-changing requests. View-only share links keep working
+- **Uploaded files are no longer able to run script in the app's origin** – Attachments and the custom logo/favicon are served with `X-Content-Type-Options: nosniff`; HTML, SVG and XML files additionally get a sandboxing `Content-Security-Policy`. Images, PDFs, text files and downloads behave as before
+
+### Changed
+- HTML, SVG and XML attachments opened directly in the browser now display as static content without running scripts. SVG images embedded in notes or used as the logo/favicon render as before
+- Note paths that are absolute or contain `.` / empty segments (e.g. `a//b`, `./a`, `/a`) are now rejected with a validation error instead of being saved
+
+### Technical
+- `ToastViewer.vue`: new `createSvgIcon()` helper (`createElementNS` + `setAttribute`); `innerHTML` is now used only for fixed, static markup
+- `server/main.py`: `require_writable` dependency and `write_deps`; `harden_user_file_response()` applied to the attachment routes and `/api/brand/*`
+- `server/notes/models.py`, `server/notes/file_system/file_system.py`: one shared `is_valid_note_path()` used by the API models and the storage layer; `_path_from_title()` performs a lexical containment check
+- No dependency, database or configuration changes
+
+### Contributor
+- Thanks to the security researcher who reported these issues responsibly and privately
+
+---
+
 ## [1.18.1] - 2026-10-22
 
 ### Fixed

@@ -50,9 +50,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.18.1
+## 🆕 What's New in v1.18.2
 
-- **Bug Fix** – Code blocks with angle brackets no longer truncate notes
+- **Security Release** – Fixes four security issues reported privately. **Upgrading is strongly recommended for every installation.** Technical details will be published in the security advisory in the coming days.
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -158,6 +158,7 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 | OIDC / OAuth2 (SSO) | Single Sign-On with Google, GitHub, PocketID, Authelia, Authentik, Keycloak, and more |
 | Non-ASCII Support | Usernames and passwords support umlauts (ä, ö, ü, ß) and accented characters. |
 | Showcase Mode | **For public instances:** Use `FLATNOTES_AUTH_TYPE=read_only` together with `FLATNOTES_SEARCH_DISABLED=true` to create a genuinely read-only showcase instance. |
+| Read-Only Enforcement | `FLATNOTES_AUTH_TYPE=read_only` now blocks state-changing requests at the API level, not just in the UI. View-only share links continue to work. |
 
 ---
 
@@ -491,6 +492,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.18.2` – Security Release – four privately reported issues fixed; upgrading strongly recommended
 - `v1.18.1` – Bug Fix – Code blocks with angle brackets no longer truncate notes
 - `v1.18.0` – Theme Selector – 16 predefined color themes (Dracula, Catppuccin, Gruvbox, Nord, Solarized, Tokyo Night, One)
 - `v1.17.0` – Custom Branding – rename your instance, set a custom accent color, upload a logo and favicon

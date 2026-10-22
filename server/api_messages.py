@@ -15,3 +15,5 @@ attachment_in_use = "Cannot delete attachment: it is still referenced by one or 
 
 brand_logo_not_found = "No branding logo has been configured."
 brand_icon_not_found = "No branding favicon has been configured."
+
+read_only_mode = "This instance is read-only."

@@ -81,6 +81,20 @@ watch([() => props.title, () => props.created, () => props.updated, () => props.
   }
 });
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+// Builds an <svg><path/></svg> icon without parsing markup, so path data and
+// fill colours (which can come from settings) are only ever attribute values.
+function createSvgIcon(pathData, attrs = {}) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  Object.entries(attrs).forEach(([name, value]) => svg.setAttribute(name, value));
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("d", pathData);
+  svg.appendChild(path);
+  return svg;
+}
+
 function processCallouts(el) {
   const blockquotes = el.querySelectorAll("blockquote");
   blockquotes.forEach((bq) => {
@@ -103,13 +117,13 @@ function processCallouts(el) {
     calloutDiv.dataset.callout = calloutType;
     calloutDiv.style.setProperty("--callout-color", rgbVal);
 
-    calloutDiv.innerHTML =
-      `<div class="callout-title">` +
-        `<svg class="callout-icon" viewBox="0 0 24 24">` +
-          `<path d="${iconPath}"/>` +
-        `</svg>` +
-        `<span class="callout-title-inner">${titleText}</span>` +
-      `</div>`;
+    const titleDiv = document.createElement("div");
+    titleDiv.className = "callout-title";
+    const titleInner = document.createElement("span");
+    titleInner.className = "callout-title-inner";
+    titleInner.textContent = titleText;
+    titleDiv.append(createSvgIcon(iconPath, { class: "callout-icon" }), titleInner);
+    calloutDiv.appendChild(titleDiv);
 
     const bodyParagraphs = Array.from(bq.querySelectorAll("p")).slice(1);
     if (bodyParagraphs.length > 0) {
@@ -130,6 +144,9 @@ function processDocumentLinks(el) {
   const IMAGE_EXTS = new Set([
     'jpg','jpeg','png','gif','webp','svg','bmp','ico','avif','tiff','tif'
   ]);
+
+  const PREVIEW_ICON_PATH = "M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z";
+  const DOWNLOAD_ICON_PATH = "M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z";
 
   // Extensions that get a card with a Preview button (browser can open these inline)
   const PREVIEW_EXTS = new Set(['pdf', 'txt', 'rtf', 'json', 'xml', 'html', 'htm']);
@@ -239,6 +256,11 @@ function processDocumentLinks(el) {
     if (!srcLower.includes('attachments/')) return;
     // Exclude actual external URLs that happen to contain the word "attachments"
     if (src.startsWith('http') && !srcLower.includes('/attachments/')) return;
+    // Only http(s) targets (relative URLs resolve against the page base) may
+    // become links; javascript:, data: and similar schemes are left alone.
+    let target;
+    try { target = new URL(src, document.baseURI); } catch { return; }
+    if (target.protocol !== 'http:' && target.protocol !== 'https:') return;
 
     // Always lowercase the extension for all subsequent Set/map lookups.
     const rawExt = src.split('.').pop().split('?')[0].toLowerCase();
@@ -250,33 +272,33 @@ function processDocumentLinks(el) {
     const iconPath = getIconPath(rawExt);
     const canPreview = PREVIEW_EXTS.has(rawExt);
 
-    const buttonHtml = canPreview ? `
-      <a class="pdf-preview-btn" href="${src}" target="_blank" rel="noopener" title="Preview in new tab">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
-        </svg>
-        Preview
-      </a>
-    ` : `
-      <a class="pdf-preview-btn" href="${src}" download title="Download ${filename}">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
-        </svg>
-        Download
-      </a>
-    `;
+    const iconBox = document.createElement("div");
+    iconBox.className = "pdf-attachment-icon";
+    iconBox.style.background = bgColor;
+    iconBox.appendChild(createSvgIcon(iconPath));
+
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "pdf-attachment-name";
+    nameSpan.title = filename;
+    nameSpan.textContent = filename;
+
+    const button = document.createElement("a");
+    button.className = "pdf-preview-btn";
+    button.setAttribute("href", src);
+    if (canPreview) {
+      button.target = "_blank";
+      button.rel = "noopener";
+      button.title = "Preview in new tab";
+      button.append(createSvgIcon(PREVIEW_ICON_PATH), "Preview");
+    } else {
+      button.setAttribute("download", "");
+      button.title = `Download ${filename}`;
+      button.append(createSvgIcon(DOWNLOAD_ICON_PATH), "Download");
+    }
 
     const card = document.createElement("div");
     card.className = "pdf-attachment-card";
-    card.innerHTML = `
-      <div class="pdf-attachment-icon" style="background: ${bgColor}">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="${iconPath}"/>
-        </svg>
-      </div>
-      <span class="pdf-attachment-name" title="${filename}">${filename}</span>
-      ${buttonHtml}
-    `;
+    card.append(iconBox, nameSpan, button);
 
     img.replaceWith(card);
   });
@@ -349,7 +371,9 @@ function processTaskIcons(el) {
 
     const iconSpan = document.createElement('span');
     iconSpan.className = 'task-custom-icon';
-    iconSpan.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="${fillColor}"><path d="${iconData.iconPath}"/></svg>`;
+    iconSpan.appendChild(
+      createSvgIcon(iconData.iconPath, { width: "18", height: "18", fill: fillColor }),
+    );
     textNode.parentNode.insertBefore(iconSpan, textNode);
 
     li.classList.add('task-custom');

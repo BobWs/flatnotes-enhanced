@@ -8,7 +8,7 @@ from helpers import CustomBaseModel, strip_whitespace
 
 # Characters that are invalid in note paths.
 # Forward-slash is intentionally excluded so folder paths like "work/todo" work.
-INVALID_NOTE_PATH_CHARS = re.compile(r'[<>:"\\|?*]')
+INVALID_NOTE_PATH_CHARS = re.compile(r'[<>:"\\|?*\x00]')
 
 
 def is_valid_note_path(value: str) -> str:
@@ -17,8 +17,13 @@ def is_valid_note_path(value: str) -> str:
         raise ValueError(
             'Note path cannot include any of the following characters: <>:"\\|?*'
         )
-    if ".." in value.split("/"):
-        raise ValueError("Note path must not contain '..'")
+    # Every "/"-separated segment must be a real name. This rejects absolute
+    # paths (leading "/"), "..", "." and empty segments ("a//b", trailing "/").
+    if any(segment in ("", ".", "..") for segment in value.split("/")):
+        raise ValueError(
+            "Note path must be relative and must not contain empty, '.' or "
+            "'..' segments"
+        )
     return value
 
 

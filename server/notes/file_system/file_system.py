@@ -22,7 +22,13 @@ from helpers import get_env, is_valid_filename
 from logger import logger
 
 from ..base import BaseNotes
-from ..models import Note, NoteCreate, NoteUpdate, SearchResult
+from ..models import (
+    Note,
+    NoteCreate,
+    NoteUpdate,
+    SearchResult,
+    is_valid_note_path,
+)
 
 MARKDOWN_EXT = ".md"
 META_EXT = ".meta.json"  # sidecar metadata file (timestamps)
@@ -53,8 +59,6 @@ class FileSystemNotes(BaseNotes):
     TAGS_WITH_HASH_RE = re.compile(
         r"(?:(?<=^)|(?<=\s))#[a-zA-Z][a-zA-Z0-9_/-]*(?=\s|$)"
     )
-    # Allow forward-slash in paths but not other reserved chars
-    INVALID_PATH_CHARS_RE = re.compile(r'[<>:"\\|?*]')
 
     def __init__(self):
         self.storage_path = get_env("FLATNOTES_PATH", mandatory=True)
@@ -553,7 +557,11 @@ class FileSystemNotes(BaseNotes):
         return os.path.join(self.storage_path, ".flatnotes")
 
     def _path_from_title(self, title: str) -> str:
-        return os.path.join(self.storage_path, title + MARKDOWN_EXT)
+        path = os.path.join(self.storage_path, title + MARKDOWN_EXT)
+        root = os.path.abspath(self.storage_path)
+        if os.path.commonpath([root, os.path.abspath(path)]) != root:
+            raise ValueError("Note path must stay inside the notes directory")
+        return path
 
     def _folder_from_title(self, title: str) -> str:
         """Return the folder component of a note title (empty string for root)."""
@@ -763,15 +771,9 @@ class FileSystemNotes(BaseNotes):
                 break
 
     def _validate_note_path(self, title: str) -> None:
-        """Raise ValueError if title contains invalid characters.
+        """Raise ValueError if title is not a safe, relative note path.
         Unlike the original validator, forward-slash IS allowed for folders."""
-        if self.INVALID_PATH_CHARS_RE.search(title):
-            raise ValueError(
-                "Note title contains invalid characters: <>:\"\\|?*"
-            )
-        # Prevent path traversal
-        if ".." in title.split("/"):
-            raise ValueError("Note title must not contain '..'")
+        is_valid_note_path(title)
 
     def _search_result_from_hit(self, hit: Hit):
         matched_fields = self._get_matched_fields(hit.matched_terms())

@@ -262,6 +262,15 @@ if _trash_days and _trash_days > 0:
     except Exception as _e:
         pass
 auth_deps = [Depends(auth.authenticate)] if auth else []
+
+
+def require_writable():
+    """Reject state-changing requests when running in read_only mode."""
+    if global_config.auth_type == AuthType.READ_ONLY:
+        raise HTTPException(status_code=403, detail=api_messages.read_only_mode)
+
+
+write_deps = [*auth_deps, Depends(require_writable)]
 router = APIRouter()
 app = FastAPI(
     docs_url=global_config.path_prefix + "/docs",
@@ -488,7 +497,7 @@ def get_templates():
         return []
 
 
-@router.delete("/api/archive/{title:path}", dependencies=auth_deps, response_model=None)
+@router.delete("/api/archive/{title:path}", dependencies=write_deps, response_model=None)
 def permanent_delete_archived_note(title: str):
     if not title.startswith("_archive/"):
         title = f"_archive/{title}"
@@ -564,6 +573,35 @@ def get_config():
 # endregion
 
 
+# region User-file response hardening
+# Files served from user-controlled storage (attachments, branding images) are
+# never trusted to be inert. `nosniff` stops browsers from guessing a more
+# dangerous type than the one declared. Types a browser would render as an
+# active document (HTML, SVG, XML) additionally get a sandboxing CSP, so
+# opening one directly gives a static page with no script access to the app's
+# origin or credentials. Embedding as <img> is unaffected. PDFs are left alone
+# because the browser's PDF viewer does not work inside a CSP sandbox.
+SCRIPT_CAPABLE_MEDIA_TYPES = {
+    "text/html",
+    "application/xhtml+xml",
+    "image/svg+xml",
+    "text/xml",
+    "application/xml",
+}
+USER_FILE_SANDBOX_CSP = (
+    "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'"
+)
+
+
+def harden_user_file_response(response: FileResponse) -> FileResponse:
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    media_type = (response.media_type or "").split(";")[0].strip().lower()
+    if media_type in SCRIPT_CAPABLE_MEDIA_TYPES:
+        response.headers["Content-Security-Policy"] = USER_FILE_SANDBOX_CSP
+    return response
+# endregion
+
+
 # region Branding
 # The logo/favicon are served from fixed, public URLs (no auth) so they
 # render on the login page and in fresh/logged-out browser sessions — before
@@ -575,7 +613,7 @@ def get_brand_logo():
     path = get_brand_logo_path()
     if not path:
         raise HTTPException(status_code=404, detail=api_messages.brand_logo_not_found)
-    return FileResponse(path)
+    return harden_user_file_response(FileResponse(path))
 
 
 @router.get("/api/brand/favicon", include_in_schema=False)
@@ -583,7 +621,7 @@ def get_brand_favicon():
     path = get_brand_icon_path()
     if not path:
         raise HTTPException(status_code=404, detail=api_messages.brand_icon_not_found)
-    return FileResponse(path)
+    return harden_user_file_response(FileResponse(path))
 
 
 @router.get("/api/settings/branding", dependencies=auth_deps)
@@ -621,7 +659,7 @@ if global_config.auth_type != AuthType.READ_ONLY:
 @router.get("/attachments/{filename}", dependencies=auth_deps, include_in_schema=False)
 def get_attachment(filename: str):
     try:
-        return attachment_storage.get(filename)
+        return harden_user_file_response(attachment_storage.get(filename))
     except ValueError:
         raise HTTPException(status_code=400, detail=api_messages.invalid_attachment_filename)
     except FileNotFoundError:
@@ -662,7 +700,7 @@ def api_get_callouts():
     return [c.dict() for c in get_callouts()]
 
 
-@router.put("/api/settings/callouts", dependencies=auth_deps)
+@router.put("/api/settings/callouts", dependencies=write_deps)
 def api_save_callouts(callouts: TypingList[CalloutDefinition]):
     try:
         save_callouts(callouts)
@@ -676,7 +714,7 @@ def api_get_prefs():
     return get_prefs().dict()
 
 
-@router.put("/api/settings/prefs", dependencies=auth_deps)
+@router.put("/api/settings/prefs", dependencies=write_deps)
 def api_save_prefs(prefs: UserPrefsUpdate):
     try:
         save_prefs(prefs)
@@ -692,7 +730,7 @@ def api_get_header_colors():
     return [c.dict() for c in get_header_colors()]
 
 
-@router.put("/api/settings/header-colors", dependencies=auth_deps)
+@router.put("/api/settings/header-colors", dependencies=write_deps)
 def api_save_header_colors(colors: List[HeaderColorDefinition]):
     try:
         save_prefs(UserPrefsUpdate(header_colors=colors))
@@ -708,7 +746,7 @@ def api_get_highlight_colors():
     return [c.dict() for c in get_highlight_colors()]
 
 
-@router.put("/api/settings/highlight-colors", dependencies=auth_deps)
+@router.put("/api/settings/highlight-colors", dependencies=write_deps)
 def api_save_highlight_colors(colors: List[HighlightColorDefinition]):
     try:
         save_prefs(UserPrefsUpdate(highlight_colors=colors))
@@ -724,7 +762,7 @@ def api_get_default_highlight():
     return {"default": get_default_highlight()}
 
 
-@router.put("/api/settings/default-highlight", dependencies=auth_deps)
+@router.put("/api/settings/default-highlight", dependencies=write_deps)
 def api_save_default_highlight(data: dict):
     try:
         save_prefs(UserPrefsUpdate(default_highlight=data.get("default")))
@@ -740,7 +778,7 @@ def api_get_table_style():
     return get_table_style().dict()
 
 
-@router.put("/api/settings/table-style", dependencies=auth_deps)
+@router.put("/api/settings/table-style", dependencies=write_deps)
 def api_save_table_style(style: TableStyleDefinition):
     try:
         save_prefs(UserPrefsUpdate(table_style=style))
@@ -756,7 +794,7 @@ def api_get_quote_style():
     return get_quote_style().dict()
 
 
-@router.put("/api/settings/quote-style", dependencies=auth_deps)
+@router.put("/api/settings/quote-style", dependencies=write_deps)
 def api_save_quote_style(style: QuoteStyleDefinition):
     try:
         save_prefs(UserPrefsUpdate(quote_style=style))
@@ -772,7 +810,7 @@ def api_get_tag_colors():
     return get_tag_colors().dict()
 
 
-@router.put("/api/settings/tag-colors", dependencies=auth_deps)
+@router.put("/api/settings/tag-colors", dependencies=write_deps)
 def api_save_tag_colors(tag_colors: TagColorSettings):
     try:
         save_tag_colors(tag_colors)
@@ -789,7 +827,7 @@ def api_get_task_icons():
     return get_task_icons().dict()
 
 
-@router.put("/api/settings/task-icons", dependencies=auth_deps)
+@router.put("/api/settings/task-icons", dependencies=write_deps)
 def api_save_task_icons(task_icons: TaskIconSettings):
     """Save task icon settings.
 
@@ -810,7 +848,7 @@ def api_get_saved_searches():
     return get_saved_searches().dict()
 
 
-@router.put("/api/settings/saved-searches", dependencies=auth_deps)
+@router.put("/api/settings/saved-searches", dependencies=write_deps)
 def api_save_saved_searches(saved_searches: SavedSearchSettings):
     """Save saved search settings (full list replace).
 
@@ -834,7 +872,7 @@ def list_backups():
     return db_manager.list_backups()
 
 
-@router.post("/api/maintenance/backups", dependencies=auth_deps)
+@router.post("/api/maintenance/backups", dependencies=write_deps)
 def create_backup(body: dict = Body(default={})):
     """Create a manual backup of the settings database."""
     label = str(body.get("label", "manual"))[:32] or "manual"
@@ -844,7 +882,7 @@ def create_backup(body: dict = Body(default={})):
         raise HTTPException(500, f"Backup failed: {exc}")
 
 
-@router.post("/api/maintenance/backups/restore", dependencies=auth_deps)
+@router.post("/api/maintenance/backups/restore", dependencies=write_deps)
 def restore_backup(body: dict = Body(default={})):
     """Restore a backup. Automatically creates a pre-restore safety backup first."""
     filename = body.get("filename", "")
@@ -858,7 +896,7 @@ def restore_backup(body: dict = Body(default={})):
         raise HTTPException(500, f"Restore failed: {exc}")
 
 
-@router.delete("/api/maintenance/backups/{filename}", dependencies=auth_deps)
+@router.delete("/api/maintenance/backups/{filename}", dependencies=write_deps)
 def delete_backup(filename: str):
     """Permanently delete a single backup file."""
     import re as _re
@@ -937,7 +975,7 @@ def maintenance_status():
     }
 
 
-@router.post("/api/maintenance/trash/empty", dependencies=auth_deps)
+@router.post("/api/maintenance/trash/empty", dependencies=write_deps)
 def maintenance_empty_trash(body: dict = Body(default={})):
     """Empty all or part of the trash.
 
@@ -994,7 +1032,7 @@ class ShareCreateRequest(BaseModel):
     password: Optional[str] = None          # None = no password protection
 
 
-@router.post("/api/share", dependencies=auth_deps)
+@router.post("/api/share", dependencies=write_deps)
 def create_share(req: ShareCreateRequest):
     """Create a new share token for a note. Authenticated users only."""
     if req.permission not in ("read", "write"):
@@ -1034,7 +1072,7 @@ def validate_share(token: str, body: dict = Body(default={})):
     return result
 
 
-@router.delete("/api/share/{token}", dependencies=auth_deps)
+@router.delete("/api/share/{token}", dependencies=write_deps)
 def revoke_share(token: str):
     """Hard-delete a share token. Authenticated users only."""
     deleted = db_manager.revoke_share(token)
@@ -1070,7 +1108,7 @@ def get_shared_note(token: str, body: SharedNoteRequest = SharedNoteRequest()):
         raise HTTPException(404, "Note not found") 
 
 
-@router.patch("/api/shared/{token}/note")
+@router.patch("/api/shared/{token}/note", dependencies=[Depends(require_writable)])
 def patch_shared_note(token: str, data: SharedNoteUpdateRequest):
     """Save note content via a write share token. No user auth required."""
     password = data.password or None
@@ -1094,7 +1132,7 @@ def list_all_shares():
     return db_manager.list_all_shares()
 
 
-@router.delete("/api/shares/{token_hash}", dependencies=auth_deps)
+@router.delete("/api/shares/{token_hash}", dependencies=write_deps)
 def revoke_share_by_hash(token_hash: str):
     """Hard-delete a share token by its SHA-256 hash. Authenticated users only.
 
@@ -1106,7 +1144,7 @@ def revoke_share_by_hash(token_hash: str):
     return {"success": True}
 
 
-@router.delete("/api/share/note/{title:path}/all", dependencies=auth_deps)
+@router.delete("/api/share/note/{title:path}/all", dependencies=write_deps)
 def revoke_all_shares(title: str):
     """Hard-delete all active share tokens for a note. Authenticated users only."""
     count = db_manager.revoke_all_shares(title)
