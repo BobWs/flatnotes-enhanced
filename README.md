@@ -50,9 +50,9 @@ Flatnotes-Enhanced elevates the original Flatnotes into a powerful, customizable
 
 ---
 
-## 🆕 What's New in v1.18.0
+## 🆕 What's New in v1.18.1
 
-- **Theme Selector** – Choose from 16 predefined color themes (Dracula, Catppuccin, Gruvbox, Nord, Solarized, Tokyo Night, One). Open the Theme picker from the navbar menu and apply a theme instantly — your choice is remembered across sessions.
+- **Bug Fix** – Code blocks with angle brackets no longer truncate notes
 
 - View [full changelog](https://github.com/BobWs/flatnotes-enhanced/releases) latest version
 - See the [Changelog](CHANGELOG.md) file for complete version history.
@@ -491,6 +491,7 @@ Your preferences (colors, callouts, tag settings, appearance, etc.) are automati
 ## Tags
 
 - `latest` – newest version (multi-arch: `linux/amd64` + `linux/arm64`)
+- `v1.18.1` – Bug Fix – Code blocks with angle brackets no longer truncate notes
 - `v1.18.0` – Theme Selector – 16 predefined color themes (Dracula, Catppuccin, Gruvbox, Nord, Solarized, Tokyo Night, One)
 - `v1.17.0` – Custom Branding – rename your instance, set a custom accent color, upload a logo and favicon
 - `v1.16.1` – Bug Fix: Copy button no longer adds an extra trailing line to copied code

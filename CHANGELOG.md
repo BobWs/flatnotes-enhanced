@@ -13,6 +13,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.18.1] - 2026-10-22
+
+### Fixed
+- **Code blocks with angle brackets no longer truncate notes** – Content such as `<genre>`, `<author>` or `<title>` inside a fenced or indented code block without a highlighting language is now displayed literally (#53)
+  - Previously the angle-bracket placeholders disappeared (`input/<genre>/<author>/` rendered as `input//`) and everything after an unclosed `<title>` was missing in reading mode
+  - Affects code blocks with no language or a language without syntax highlighting (e.g. `text`, `plaintext`) as well as indented code blocks
+  - Code blocks with a supported language (e.g. `python`, `bash`, `html`) were not affected and render exactly as before
+  - The Markdown source in the editor was never modified
+  - Fixes the viewer, shared notes, note preview popup and editor preview pane
+
+### Changed
+- HTML entities typed inside such code blocks (e.g. `&lt;`) are now displayed literally, as the Markdown specification requires. Notes that used `&lt;` / `&gt;` as a workaround can be changed back to plain `<` / `>`
+
+### Technical
+- `baseOptions.js`: The code-syntax-highlight plugin is wrapped in `safeCodeSyntaxHighlight()`, which keeps the plugin's own renderer and Prism highlighting but emits unhighlighted code content as text so it is escaped
+- Root cause: `@toast-ui/editor-plugin-code-syntax-highlight` emits the code content as raw HTML when Prism has no grammar for the language; the issue reproduces with Toast UI and this plugin alone, without any Flatnotes-Enhanced code
+- Highlighted output for supported languages is unchanged
+- No backend, SCSS or dependency changes
+
+### Contributor
+- Thanks to **@jpurdue** for reporting the issue with a clear reproduction
+
+---
+
 ## [1.18.0] - 2026-09-26
 
 ### Added

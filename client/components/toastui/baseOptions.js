@@ -300,9 +300,31 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
+// The code-syntax-highlight plugin emits a fence's content as raw HTML when
+// Prism has no grammar for it (no language, or e.g. ```text), so "<title>"
+// is parsed as markup. Keep its highlighting, but emit unhighlighted
+// content as text so it is escaped.
+function safeCodeSyntaxHighlight(context, options) {
+  const plugin = codeSyntaxHighlight(context, options);
+  const highlight = plugin.toHTMLRenderers.codeBlock;
+  return {
+    ...plugin,
+    toHTMLRenderers: {
+      ...plugin.toHTMLRenderers,
+      codeBlock(node, ctx) {
+        return highlight(node, ctx).map((token) =>
+          token.type === "html" && token.content === node.literal
+            ? { type: "text", content: token.content }
+            : token
+        );
+      },
+    },
+  };
+}
+
 const baseOptions = {
   height: "100%",
-  plugins: [codeSyntaxHighlight],
+  plugins: [safeCodeSyntaxHighlight],
   customHTMLRenderer: customHTMLRenderer,
   usageStatistics: false,
 };
